@@ -44,6 +44,7 @@
     
     h2 { text-align: center; color: var(--success-hover); margin-top: 0; margin-bottom: 15px; font-size: 20px; font-weight: 700; }
     
+    /* Tab System CSS */
     .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px; }
     .tab-btn { flex: 1; padding: 12px; font-size: 15px; font-weight: 700; color: var(--text-muted); background: transparent; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
     .tab-btn.active { background: #ffffff; color: var(--success-hover); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
@@ -135,21 +136,22 @@
   
   <h2>সুপারি হিসাব ক্যালকুলেটর</h2>
 
+  <!-- Tab Buttons -->
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('tab-main')">মূল হিসাব</button>
     <button class="tab-btn" onclick="switchTab('tab-rate')">দর যাচাই</button>
   </div>
 
-  <!-- Tab 1: মূল হিসাব -->
-  <div id="tab-main" class="tab-content active">
-    <div class="setting-box">
-      <span>হিসাবের নিয়ম:</span>
-      <select id="ghaPerKuri" onchange="saveData()">
-        <option value="21" selected>২১ ঘা = ১ কুড়ি</option>
-        <option value="20">২০ ঘা = ১ কুড়ি</option>
-      </select>
-    </div>
+  <div class="setting-box">
+    <span>হিসাবের নিয়ম:</span>
+    <select id="ghaPerKuri" onchange="saveData()">
+      <option value="21" selected>২১ ঘা = ১ কুড়ি</option>
+      <option value="20">২০ ঘা = ১ কুড়ি</option>
+    </select>
+  </div>
 
+  <!-- Tab 1: মূল হিসাব (Main Calculator) -->
+  <div id="tab-main" class="tab-content active">
     <div class="grid-3">
       <div class="input-group">
         <label>কুড়ি</label>
@@ -199,16 +201,8 @@
     </div>
   </div>
 
-  <!-- Tab 2: দর যাচাই (Default 20 Gha) -->
+  <!-- Tab 2: দর যাচাই (Rate Finder) -->
   <div id="tab-rate" class="tab-content">
-    <div class="setting-box">
-      <span>হিসাবের নিয়ম:</span>
-      <select id="ghaPerKuriRate">
-        <option value="21">২১ ঘা = ১ কুড়ি</option>
-        <option value="20" selected>২০ ঘা = ১ কুড়ি</option> <!-- এখানে ২০ ডিফল্ট রাখা হয়েছে -->
-      </select>
-    </div>
-
     <div style="text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">
       ক্রেতা নির্দিষ্ট পরিমাণের যে দাম বলেছে তা লিখুন। এক কুড়ির দাম বের হয়ে যাবে।
     </div>
@@ -249,6 +243,7 @@
 <div id="toast"></div>
 
 <script>
+  // Tab Switching Function
   function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -257,6 +252,7 @@
     event.currentTarget.classList.add('active');
   }
 
+  // Pull-to-refresh block
   let touchStartY = 0;
   document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive: false});
   document.addEventListener('touchmove', e => {
@@ -273,6 +269,7 @@
   const engDigits = {'0':'০', '1':'১', '2':'২', '3':'৩', '4':'৪', '5':'৫', '6':'৬', '7':'৭', '8':'৮', '9':'৯'};
   const bnDigits = {'০':'0', '১':'1', '২':'2', '৩':'3', '৪':'4', '৫':'5', '৬':'6', '৭':'7', '৮':'8', '৯':'9'};
 
+  // Auto-Save Load
   window.onload = function() {
     const savedData = localStorage.getItem('supariData');
     const savedRule = localStorage.getItem('ghaPerKuri');
@@ -310,6 +307,7 @@
     setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
   }
 
+  // ==== Tab 1 (Main Calculator) Functions ====
   function clearInputFields() {
     document.getElementById('kuri').value = '';
     document.getElementById('gha').value = '';
@@ -431,6 +429,7 @@
     document.body.removeChild(textArea);
   }
 
+  // ==== Tab 2 (Rate Finder) Functions ====
   function clearFindRateInputs() {
     document.getElementById('find_kuri').value = '';
     document.getElementById('find_gha').value = '';
@@ -440,7 +439,7 @@
   }
 
   function calculateKuriRate() {
-    const ghaPerKuri = parseInt(document.getElementById('ghaPerKuriRate').value); // দর যাচাইয়ের নিজস্ব ড্রপডাউন
+    const ghaPerKuri = parseInt(document.getElementById('ghaPerKuri').value);
     
     const kuri = parseBnNum(document.getElementById('find_kuri').value);
     const gha = parseBnNum(document.getElementById('find_gha').value);
@@ -461,6 +460,7 @@
     const resultBox = document.getElementById('rateResultBox');
     resultBox.style.display = 'block';
     
+    // Display result beautifully
     resultBox.innerHTML = `
       <div style="font-size: 15px; color: var(--text-muted); margin-bottom: 5px;">বর্তমান দর অনুযায়ী:</div>
       <div style="margin-bottom: 10px;">১ কুড়ির দাম: <strong style="font-size: 22px; color: var(--danger);">${toBengaliDigits(Math.round(pricePerKuri))} ৳</strong></div>
