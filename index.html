@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>সুপারি হিসাব ক্যালকুলেটর</title>
   
   <link rel="manifest" href="manifest.json">
@@ -26,7 +26,18 @@
     }
 
     * { box-sizing: border-box; font-family: 'Noto Sans Bengali', system-ui, sans-serif; }
-    body { background-color: var(--bg-color); margin: 0; padding: 20px 15px; display: flex; justify-content: center; color: var(--text-main); }
+    
+    /* টান দিয়ে রিফ্রেশ হওয়া বন্ধ করার বিশেষ কোড */
+    body { 
+      background-color: var(--bg-color); 
+      margin: 0; 
+      padding: 20px 15px; 
+      display: flex; 
+      justify-content: center; 
+      color: var(--text-main); 
+      overscroll-behavior-y: contain; 
+    }
+    
     .app-container { width: 100%; max-width: 500px; background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.15); }
     
     .logo-container { text-align: center; margin-bottom: 10px; }
