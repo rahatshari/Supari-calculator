@@ -1,4 +1,4 @@
-const CACHE_NAME = 'supari-calc-v2';
+const CACHE_NAME = 'supari-calc-v3';
 const urlsToCache = [
   './',
   './index.html',
