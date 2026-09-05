@@ -27,18 +27,17 @@
 
     * { box-sizing: border-box; font-family: 'Noto Sans Bengali', system-ui, sans-serif; }
     
-    /* টান দিয়ে রিফ্রেশ হওয়া বন্ধ করার বিশেষ কোড */
-    body { 
+    html, body { 
       background-color: var(--bg-color); 
       margin: 0; 
-      padding: 20px 15px; 
+      padding: 10px 15px; 
       display: flex; 
       justify-content: center; 
       color: var(--text-main); 
-      overscroll-behavior-y: contain; 
+      overscroll-behavior: none; /* রিফ্রেশ বন্ধ করার সিএসএস */
     }
     
-    .app-container { width: 100%; max-width: 500px; background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.15); }
+    .app-container { width: 100%; max-width: 500px; background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.15); margin-bottom: 20px;}
     
     .logo-container { text-align: center; margin-bottom: 10px; }
     .logo-container svg { width: 70px; height: 70px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
@@ -131,7 +130,7 @@
 
   <div class="setting-box">
     <span>হিসাবের নিয়ম:</span>
-    <select id="ghaPerKuri">
+    <select id="ghaPerKuri" onchange="saveData()">
       <option value="21" selected>২১ ঘা = ১ কুড়ি</option>
       <option value="20">২০ ঘা = ১ কুড়ি</option>
     </select>
@@ -193,11 +192,41 @@
 <div id="toast"></div>
 
 <script>
+  // রিফ্রেশ বন্ধ করার জাভাস্ক্রিপ্ট (Pull-to-refresh block)
+  let touchStartY = 0;
+  document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive: false});
+  document.addEventListener('touchmove', e => {
+    const touchY = e.touches[0].clientY;
+    const touchDiff = touchY - touchStartY;
+    if (touchDiff > 0 && window.scrollY === 0) {
+      e.preventDefault();
+    }
+  }, {passive: false});
+
   let reportData = [];
   const tiPerGha = 10; 
 
   const engDigits = {'0':'০', '1':'১', '2':'২', '3':'৩', '4':'৪', '5':'৫', '6':'৬', '7':'৭', '8':'৮', '9':'৯'};
   const bnDigits = {'০':'0', '১':'1', '২':'2', '৩':'3', '৪':'4', '৫':'5', '৬':'6', '৭':'7', '৮':'8', '৯':'9'};
+
+  // অটো-সেভ লোড (অটোমেটিক আগের ডাটা ফিরিয়ে আনা)
+  window.onload = function() {
+    const savedData = localStorage.getItem('supariData');
+    const savedRule = localStorage.getItem('ghaPerKuri');
+    if(savedRule) {
+      document.getElementById('ghaPerKuri').value = savedRule;
+    }
+    if(savedData) {
+      reportData = JSON.parse(savedData);
+      renderReport(parseInt(document.getElementById('ghaPerKuri').value));
+    }
+  };
+
+  // ডাটা সেভ করার ফাংশন
+  function saveData() {
+    localStorage.setItem('supariData', JSON.stringify(reportData));
+    localStorage.setItem('ghaPerKuri', document.getElementById('ghaPerKuri').value);
+  }
 
   function convertToBengali(e) {
     let val = e.target.value;
@@ -257,6 +286,9 @@
     const record = { qtyString, rate, totalPrice, totalTi, totalKuri };
     reportData.push(record);
 
+    // অটো সেভ করা হচ্ছে
+    saveData();
+
     const recentBox = document.getElementById('recentResult');
     recentBox.style.display = 'block';
     recentBox.innerHTML = `সর্বশেষ হিসাব: <br> ${qtyString} (${toBengaliDigits(rate)} ৳ দরে) <br> <span style="font-size: 20px; color: #047857;">মোট: ${toBengaliDigits(totalPrice)} ৳</span>`;
@@ -314,6 +346,7 @@
   function resetReport() {
     if (confirm("আপনি কি নিশ্চিত যে সম্পূর্ণ রিপোর্ট মুছে ফেলতে চান?")) {
       reportData = [];
+      saveData(); // ডাটাবেস থেকেও ডিলিট হবে
       document.getElementById('recentResult').style.display = 'none';
       renderReport(parseInt(document.getElementById('ghaPerKuri').value));
       showToast("🗑️ রিপোর্ট মুছে ফেলা হয়েছে");
@@ -339,12 +372,6 @@
     try { document.execCommand('copy') ? showToast("📋 রিপোর্ট কপি করা হয়েছে!") : showToast("⚠️ সমস্যা হয়েছে!"); } 
     catch (err) { showToast("⚠️ সমস্যা হয়েছে!"); }
     document.body.removeChild(textArea);
-  }
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').then(reg => console.log('Service Worker Registered')).catch(err => console.log('SW Registration failed', err));
-    });
   }
 </script>
 </body>
