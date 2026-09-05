@@ -1,0 +1,17 @@
+{
+  "name": "সুপারি হিসাব ক্যালকুলেটর",
+  "short_name": "সুপারি হিসাব",
+  "description": "সুপারি ক্রয়-বিক্রয়ের সহজ হিসাব",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0fdfa",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

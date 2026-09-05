@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>সুপারি হিসাব ক্যালকুলেটর</title>
+  
+  <!-- PWA & Offline Support -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#10b981">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0ea5e9;
+      --success: #10b981;
+      --success-hover: #059669;
+      --danger: #ef4444;
+      --bg-color: #f0fdfa;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; font-family: 'Noto Sans Bengali', system-ui, sans-serif; }
+    body { background-color: var(--bg-color); margin: 0; padding: 20px 15px; display: flex; justify-content: center; color: var(--text-main); }
+    .app-container { width: 100%; max-width: 500px; background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.15); }
+    
+    .logo-container { text-align: center; margin-bottom: 10px; }
+    .logo-container svg { width: 60px; height: 60px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+    
+    h2 { text-align: center; color: var(--success-hover); margin-top: 0; margin-bottom: 20px; font-size: 22px; font-weight: 700; }
+    .setting-box { background: #f8fafc; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; border: 1px solid var(--border-color); }
+    .setting-box select { padding: 8px 12px; font-size: 15px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; }
+    
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+    .input-group { display: flex; flex-direction: column; align-items: center; }
+    .input-group label { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: var(--text-muted); }
+    .input-group input { width: 100%; height: 50px; text-align: center; font-size: 18px; font-weight: 600; border: 2px solid var(--border-color); border-radius: 12px; outline: none; background: #f8fafc; }
+    .input-group input:focus { border-color: var(--success); background: #ffffff; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+    .rate-group { width: 70%; margin: 0 auto 25px auto; }
+    
+    .btn-row { display: flex; gap: 15px; margin-bottom: 20px; }
+    button { flex: 1; padding: 14px; font-size: 16px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    button:active { transform: scale(0.97); }
+    .btn-calculate { background: linear-gradient(135deg, var(--success) 0%, var(--success-hover) 100%); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+    .btn-clear-input { background-color: #f1f5f9; color: var(--text-muted); }
+    
+    /* সর্বশেষ হিসাব (Recent Result) ডিজাইন */
+    .recent-result { background: #ecfdf5; border: 2px dashed #34d399; padding: 15px; margin-bottom: 20px; border-radius: 12px; font-size: 16px; color: #065f46; text-align: center; font-weight: 700; display: none; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .report-section { border-top: 2px dashed var(--border-color); padding-top: 20px; margin-top: 10px; }
+    .report-title { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 15px; text-align: center; }
+    
+    .report-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 20px; font-size: 15px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); }
+    .report-table th, .report-table td { padding: 12px 10px; text-align: center; border-bottom: 1px solid var(--border-color); }
+    .report-table th { background-color: #f8fafc; color: var(--text-muted); font-size: 13px; }
+    .summary-card { background: linear-gradient(to right bottom, #f0fdfa, #ecfdf5); border: 1px solid #d1fae5; padding: 18px; border-radius: 12px; margin-top: 15px; font-size: 16px; color: #065f46; }
+    .summary-card div { margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .summary-card div:last-child { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #6ee7b7; }
+    
+    .report-actions { display: flex; gap: 12px; margin-top: 20px; }
+    .btn-action { background-color: #f8fafc; border: 1px solid var(--border-color); padding: 12px; }
+    .btn-reset-report { background-color: #fff1f2; color: var(--danger); border: 1px solid #fecdd3; margin-top: 15px; width: 100%; }
+    
+    #toast { visibility: hidden; min-width: 280px; background: rgba(15, 23, 42, 0.9); color: #fff; text-align: center; border-radius: 50px; padding: 14px 24px; position: fixed; z-index: 1000; left: 50%; bottom: -50px; transform: translateX(-50%); font-size: 15px; opacity: 0; transition: all 0.4s; }
+    #toast.show { visibility: visible; opacity: 1; bottom: 30px; }
+    
+    @media print {
+      .setting-box, .grid-3, .rate-group, .btn-row, .report-actions, .btn-reset-report, #toast, .recent-result { display: none !important; }
+      .app-container { box-shadow: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  
+  <div class="logo-container">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="45" fill="#fef08a"/>
+      <ellipse cx="50" cy="55" rx="30" ry="35" fill="#d97706"/>
+      <path d="M50 20 C60 20, 70 30, 65 45 C55 35, 45 40, 50 20 Z" fill="#65a30d"/>
+      <path d="M50 20 C40 20, 30 30, 35 45 C45 35, 55 40, 50 20 Z" fill="#4d7c0f"/>
+    </svg>
+  </div>
+  
+  <h2>সুপারি হিসাব</h2>
+
+  <div class="setting-box">
+    <span>হিসাবের নিয়ম:</span>
+    <select id="ghaPerKuri">
+      <option value="21" selected>২১ ঘা = ১ কুড়ি</option>
+      <option value="20">২০ ঘা = ১ কুড়ি</option>
+    </select>
+  </div>
+
+  <div class="grid-3">
+    <div class="input-group">
+      <label>কুড়ি</label>
+      <input type="text" id="kuri" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+    </div>
+    <div class="input-group">
+      <label>ঘা</label>
+      <input type="text" id="gha" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+    </div>
+    <div class="input-group">
+      <label>টি (পিস)</label>
+      <input type="text" id="ti" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+    </div>
+  </div>
+
+  <div class="input-group rate-group">
+    <label>প্রতি কুড়ির দাম (৳)</label>
+    <input type="text" id="rate" placeholder="০" inputmode="decimal" oninput="convertToBengali(event)">
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-clear-input" onclick="clearInputFields()">ক্লিয়ার</button>
+    <button class="btn-calculate" onclick="calculateAndAdd()">হিসাব করুন</button>
+  </div>
+
+  <!-- সর্বশেষ হিসাব দেখানোর জায়গা -->
+  <div id="recentResult" class="recent-result"></div>
+
+  <div class="report-section">
+    <div class="report-title">হিসাব রিপোর্ট</div>
+    
+    <div id="reportContainer">
+      <div style="color: var(--text-muted); text-align: center; padding: 20px; font-size: 15px;">এখনো কোনো হিসাব যোগ করা হয়নি।</div>
+    </div>
+
+    <div class="summary-card" id="summaryCard" style="display: none;">
+      <div><span>সর্বমোট সুপারি:</span> <strong id="totalQuantityText">০ কুড়ি</strong></div>
+      <div><span>মোট কুড়ি:</span> <strong id="totalKuriDecimal">০.০০</strong></div>
+      <div style="font-size: 19px;"><span>সর্বমোট দাম:</span> <strong style="color: #047857;">৳ <span id="totalAmount">০</span></strong></div>
+    </div>
+
+    <div class="report-actions" id="reportActions" style="display: none;">
+      <button class="btn-action" onclick="copyReport()">📋 কপি</button>
+      <button class="btn-action" onclick="window.print()">🖨️ প্রিন্ট</button>
+    </div>
+
+    <button id="btnClearReport" class="btn-reset-report" onclick="resetReport()" style="display: none;">🗑️ সম্পূর্ণ রিপোর্ট মুছুন</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  let reportData = [];
+  const tiPerGha = 10; 
+
+  const engDigits = {'0':'০', '1':'১', '2':'২', '3':'৩', '4':'৪', '5':'৫', '6':'৬', '7':'৭', '8':'৮', '9':'৯'};
+  const bnDigits = {'০':'0', '১':'1', '২':'2', '৩':'3', '৪':'4', '৫':'5', '৬':'6', '৭':'7', '৮':'8', '৯':'9'};
+
+  // ইনপুট টাইপ করার সময় সাথে সাথে বাংলায় রূপান্তর
+  function convertToBengali(e) {
+    let val = e.target.value;
+    e.target.value = val.split('').map(c => engDigits[c] || c).join('');
+  }
+
+  // বাংলা সংখ্যাকে গাণিতিক হিসাবের জন্য ইংরেজিতে রূপান্তর
+  function parseBnNum(bnStr) {
+    if(!bnStr) return 0;
+    let engStr = bnStr.toString().split('').map(c => bnDigits[c] || c).join('');
+    return parseFloat(engStr) || 0;
+  }
+
+  function toBengaliDigits(num) {
+    return num.toString().replace(/\d/g, d => engDigits[d]);
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.innerText = message;
+    toast.className = "show";
+    setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+  }
+
+  function clearInputFields() {
+    document.getElementById('kuri').value = '';
+    document.getElementById('gha').value = '';
+    document.getElementById('ti').value = '';
+    document.getElementById('rate').value = '';
+    document.getElementById('kuri').focus();
+  }
+
+  function calculateAndAdd() {
+    const ghaPerKuri = parseInt(document.getElementById('ghaPerKuri').value);
+    
+    // ইনপুট থেকে বাংলা সংখ্যা নিয়ে ইংরেজিতে রূপান্তর করে হিসাব
+    const kuri = parseBnNum(document.getElementById('kuri').value);
+    const gha = parseBnNum(document.getElementById('gha').value);
+    const ti = parseBnNum(document.getElementById('ti').value);
+    const rate = parseBnNum(document.getElementById('rate').value);
+
+    const tiPerKuri = ghaPerKuri * tiPerGha;
+    const totalTi = (kuri * tiPerKuri) + (gha * tiPerGha) + ti;
+
+    if (totalTi <= 0 || rate <= 0) {
+      showToast("⚠️ দয়া করে সঠিক পরিমাণ এবং দাম দিন");
+      return;
+    }
+
+    const totalKuri = totalTi / tiPerKuri;
+    const totalPrice = Math.round((totalKuri * rate) * 100) / 100;
+
+    let itemParts = [];
+    if (kuri > 0) itemParts.push(`${toBengaliDigits(kuri)} কুড়ি`);
+    if (gha > 0) itemParts.push(`${toBengaliDigits(gha)} ঘা`);
+    if (ti > 0) itemParts.push(`${toBengaliDigits(ti)} টি`);
+    const qtyString = itemParts.join(' ');
+
+    const record = { qtyString, rate, totalPrice, totalTi, totalKuri };
+    reportData.push(record);
+
+    // সর্বশেষ হিসাব দেখানো (Recent Result)
+    const recentBox = document.getElementById('recentResult');
+    recentBox.style.display = 'block';
+    recentBox.innerHTML = `সর্বশেষ হিসাব: <br> ${qtyString} (${toBengaliDigits(rate)} ৳ দরে) <br> <span style="font-size: 20px; color: #047857;">মোট: ${toBengaliDigits(totalPrice)} ৳</span>`;
+
+    showToast("✅ হিসাব যোগ করা হয়েছে");
+    clearInputFields();
+    renderReport(ghaPerKuri);
+  }
+
+  function renderReport(ghaPerKuri) {
+    const container = document.getElementById('reportContainer');
+    const summaryCard = document.getElementById('summaryCard');
+    const reportActions = document.getElementById('reportActions');
+    const btnClearReport = document.getElementById('btnClearReport');
+
+    if (reportData.length === 0) {
+      container.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">এখনো কোনো হিসাব যোগ করা হয়নি।</div>';
+      summaryCard.style.display = 'none';
+      reportActions.style.display = 'none';
+      btnClearReport.style.display = 'none';
+      return;
+    }
+
+    let grandTi = 0, grandPrice = 0, grandKuri = 0;
+    let tableHTML = `<table class="report-table"><thead><tr><th>নং</th><th style="text-align: left;">পরিমাণ</th><th>দর (৳)</th><th style="text-align: right;">মোট (৳)</th></tr></thead><tbody>`;
+
+    reportData.forEach((item, index) => {
+      grandTi += item.totalTi; grandPrice += item.totalPrice; grandKuri += item.totalKuri;
+      tableHTML += `<tr><td>${toBengaliDigits(index + 1)}</td><td style="text-align: left;">${item.qtyString}</td><td>${toBengaliDigits(item.rate)}</td><td style="text-align: right; font-weight: 600;">${toBengaliDigits(item.totalPrice)}</td></tr>`;
+    });
+
+    tableHTML += `</tbody></table>`;
+    container.innerHTML = tableHTML;
+
+    const tiPerKuri = ghaPerKuri * tiPerGha;
+    const finalKuri = Math.floor(grandTi / tiPerKuri);
+    const remTiAfterKuri = grandTi % tiPerKuri;
+    const finalGha = Math.floor(remTiAfterKuri / tiPerGha);
+    const finalTi = remTiAfterKuri % tiPerGha;
+
+    let finalQtyParts = [];
+    if (finalKuri > 0) finalQtyParts.push(`${toBengaliDigits(finalKuri)} কুড়ি`);
+    if (finalGha > 0) finalQtyParts.push(`${toBengaliDigits(finalGha)} ঘা`);
+    if (finalTi > 0) finalQtyParts.push(`${toBengaliDigits(finalTi)} টি`);
+
+    document.getElementById('totalQuantityText').innerText = finalQtyParts.join(' ') || '০';
+    document.getElementById('totalKuriDecimal').innerText = toBengaliDigits(grandKuri.toFixed(2));
+    document.getElementById('totalAmount').innerText = toBengaliDigits(grandPrice.toFixed(2));
+
+    summaryCard.style.display = 'block';
+    reportActions.style.display = 'flex';
+    btnClearReport.style.display = 'block';
+  }
+
+  function resetReport() {
+    if (confirm("আপনি কি নিশ্চিত যে সম্পূর্ণ রিপোর্ট মুছে ফেলতে চান?")) {
+      reportData = [];
+      document.getElementById('recentResult').style.display = 'none';
+      renderReport(parseInt(document.getElementById('ghaPerKuri').value));
+      showToast("🗑️ রিপোর্ট মুছে ফেলা হয়েছে");
+    }
+  }
+
+  function copyReport() {
+    if (reportData.length === 0) return;
+    let text = "--- সুপারি হিসাব রিপোর্ট ---\n\n";
+    reportData.forEach((item, i) => { text += `${toBengaliDigits(i + 1)}. ${item.qtyString} | দর: ${toBengaliDigits(item.rate)} ৳ | দাম: ${toBengaliDigits(item.totalPrice)} ৳\n`; });
+    text += "\n-------------------------\n";
+    text += `সর্বমোট সুপারি: ${document.getElementById('totalQuantityText').innerText}\n`;
+    text += `সর্বমোট দাম: ${document.getElementById('totalAmount').innerText} টাকা\n`;
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => showToast("📋 রিপোর্ট কপি করা হয়েছে!")).catch(() => fallbackCopyTextToClipboard(text));
+    } else fallbackCopyTextToClipboard(text);
+  }
+
+  function fallbackCopyTextToClipboard(text) {
+    let textArea = document.createElement("textarea"); textArea.value = text; textArea.style.position = "fixed";
+    document.body.appendChild(textArea); textArea.focus(); textArea.select();
+    try { document.execCommand('copy') ? showToast("📋 রিপোর্ট কপি করা হয়েছে!") : showToast("⚠️ সমস্যা হয়েছে!"); } 
+    catch (err) { showToast("⚠️ সমস্যা হয়েছে!"); }
+    document.body.removeChild(textArea);
+  }
+
+  // Service Worker Registration for Offline App
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').then(reg => console.log('Service Worker Registered')).catch(err => console.log('SW Registration failed', err));
+    });
+  }
+</script>
+</body>
+</html>
