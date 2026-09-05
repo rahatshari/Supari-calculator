@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>সুপারি হিসাব ক্যালকুলেটর</title>
   
-  <!-- PWA & Offline Support -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#10b981">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
@@ -15,6 +14,7 @@
   <style>
     :root {
       --primary: #0ea5e9;
+      --primary-hover: #0284c7;
       --success: #10b981;
       --success-hover: #059669;
       --danger: #ef4444;
@@ -30,7 +30,7 @@
     .app-container { width: 100%; max-width: 500px; background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.15); }
     
     .logo-container { text-align: center; margin-bottom: 10px; }
-    .logo-container svg { width: 60px; height: 60px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+    .logo-container svg { width: 70px; height: 70px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
     
     h2 { text-align: center; color: var(--success-hover); margin-top: 0; margin-bottom: 20px; font-size: 22px; font-weight: 700; }
     .setting-box { background: #f8fafc; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; border: 1px solid var(--border-color); }
@@ -49,7 +49,6 @@
     .btn-calculate { background: linear-gradient(135deg, var(--success) 0%, var(--success-hover) 100%); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
     .btn-clear-input { background-color: #f1f5f9; color: var(--text-muted); }
     
-    /* সর্বশেষ হিসাব (Recent Result) ডিজাইন */
     .recent-result { background: #ecfdf5; border: 2px dashed #34d399; padding: 15px; margin-bottom: 20px; border-radius: 12px; font-size: 16px; color: #065f46; text-align: center; font-weight: 700; display: none; animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -67,11 +66,15 @@
     .btn-action { background-color: #f8fafc; border: 1px solid var(--border-color); padding: 12px; }
     .btn-reset-report { background-color: #fff1f2; color: var(--danger); border: 1px solid #fecdd3; margin-top: 15px; width: 100%; }
     
+    .app-footer { text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--border-color); font-size: 14px; color: var(--text-muted); }
+    .app-footer a { color: var(--primary); text-decoration: none; font-weight: 700; transition: color 0.2s; }
+    .app-footer a:hover { color: var(--primary-hover); text-decoration: underline; }
+
     #toast { visibility: hidden; min-width: 280px; background: rgba(15, 23, 42, 0.9); color: #fff; text-align: center; border-radius: 50px; padding: 14px 24px; position: fixed; z-index: 1000; left: 50%; bottom: -50px; transform: translateX(-50%); font-size: 15px; opacity: 0; transition: all 0.4s; }
     #toast.show { visibility: visible; opacity: 1; bottom: 30px; }
     
     @media print {
-      .setting-box, .grid-3, .rate-group, .btn-row, .report-actions, .btn-reset-report, #toast, .recent-result { display: none !important; }
+      .setting-box, .grid-3, .rate-group, .btn-row, .report-actions, .btn-reset-report, #toast, .recent-result, .app-footer { display: none !important; }
       .app-container { box-shadow: none; padding: 0; }
     }
   </style>
@@ -81,11 +84,35 @@
 <div class="app-container">
   
   <div class="logo-container">
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="50" cy="50" r="45" fill="#fef08a"/>
-      <ellipse cx="50" cy="55" rx="30" ry="35" fill="#d97706"/>
-      <path d="M50 20 C60 20, 70 30, 65 45 C55 35, 45 40, 50 20 Z" fill="#65a30d"/>
-      <path d="M50 20 C40 20, 30 30, 35 45 C45 35, 55 40, 50 20 Z" fill="#4d7c0f"/>
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(0,0,0,0.35)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+        </radialGradient>
+        <radialGradient id="supari-body" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#f97316"/>
+          <stop offset="50%" stop-color="#ea580c"/>
+          <stop offset="85%" stop-color="#9a3412"/>
+          <stop offset="100%" stop-color="#431407"/>
+        </radialGradient>
+        <linearGradient id="calyx-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#65a30d"/>
+          <stop offset="100%" stop-color="#3f6212"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="60" cy="100" rx="35" ry="12" fill="url(#shadow)"/>
+      <path d="M 60 25 C 95 25, 100 60, 85 88 C 75 105, 45 105, 35 88 C 20 60, 25 25, 60 25 Z" fill="url(#supari-body)"/>
+      <path d="M 40 40 Q 32 65 42 90" stroke="#7c2d12" stroke-width="2.5" fill="none" opacity="0.4" stroke-linecap="round"/>
+      <path d="M 80 40 Q 88 65 78 90" stroke="#7c2d12" stroke-width="2.5" fill="none" opacity="0.4" stroke-linecap="round"/>
+      <path d="M 60 98 Q 65 70 60 30" stroke="#7c2d12" stroke-width="1.5" fill="none" opacity="0.3"/>
+      <path d="M 50 35 Q 45 60 52 95" stroke="#7c2d12" stroke-width="1.5" fill="none" opacity="0.25"/>
+      <path d="M 70 35 Q 75 60 68 95" stroke="#7c2d12" stroke-width="1.5" fill="none" opacity="0.25"/>
+      <ellipse cx="45" cy="45" rx="8" ry="18" fill="#ffedd5" opacity="0.25" transform="rotate(-20 45 45)"/>
+      <path d="M 45 28 C 48 20, 55 18, 60 18 C 65 18, 72 20, 75 28 C 78 32, 68 32, 60 34 C 52 32, 42 32, 45 28 Z" fill="url(#calyx-grad)"/>
+      <path d="M 40 25 C 45 25, 48 30, 52 28 C 48 35, 40 32, 40 25 Z" fill="url(#calyx-grad)"/>
+      <path d="M 80 25 C 75 25, 72 30, 68 28 C 72 35, 80 32, 80 25 Z" fill="url(#calyx-grad)"/>
+      <rect x="57" y="14" width="6" height="8" fill="#3f6212" rx="2"/>
     </svg>
   </div>
   
@@ -124,7 +151,6 @@
     <button class="btn-calculate" onclick="calculateAndAdd()">হিসাব করুন</button>
   </div>
 
-  <!-- সর্বশেষ হিসাব দেখানোর জায়গা -->
   <div id="recentResult" class="recent-result"></div>
 
   <div class="report-section">
@@ -147,6 +173,10 @@
 
     <button id="btnClearReport" class="btn-reset-report" onclick="resetReport()" style="display: none;">🗑️ সম্পূর্ণ রিপোর্ট মুছুন</button>
   </div>
+
+  <div class="app-footer">
+    Created by <a href="https://www.facebook.com/rahatsharif504" target="_blank">Rahat Sharif</a>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -158,13 +188,11 @@
   const engDigits = {'0':'০', '1':'১', '2':'২', '3':'৩', '4':'৪', '5':'৫', '6':'৬', '7':'৭', '8':'৮', '9':'৯'};
   const bnDigits = {'০':'0', '১':'1', '২':'2', '৩':'3', '৪':'4', '৫':'5', '৬':'6', '৭':'7', '৮':'8', '৯':'9'};
 
-  // ইনপুট টাইপ করার সময় সাথে সাথে বাংলায় রূপান্তর
   function convertToBengali(e) {
     let val = e.target.value;
     e.target.value = val.split('').map(c => engDigits[c] || c).join('');
   }
 
-  // বাংলা সংখ্যাকে গাণিতিক হিসাবের জন্য ইংরেজিতে রূপান্তর
   function parseBnNum(bnStr) {
     if(!bnStr) return 0;
     let engStr = bnStr.toString().split('').map(c => bnDigits[c] || c).join('');
@@ -193,7 +221,6 @@
   function calculateAndAdd() {
     const ghaPerKuri = parseInt(document.getElementById('ghaPerKuri').value);
     
-    // ইনপুট থেকে বাংলা সংখ্যা নিয়ে ইংরেজিতে রূপান্তর করে হিসাব
     const kuri = parseBnNum(document.getElementById('kuri').value);
     const gha = parseBnNum(document.getElementById('gha').value);
     const ti = parseBnNum(document.getElementById('ti').value);
@@ -219,7 +246,6 @@
     const record = { qtyString, rate, totalPrice, totalTi, totalKuri };
     reportData.push(record);
 
-    // সর্বশেষ হিসাব দেখানো (Recent Result)
     const recentBox = document.getElementById('recentResult');
     recentBox.style.display = 'block';
     recentBox.innerHTML = `সর্বশেষ হিসাব: <br> ${qtyString} (${toBengaliDigits(rate)} ৳ দরে) <br> <span style="font-size: 20px; color: #047857;">মোট: ${toBengaliDigits(totalPrice)} ৳</span>`;
@@ -304,7 +330,6 @@
     document.body.removeChild(textArea);
   }
 
-  // Service Worker Registration for Offline App
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js').then(reg => console.log('Service Worker Registered')).catch(err => console.log('SW Registration failed', err));
