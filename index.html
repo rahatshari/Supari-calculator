@@ -34,15 +34,22 @@
       display: flex; 
       justify-content: center; 
       color: var(--text-main); 
-      overscroll-behavior: none; /* রিফ্রেশ বন্ধ করার সিএসএস */
+      overscroll-behavior: none;
     }
     
-    .app-container { width: 100%; max-width: 500px; background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.15); margin-bottom: 20px;}
+    .app-container { width: 100%; max-width: 500px; background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.15); margin-bottom: 20px;}
     
-    .logo-container { text-align: center; margin-bottom: 10px; }
-    .logo-container svg { width: 70px; height: 70px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+    .logo-container { text-align: center; margin-bottom: 5px; }
+    .logo-container svg { width: 60px; height: 60px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
     
-    h2 { text-align: center; color: var(--success-hover); margin-top: 0; margin-bottom: 20px; font-size: 22px; font-weight: 700; }
+    h2 { text-align: center; color: var(--success-hover); margin-top: 0; margin-bottom: 15px; font-size: 20px; font-weight: 700; }
+    
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px; }
+    .tab-btn { flex: 1; padding: 12px; font-size: 15px; font-weight: 700; color: var(--text-muted); background: transparent; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+    .tab-btn.active { background: #ffffff; color: var(--success-hover); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .tab-content { display: none; animation: fadeIn 0.3s ease; }
+    .tab-content.active { display: block; }
+    
     .setting-box { background: #f8fafc; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; border: 1px solid var(--border-color); }
     .setting-box select { padding: 8px 12px; font-size: 15px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; }
     
@@ -59,7 +66,7 @@
     .btn-calculate { background: linear-gradient(135deg, var(--success) 0%, var(--success-hover) 100%); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
     .btn-clear-input { background-color: #f1f5f9; color: var(--text-muted); }
     
-    .recent-result { background: #ecfdf5; border: 2px dashed #34d399; padding: 15px; margin-bottom: 20px; border-radius: 12px; font-size: 16px; color: #065f46; text-align: center; font-weight: 700; display: none; animation: fadeIn 0.4s ease; }
+    .recent-result, .rate-result-box { background: #ecfdf5; border: 2px dashed #34d399; padding: 15px; margin-bottom: 20px; border-radius: 12px; font-size: 16px; color: #065f46; text-align: center; font-weight: 700; display: none; animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
     .report-section { border-top: 2px dashed var(--border-color); padding-top: 20px; margin-top: 10px; }
@@ -84,7 +91,7 @@
     #toast.show { visibility: visible; opacity: 1; bottom: 30px; }
     
     @media print {
-      .setting-box, .grid-3, .rate-group, .btn-row, .report-actions, .btn-reset-report, #toast, .recent-result, .app-footer { display: none !important; }
+      .tabs, .setting-box, .grid-3, .rate-group, .btn-row, .report-actions, .btn-reset-report, #toast, .recent-result, .app-footer, #tab-rate { display: none !important; }
       .app-container { box-shadow: none; padding: 0; }
     }
   </style>
@@ -126,62 +133,112 @@
     </svg>
   </div>
   
-  <h2>সুপারি হিসাব</h2>
+  <h2>সুপারি হিসাব ক্যালকুলেটর</h2>
 
-  <div class="setting-box">
-    <span>হিসাবের নিয়ম:</span>
-    <select id="ghaPerKuri" onchange="saveData()">
-      <option value="21" selected>২১ ঘা = ১ কুড়ি</option>
-      <option value="20">২০ ঘা = ১ কুড়ি</option>
-    </select>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-main')">মূল হিসাব</button>
+    <button class="tab-btn" onclick="switchTab('tab-rate')">দর যাচাই</button>
   </div>
 
-  <div class="grid-3">
-    <div class="input-group">
-      <label>কুড়ি</label>
-      <input type="text" id="kuri" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+  <!-- Tab 1: মূল হিসাব -->
+  <div id="tab-main" class="tab-content active">
+    <div class="setting-box">
+      <span>হিসাবের নিয়ম:</span>
+      <select id="ghaPerKuri" onchange="saveData()">
+        <option value="21" selected>২১ ঘা = ১ কুড়ি</option>
+        <option value="20">২০ ঘা = ১ কুড়ি</option>
+      </select>
     </div>
-    <div class="input-group">
-      <label>ঘা</label>
-      <input type="text" id="gha" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+
+    <div class="grid-3">
+      <div class="input-group">
+        <label>কুড়ি</label>
+        <input type="text" id="kuri" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+      </div>
+      <div class="input-group">
+        <label>ঘা</label>
+        <input type="text" id="gha" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+      </div>
+      <div class="input-group">
+        <label>টি (পিস)</label>
+        <input type="text" id="ti" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+      </div>
     </div>
-    <div class="input-group">
-      <label>টি (পিস)</label>
-      <input type="text" id="ti" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+
+    <div class="input-group rate-group">
+      <label>প্রতি কুড়ির দাম (৳)</label>
+      <input type="text" id="rate" placeholder="০" inputmode="decimal" oninput="convertToBengali(event)">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-clear-input" onclick="clearInputFields()">ক্লিয়ার</button>
+      <button class="btn-calculate" onclick="calculateAndAdd()">হিসাব করুন</button>
+    </div>
+
+    <div id="recentResult" class="recent-result"></div>
+
+    <div class="report-section">
+      <div class="report-title">হিসাব রিপোর্ট</div>
+      
+      <div id="reportContainer">
+        <div style="color: var(--text-muted); text-align: center; padding: 20px; font-size: 15px;">এখনো কোনো হিসাব যোগ করা হয়নি।</div>
+      </div>
+
+      <div class="summary-card" id="summaryCard" style="display: none;">
+        <div><span>সর্বমোট সুপারি:</span> <strong id="totalQuantityText">০ কুড়ি</strong></div>
+        <div><span>মোট কুড়ি:</span> <strong id="totalKuriDecimal">০.০০</strong></div>
+        <div style="font-size: 19px;"><span>সর্বমোট দাম:</span> <strong style="color: #047857;">৳ <span id="totalAmount">০</span></strong></div>
+      </div>
+
+      <div class="report-actions" id="reportActions" style="display: none;">
+        <button class="btn-action" onclick="copyReport()">📋 কপি</button>
+        <button class="btn-action" onclick="window.print()">🖨️ প্রিন্ট</button>
+      </div>
+
+      <button id="btnClearReport" class="btn-reset-report" onclick="resetReport()" style="display: none;">🗑️ সম্পূর্ণ রিপোর্ট মুছুন</button>
     </div>
   </div>
 
-  <div class="input-group rate-group">
-    <label>প্রতি কুড়ির দাম (৳)</label>
-    <input type="text" id="rate" placeholder="০" inputmode="decimal" oninput="convertToBengali(event)">
-  </div>
+  <!-- Tab 2: দর যাচাই (Default 20 Gha) -->
+  <div id="tab-rate" class="tab-content">
+    <div class="setting-box">
+      <span>হিসাবের নিয়ম:</span>
+      <select id="ghaPerKuriRate">
+        <option value="21">২১ ঘা = ১ কুড়ি</option>
+        <option value="20" selected>২০ ঘা = ১ কুড়ি</option> <!-- এখানে ২০ ডিফল্ট রাখা হয়েছে -->
+      </select>
+    </div>
 
-  <div class="btn-row">
-    <button class="btn-clear-input" onclick="clearInputFields()">ক্লিয়ার</button>
-    <button class="btn-calculate" onclick="calculateAndAdd()">হিসাব করুন</button>
-  </div>
-
-  <div id="recentResult" class="recent-result"></div>
-
-  <div class="report-section">
-    <div class="report-title">হিসাব রিপোর্ট</div>
+    <div style="text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">
+      ক্রেতা নির্দিষ্ট পরিমাণের যে দাম বলেছে তা লিখুন। এক কুড়ির দাম বের হয়ে যাবে।
+    </div>
     
-    <div id="reportContainer">
-      <div style="color: var(--text-muted); text-align: center; padding: 20px; font-size: 15px;">এখনো কোনো হিসাব যোগ করা হয়নি।</div>
+    <div class="grid-3">
+      <div class="input-group">
+        <label>কুড়ি</label>
+        <input type="text" id="find_kuri" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+      </div>
+      <div class="input-group">
+        <label>ঘা</label>
+        <input type="text" id="find_gha" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+      </div>
+      <div class="input-group">
+        <label>টি (পিস)</label>
+        <input type="text" id="find_ti" placeholder="০" inputmode="numeric" oninput="convertToBengali(event)">
+      </div>
     </div>
 
-    <div class="summary-card" id="summaryCard" style="display: none;">
-      <div><span>সর্বমোট সুপারি:</span> <strong id="totalQuantityText">০ কুড়ি</strong></div>
-      <div><span>মোট কুড়ি:</span> <strong id="totalKuriDecimal">০.০০</strong></div>
-      <div style="font-size: 19px;"><span>সর্বমোট দাম:</span> <strong style="color: #047857;">৳ <span id="totalAmount">০</span></strong></div>
+    <div class="input-group rate-group">
+      <label>উক্ত পরিমাণের দাম (৳)</label>
+      <input type="text" id="find_price" placeholder="০" inputmode="decimal" oninput="convertToBengali(event)">
     </div>
 
-    <div class="report-actions" id="reportActions" style="display: none;">
-      <button class="btn-action" onclick="copyReport()">📋 কপি</button>
-      <button class="btn-action" onclick="window.print()">🖨️ প্রিন্ট</button>
+    <div class="btn-row">
+      <button class="btn-clear-input" onclick="clearFindRateInputs()">ক্লিয়ার</button>
+      <button class="btn-calculate" onclick="calculateKuriRate()">দর যাচাই করুন</button>
     </div>
 
-    <button id="btnClearReport" class="btn-reset-report" onclick="resetReport()" style="display: none;">🗑️ সম্পূর্ণ রিপোর্ট মুছুন</button>
+    <div id="rateResultBox" class="rate-result-box"></div>
   </div>
 
   <div class="app-footer">
@@ -192,7 +249,14 @@
 <div id="toast"></div>
 
 <script>
-  // রিফ্রেশ বন্ধ করার জাভাস্ক্রিপ্ট (Pull-to-refresh block)
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
   let touchStartY = 0;
   document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive: false});
   document.addEventListener('touchmove', e => {
@@ -209,20 +273,16 @@
   const engDigits = {'0':'০', '1':'১', '2':'২', '3':'৩', '4':'৪', '5':'৫', '6':'৬', '7':'৭', '8':'৮', '9':'৯'};
   const bnDigits = {'০':'0', '১':'1', '২':'2', '৩':'3', '৪':'4', '৫':'5', '৬':'6', '৭':'7', '৮':'8', '৯':'9'};
 
-  // অটো-সেভ লোড (অটোমেটিক আগের ডাটা ফিরিয়ে আনা)
   window.onload = function() {
     const savedData = localStorage.getItem('supariData');
     const savedRule = localStorage.getItem('ghaPerKuri');
-    if(savedRule) {
-      document.getElementById('ghaPerKuri').value = savedRule;
-    }
+    if(savedRule) { document.getElementById('ghaPerKuri').value = savedRule; }
     if(savedData) {
       reportData = JSON.parse(savedData);
       renderReport(parseInt(document.getElementById('ghaPerKuri').value));
     }
   };
 
-  // ডাটা সেভ করার ফাংশন
   function saveData() {
     localStorage.setItem('supariData', JSON.stringify(reportData));
     localStorage.setItem('ghaPerKuri', document.getElementById('ghaPerKuri').value);
@@ -255,7 +315,6 @@
     document.getElementById('gha').value = '';
     document.getElementById('ti').value = '';
     document.getElementById('rate').value = '';
-    document.getElementById('kuri').focus();
   }
 
   function calculateAndAdd() {
@@ -285,8 +344,6 @@
 
     const record = { qtyString, rate, totalPrice, totalTi, totalKuri };
     reportData.push(record);
-
-    // অটো সেভ করা হচ্ছে
     saveData();
 
     const recentBox = document.getElementById('recentResult');
@@ -346,7 +403,7 @@
   function resetReport() {
     if (confirm("আপনি কি নিশ্চিত যে সম্পূর্ণ রিপোর্ট মুছে ফেলতে চান?")) {
       reportData = [];
-      saveData(); // ডাটাবেস থেকেও ডিলিট হবে
+      saveData();
       document.getElementById('recentResult').style.display = 'none';
       renderReport(parseInt(document.getElementById('ghaPerKuri').value));
       showToast("🗑️ রিপোর্ট মুছে ফেলা হয়েছে");
@@ -372,6 +429,45 @@
     try { document.execCommand('copy') ? showToast("📋 রিপোর্ট কপি করা হয়েছে!") : showToast("⚠️ সমস্যা হয়েছে!"); } 
     catch (err) { showToast("⚠️ সমস্যা হয়েছে!"); }
     document.body.removeChild(textArea);
+  }
+
+  function clearFindRateInputs() {
+    document.getElementById('find_kuri').value = '';
+    document.getElementById('find_gha').value = '';
+    document.getElementById('find_ti').value = '';
+    document.getElementById('find_price').value = '';
+    document.getElementById('rateResultBox').style.display = 'none';
+  }
+
+  function calculateKuriRate() {
+    const ghaPerKuri = parseInt(document.getElementById('ghaPerKuriRate').value); // দর যাচাইয়ের নিজস্ব ড্রপডাউন
+    
+    const kuri = parseBnNum(document.getElementById('find_kuri').value);
+    const gha = parseBnNum(document.getElementById('find_gha').value);
+    const ti = parseBnNum(document.getElementById('find_ti').value);
+    const price = parseBnNum(document.getElementById('find_price').value);
+
+    const totalTi = (kuri * ghaPerKuri * tiPerGha) + (gha * tiPerGha) + ti;
+
+    if (totalTi <= 0 || price <= 0) {
+      showToast("⚠️ দয়া করে সঠিক পরিমাণ এবং দাম দিন");
+      return;
+    }
+
+    const pricePerTi = price / totalTi;
+    const pricePerGha = pricePerTi * tiPerGha;
+    const pricePerKuri = pricePerTi * (ghaPerKuri * tiPerGha);
+
+    const resultBox = document.getElementById('rateResultBox');
+    resultBox.style.display = 'block';
+    
+    resultBox.innerHTML = `
+      <div style="font-size: 15px; color: var(--text-muted); margin-bottom: 5px;">বর্তমান দর অনুযায়ী:</div>
+      <div style="margin-bottom: 10px;">১ কুড়ির দাম: <strong style="font-size: 22px; color: var(--danger);">${toBengaliDigits(Math.round(pricePerKuri))} ৳</strong></div>
+      <div style="font-size: 15px; border-top: 1px dashed #34d399; padding-top: 8px;">১ ঘার দাম: <strong>${toBengaliDigits(pricePerGha.toFixed(2))} ৳</strong></div>
+    `;
+    
+    showToast("✅ দর বের করা হয়েছে");
   }
 </script>
 </body>
