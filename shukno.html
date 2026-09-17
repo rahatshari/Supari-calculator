@@ -45,12 +45,26 @@
             box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
             position: relative; z-index: 10;
         }
+        
+        .back-btn-small {
+            background: rgba(255, 255, 255, 0.2); 
+            color: white; 
+            text-decoration: none; 
+            padding: 5px 10px; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            display: inline-block;
+            transition: 0.2s;
+        }
+        .back-btn-small:hover { background: rgba(255, 255, 255, 0.3); }
+
         .menu-btn {
             background: none; border: none; color: white;
             font-size: 24px; cursor: pointer; padding: 0; line-height: 1;
         }
         .header-title { font-size: 18px; font-weight: 700; }
-        .header-spacer { width: 24px; } 
 
         /* --- Sidebar Menu --- */
         .side-menu {
@@ -144,7 +158,7 @@
         input:checked + .slider:before { transform: translateX(20px); }
 
         /* --- Settings Grid --- */
-        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 20px 0 20px; }
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 15px 20px 0 20px; }
         .grid-box { background: #F9FAFB; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px; }
         .grid-box label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 700; }
         
@@ -295,13 +309,12 @@
         .btn-cancel-modal { background: #E5E7EB; color: #374151; }
         .btn-confirm-modal { background: var(--danger); color: white; }
 
-
         /* Print CSS */
         @media print {
             @page { margin: 10mm; } 
             body { background: white !important; padding: 0 !important; margin: 0 !important; }
             .app-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
-            .app-header, .side-menu, .overlay, .settings-grid, .main-bag-section, .tabs, .input-label, .input-group, .current-result, .badge-note, .export-btns, #tab2, #toastBox, .confirm-modal-overlay, .back-btn-wrapper { display: none !important; }
+            .app-header, .side-menu, .overlay, .settings-grid, .main-bag-section, .tabs, .input-label, .input-group, .current-result, .badge-note, .export-btns, #tab2, #toastBox, .confirm-modal-overlay { display: none !important; }
             #tab1 { display: block !important; padding: 0 !important; margin: 0 !important; }
             #exportArea { display: block !important; width: 100% !important; border: none !important; padding: 0 !important; margin: 0 !important; }
             table { width: 100% !important; border-collapse: collapse !important; }
@@ -330,16 +343,11 @@
     </div>
 
     <div class="app-container">
-        <!-- Header -->
+        <!-- Header (Updated Layout) -->
         <div class="app-header">
-            <button class="menu-btn" onclick="openMenu()">⋮</button>
+            <a href="index.html" class="back-btn-small">⬅ ফিরে যান</a>
             <div class="header-title">সুপারি হিসাব</div>
-            <div class="header-spacer"></div>
-        </div>
-
-        <!-- Back Button (Added Here) -->
-        <div class="back-btn-wrapper" style="padding: 20px 20px 0 20px;">
-            <a href="index.html" style="display: inline-block; margin-bottom: 15px; padding: 8px 15px; background: #f1f5f9; color: #0f172a; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; border: 1px solid #cbd5e1;">⬅ মেনুতে ফিরে যান</a>
+            <button class="menu-btn" onclick="openMenu()">⋮</button>
         </div>
 
         <!-- Sidebar / Settings & History Menu -->
@@ -462,6 +470,11 @@
                         <span>সর্বমোট দাম:</span> <span style="font-weight:bold;">৳ <span id="totalPriceText">০</span></span>
                     </div>
                 </div>
+
+                <!-- Print & JPG Credit Footer -->
+                <div style="text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #E5E7EB; font-size: 13px; color: #4B5563;">
+                    Created by <a href="https://www.facebook.com/rahatsharif504" target="_blank" style="color: #10B981; font-weight: 700; text-decoration: none;">Rahat Sharif</a>
+                </div>
             </div>
 
             <!-- Export Buttons -->
@@ -494,6 +507,11 @@
                 <p>সুপারির নিট ওজন: <span id="dWeight" style="font-weight: bold; color: var(--text-dark);">০ কেজি</span></p>
                 <p style="color: #059669;">পরিমাণ: <span id="dSupari" style="font-weight: bold;"></span></p>
                 <p style="color: #059669; font-size: 18px; margin-top: 10px;">মোট দাম: <span style="font-weight: bold;">৳ <span id="dPrice"></span></span></p>
+            </div>
+
+            <!-- Tab 2 UI Credit Footer -->
+            <div style="text-align: center; margin-top: 25px; padding-bottom: 10px; font-size: 13px; color: #4B5563;">
+                Created by <a href="https://www.facebook.com/rahatsharif504" target="_blank" style="color: #10B981; font-weight: 700; text-decoration: none;">Rahat Sharif</a>
             </div>
         </div>
 
