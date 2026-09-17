@@ -24,18 +24,29 @@
             font-family: 'Noto Sans Bengali', sans-serif;
         }
 
-        body {
-            background-color: var(--bg-color);
+        /* --- 100% কার্যকরী Pull-to-Refresh বন্ধ করার টেকনিক --- */
+        html, body {
             margin: 0; padding: 0;
+            height: 100%;
+            height: 100dvh; 
+            overflow: hidden; 
+            overscroll-behavior: none; 
+            background-color: var(--bg-color);
+        }
+
+        body {
             display: flex; justify-content: center; align-items: flex-start;
-            min-height: 100vh;
         }
 
         .app-container {
             background: var(--card-bg);
             width: 100%; max-width: 500px;
+            height: 100%; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; 
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            overflow: hidden; position: relative;
+            position: relative;
         }
 
         /* --- Header & 3-Dot Menu --- */
@@ -66,14 +77,15 @@
         }
         .header-title { font-size: 18px; font-weight: 700; }
 
-        /* --- Sidebar Menu --- */
+        /* --- Sidebar Menu (ডান দিক থেকে ওপেন হওয়ার জন্য আপডেট করা হয়েছে) --- */
         .side-menu {
-            position: fixed; top: 0; left: -320px; width: 320px; height: 100%;
-            background: white; box-shadow: 2px 0 15px rgba(0,0,0,0.2);
-            z-index: 1000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed; top: 0; right: -320px; left: auto; width: 320px; height: 100%;
+            background: white; box-shadow: -2px 0 15px rgba(0,0,0,0.2);
+            z-index: 1000; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex; flex-direction: column;
         }
-        .side-menu.open { left: 0; }
+        .side-menu.open { right: 0; }
+        
         .menu-header {
             background: var(--primary); color: white; padding: 20px;
             display: flex; justify-content: space-between; align-items: center;
@@ -312,8 +324,8 @@
         /* Print CSS */
         @media print {
             @page { margin: 10mm; } 
-            body { background: white !important; padding: 0 !important; margin: 0 !important; }
-            .app-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
+            body { background: white !important; padding: 0 !important; margin: 0 !important; overflow: auto !important; height: auto !important; }
+            .app-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; overflow: visible !important; height: auto !important; }
             .app-header, .side-menu, .overlay, .settings-grid, .main-bag-section, .tabs, .input-label, .input-group, .current-result, .badge-note, .export-btns, #tab2, #toastBox, .confirm-modal-overlay { display: none !important; }
             #tab1 { display: block !important; padding: 0 !important; margin: 0 !important; }
             #exportArea { display: block !important; width: 100% !important; border: none !important; padding: 0 !important; margin: 0 !important; }
@@ -343,14 +355,14 @@
     </div>
 
     <div class="app-container">
-        <!-- Header (Updated Layout) -->
+        <!-- Header -->
         <div class="app-header">
             <a href="index.html" class="back-btn-small">⬅ ফিরে যান</a>
             <div class="header-title">সুপারি হিসাব</div>
             <button class="menu-btn" onclick="openMenu()">⋮</button>
         </div>
 
-        <!-- Sidebar / Settings & History Menu -->
+        <!-- Sidebar / Settings & History Menu (Now slides from RIGHT) -->
         <div class="overlay" id="menuOverlay" onclick="closeMenu()"></div>
         <div class="side-menu" id="sideMenu">
             <div class="menu-header">
