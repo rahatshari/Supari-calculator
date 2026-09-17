@@ -1,7 +1,7 @@
 {
-  "name": "সুপারি হিসাব ক্যালকুলেটর",
+  "name": "সুপারি হিসাব অ্যাপ",
   "short_name": "সুপারি হিসাব",
-  "description": "সুপারি ক্রয়-বিক্রয়ের সহজ হিসাব",
+  "description": "কাঁচা-পাকা ও শুকনো সুপারির হিসাব",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f0fdfa",
