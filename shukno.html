@@ -24,13 +24,11 @@
             font-family: 'Noto Sans Bengali', sans-serif;
         }
 
-        /* --- 100% কার্যকরী Pull-to-Refresh বন্ধ করার টেকনিক --- */
+        /* --- কার্যকরী Pull-to-Refresh বন্ধ এবং ন্যাচারাল স্ক্রল --- */
         html, body {
             margin: 0; padding: 0;
-            height: 100%;
-            height: 100dvh; 
-            overflow: hidden; 
-            overscroll-behavior: none; 
+            min-height: 100%;
+            overscroll-behavior-y: none; /* শুধু এটি দিলেই Pull-to-refresh বন্ধ হবে */
             background-color: var(--bg-color);
         }
 
@@ -41,10 +39,7 @@
         .app-container {
             background: var(--card-bg);
             width: 100%; max-width: 500px;
-            height: 100%; 
-            overflow-y: auto; 
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch; 
+            min-height: 100vh; /* ফিক্সড হাইটের বদলে min-height ব্যবহার করা হয়েছে */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             position: relative;
         }
@@ -417,7 +412,8 @@
             </div>
             <div class="grid-box">
                 <label>হাজারের দাম (৳)</label>
-                <input type="text" inputmode="numeric" id="pricePerHajar" value="২০০০০" oninput="forceBengaliDigits(event); updateReport(); calculateDirect();">
+                <!-- oninput থেকে updateReport এবং calculateDirect বাদ দিয়ে onchange এ যোগ করা হয়েছে -->
+                <input type="text" inputmode="numeric" id="pricePerHajar" value="২০০০০" oninput="forceBengaliDigits(event)" onchange="updateReport(); calculateDirect();">
             </div>
         </div>
 
@@ -425,8 +421,9 @@
         <div class="main-bag-section" id="quickBagSection">
             <label style="font-size: 14px; font-weight: 700; color: #065F46; margin-bottom: 8px; display: block;">সব বস্তার মোট ওজন (বাদ দিতে)</label>
             <div class="weight-inputs">
-                <input type="text" inputmode="numeric" id="quickBagKg" placeholder="কেজি" oninput="forceBengaliDigits(event); updateReport(); calculateDirect();">
-                <input type="text" inputmode="numeric" id="quickBagGm" placeholder="গ্রাম" oninput="forceBengaliDigits(event); updateReport(); calculateDirect();">
+                <!-- oninput থেকে updateReport এবং calculateDirect বাদ দিয়ে onchange এ যোগ করা হয়েছে -->
+                <input type="text" inputmode="numeric" id="quickBagKg" placeholder="কেজি" oninput="forceBengaliDigits(event)" onchange="updateReport(); calculateDirect();">
+                <input type="text" inputmode="numeric" id="quickBagGm" placeholder="গ্রাম" oninput="forceBengaliDigits(event)" onchange="updateReport(); calculateDirect();">
             </div>
         </div>
 
