@@ -210,7 +210,7 @@
             table th, table td { border: 1px solid #d1d5db !important; padding: 8px !important; }
             table th { background-color: #f3f4f6 !important; color: #000 !important;}
             .report-summary { border: 1px solid #d1d5db !important; background-color: #f9fafb !important; }
-            .no-print { display: none !important; } /* প্রিন্টে এডিট/ডিলিট বাটন হাইড করার জন্য */
+            .no-print { display: none !important; } 
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
@@ -242,15 +242,27 @@
         <div class="side-menu" id="sideMenu">
             <div class="menu-header">মেনু<button class="close-btn" onclick="closeMenu()">✕</button></div>
             <div class="menu-scroll-area">
+                
+                <!-- সেটিংস কার্ড: দুটি আলাদা সুইচ -->
                 <div class="setting-card">
+                    <div style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 12px; text-align: center; border-bottom: 1px dashed #E5E7EB; padding-bottom: 8px;">বস্তার ওজন বাদ দিন</div>
+                    
                     <div class="setting-item">
-                        <span>বস্তার ওজন বাদ দিন</span>
+                        <span style="font-size: 13px;">১. বস্তা হিসাব থেকে</span>
                         <label class="switch">
-                            <input type="checkbox" id="sidebarMainToggle" onchange="toggleMainPageBagSection()">
+                            <input type="checkbox" id="tab1DeductToggle" onchange="toggleBagSections()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item" style="margin-top: 12px;">
+                        <span style="font-size: 13px;">২. মোট ওজন হিসাব থেকে</span>
+                        <label class="switch">
+                            <input type="checkbox" id="tab2DeductToggle" onchange="toggleBagSections()">
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
+
                 <div class="history-section-title">
                     <span>পূর্বের হিসাব</span>
                     <span style="font-size:12px; color:var(--text-muted); font-weight:normal;" id="historyCountText">০টি</span>
@@ -324,7 +336,6 @@
                             <th>ওজন</th>
                             <th>সুপারি পরিমাণ</th>
                             <th>দাম (৳)</th>
-                            <!-- অ্যাকশন কলাম যোগ করা হয়েছে (প্রিন্টে হাইড থাকবে) -->
                             <th class="no-print" style="width: 50px;">অ্যাকশন</th> 
                         </tr>
                     </thead>
@@ -351,7 +362,6 @@
                 <button class="btn-jpg" onclick="downloadJPG()">JPG সেভ</button>
                 <button class="btn-print" onclick="printReport()">প্রিন্ট করুন</button>
                 <button class="btn-save" onclick="saveReport()">সেভ করুন</button>
-                <!-- ক্লিয়ার রিপোর্ট বাটন যোগ করা হয়েছে -->
                 <button class="btn-reset-report" onclick="clearReport()">রিসেট করুন (ক্লিয়ার)</button>
             </div>
         </div>
@@ -370,7 +380,6 @@
                 </div>
             </div>
 
-            <!-- ডিরেক্ট হিসাব এবং ক্লিয়ার বাটন একসাথে দেওয়া হয়েছে -->
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <button class="btn-add" onclick="calculateDirect()" style="flex: 2; padding: 12px;">হিসাব করুন</button>
                 <button class="btn-delete" onclick="clearDirectCalc()" style="flex: 1; padding: 12px; background: #FEF2F2; color: var(--danger); border: 1px solid #FECACA; border-radius: 8px; font-weight: 700; cursor: pointer;">ক্লিয়ার</button>
@@ -392,7 +401,7 @@
         let bags = []; 
         let currentBaseWeight = 82;
         const HISTORY_KEY = 'supari_app_history';
-        const AUTO_SAVE_KEY = 'supari_current_state'; // অটো সেভের জন্য নতুন কী (Key)
+        const AUTO_SAVE_KEY = 'supari_current_state';
 
         // =========================================
         // --- PAGE LOAD (অটো সেভ রিস্টোর) ---
@@ -412,18 +421,22 @@
                         });
                     }
                     if(state.price) document.getElementById('pricePerHajar').value = state.price;
-                    if(state.deductOn !== undefined) {
-                        document.getElementById('sidebarMainToggle').checked = state.deductOn;
-                        document.getElementById('quickBagSection').style.display = state.deductOn ? 'block' : 'none';
-                        document.getElementById('bagDeductBadge1').style.display = state.deductOn ? 'inline-block' : 'none';
-                        document.getElementById('bagDeductBadge2').style.display = state.deductOn ? 'inline-block' : 'none';
+                    
+                    if(state.deductOnTab1 !== undefined) {
+                        document.getElementById('tab1DeductToggle').checked = state.deductOnTab1;
+                    } else if (state.deductOn !== undefined) {
+                        document.getElementById('tab1DeductToggle').checked = state.deductOn;
                     }
+                    
+                    if(state.deductOnTab2 !== undefined) {
+                        document.getElementById('tab2DeductToggle').checked = state.deductOnTab2;
+                    }
+
                     if(state.emptyKg) document.getElementById('quickBagKg').value = state.emptyKg;
                     if(state.emptyGm) document.getElementById('quickBagGm').value = state.emptyGm;
                 } catch(e) {}
             }
-            updateReport();
-            updateBagBadgeText();
+            toggleBagSections();
         };
 
         // --- অটো সেভ ফাংশন ---
@@ -432,7 +445,8 @@
                 bags: [...bags],
                 baseWeight: currentBaseWeight,
                 price: document.getElementById('pricePerHajar').value,
-                deductOn: document.getElementById('sidebarMainToggle').checked,
+                deductOnTab1: document.getElementById('tab1DeductToggle').checked,
+                deductOnTab2: document.getElementById('tab2DeductToggle').checked,
                 emptyKg: document.getElementById('quickBagKg').value,
                 emptyGm: document.getElementById('quickBagGm').value,
             };
@@ -465,11 +479,14 @@
         function openMenu() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('menuOverlay').classList.add('show'); loadHistoryList(); }
         function closeMenu() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('menuOverlay').classList.remove('show'); }
 
-        function toggleMainPageBagSection() {
-            const isChecked = document.getElementById('sidebarMainToggle').checked;
-            document.getElementById('quickBagSection').style.display = isChecked ? 'block' : 'none';
-            document.getElementById('bagDeductBadge1').style.display = isChecked ? 'inline-block' : 'none';
-            document.getElementById('bagDeductBadge2').style.display = isChecked ? 'inline-block' : 'none';
+        function toggleBagSections() {
+            const isTab1Checked = document.getElementById('tab1DeductToggle').checked;
+            const isTab2Checked = document.getElementById('tab2DeductToggle').checked;
+            
+            document.getElementById('quickBagSection').style.display = (isTab1Checked || isTab2Checked) ? 'block' : 'none';
+            document.getElementById('bagDeductBadge1').style.display = isTab1Checked ? 'inline-block' : 'none';
+            document.getElementById('bagDeductBadge2').style.display = isTab2Checked ? 'inline-block' : 'none';
+            
             updateBagBadgeText(); updateReport(); calculateDirect();
         }
 
@@ -484,7 +501,9 @@
 
             const reportData = {
                 id: Date.now(), date: formattedDate, bags: [...bags], baseWeight: currentBaseWeight,
-                price: document.getElementById('pricePerHajar').value, deductOn: document.getElementById('sidebarMainToggle').checked,
+                price: document.getElementById('pricePerHajar').value, 
+                deductOnTab1: document.getElementById('tab1DeductToggle').checked,
+                deductOnTab2: document.getElementById('tab2DeductToggle').checked,
                 emptyKg: document.getElementById('quickBagKg').value, emptyGm: document.getElementById('quickBagGm').value,
                 totalPrice: document.getElementById('totalPriceText').innerText 
             };
@@ -530,11 +549,21 @@
                 document.querySelectorAll('.rule-option').forEach(el => {
                     el.classList.remove('selected'); if(el.innerText.includes(toBnNum(currentBaseWeight))) el.classList.add('selected');
                 });
-                document.getElementById('sidebarMainToggle').checked = item.deductOn;
+                
+                if(item.deductOnTab1 !== undefined) {
+                    document.getElementById('tab1DeductToggle').checked = item.deductOnTab1;
+                } else if (item.deductOn !== undefined) {
+                    document.getElementById('tab1DeductToggle').checked = item.deductOn;
+                }
+                
+                if(item.deductOnTab2 !== undefined) {
+                    document.getElementById('tab2DeductToggle').checked = item.deductOnTab2;
+                }
+
                 document.getElementById('quickBagKg').value = item.emptyKg || '';
                 document.getElementById('quickBagGm').value = item.emptyGm || '';
-                toggleMainPageBagSection(); closeMenu(); updateReport();
-                showToast('পুরনো হিসাব লোড হয়েছে।', 'success');
+                
+                toggleBagSections(); closeMenu(); showToast('পুরনো হিসাব লোড হয়েছে।', 'success');
             }
         }
         function deleteHistoryReport(id) {
@@ -570,8 +599,15 @@
             const text = getEmptyBagWeightText();
             document.getElementById('badgeWeightText1').innerText = text; document.getElementById('badgeWeightText2').innerText = text;
         }
-        function getTotalEmptyBagWeightKg() {
-            if (!document.getElementById('sidebarMainToggle').checked) return 0;
+        
+        function getTotalEmptyBagWeightKgTab1() {
+            if (!document.getElementById('tab1DeductToggle').checked) return 0;
+            const kg = parseFloat(toEngNum(document.getElementById('quickBagKg').value)) || 0;
+            const gm = parseFloat(toEngNum(document.getElementById('quickBagGm').value)) || 0;
+            return kg + (gm / 1000);
+        }
+        function getTotalEmptyBagWeightKgTab2() {
+            if (!document.getElementById('tab2DeductToggle').checked) return 0;
             const kg = parseFloat(toEngNum(document.getElementById('quickBagKg').value)) || 0;
             const gm = parseFloat(toEngNum(document.getElementById('quickBagGm').value)) || 0;
             return kg + (gm / 1000);
@@ -633,14 +669,12 @@
             updateSubtitle(); updateReport(); 
         }
 
-        // বস্তা ডিলিট করার ফাংশন
         function deleteBag(index) {
             bags.splice(index, 1);
             updateReport();
             showToast('বস্তা ডিলিট করা হয়েছে', 'success');
         }
 
-        // বস্তা এডিট করার ফাংশন
         function editBag(index) {
             const grossWeight = bags[index];
             const totalGm = Math.round(grossWeight * 1000);
@@ -650,13 +684,12 @@
             document.getElementById('bagKgInput').value = kg > 0 ? toBnNum(kg) : '';
             document.getElementById('bagGmInput').value = gm > 0 ? toBnNum(gm) : '';
             
-            bags.splice(index, 1); // বস্তাটি লিস্ট থেকে সরিয়ে ইনপুট বক্সে নেওয়া হলো
+            bags.splice(index, 1);
             updateReport();
             document.getElementById('bagKgInput').focus();
             showToast('এডিট করার জন্য ওজন বক্সে নেওয়া হয়েছে', 'info');
         }
 
-        // পুরো রিপোর্ট ক্লিয়ার করার ফাংশন
         function clearReport() {
             if(bags.length === 0) { showToast('ক্লিয়ার করার মতো কোনো ডেটা নেই!', 'info'); return; }
             showConfirmModal('হিসাব রিসেট', 'আপনি কি নিশ্চিত যে সম্পূর্ণ হিসাব মুছে ফেলতে চান?', function() {
@@ -668,7 +701,6 @@
             });
         }
 
-        // ডিরেক্ট হিসাব ক্লিয়ার করার ফাংশন
         function clearDirectCalc() {
             document.getElementById('dKgInput').value = '';
             document.getElementById('dGmInput').value = '';
@@ -677,7 +709,8 @@
 
         function updateReport() {
             const tbody = document.getElementById('tableBody'); tbody.innerHTML = '';
-            let totalGrossWeight = 0; const totalEmptyBagKg = getTotalEmptyBagWeightKg();
+            let totalGrossWeight = 0; 
+            const totalEmptyBagKg = getTotalEmptyBagWeightKgTab1(); 
 
             bags.forEach((gross, index) => {
                 totalGrossWeight += gross;
@@ -715,7 +748,7 @@
             document.getElementById('totalPriceText').innerText = finalResult.priceStr;
             updateSubtitle();
 
-            triggerAutoSave(); // যেকোনো পরিবর্তন হলেই অটো সেভ হবে
+            triggerAutoSave(); 
         }
 
         function calculateDirect() {
@@ -725,7 +758,7 @@
             if (grossWeight <= 0) return;
 
             let netWeight = grossWeight;
-            const totalEmptyBagKg = getTotalEmptyBagWeightKg();
+            const totalEmptyBagKg = getTotalEmptyBagWeightKgTab2(); 
             
             if (totalEmptyBagKg > 0) {
                 netWeight = grossWeight - totalEmptyBagKg; if(netWeight < 0) netWeight = 0;
@@ -740,21 +773,78 @@
         }
 
         // =========================================
-        // --- EXPORT FUNCTIONS ---
+        // --- EXPORT & COPY FUNCTIONS ---
         // =========================================
+        
+        // --- আপডেট করা কপি ফাংশন (ফলব্যাক সহ এবং এডিট/ডিলিট বাটন বাদে) ---
         function copyReport() {
             if(bags.length === 0) { showToast('কোনো হিসাব নেই!', 'error'); return; }
-            let text = document.getElementById('exportArea').innerText;
-            navigator.clipboard.writeText(text).then(() => { showToast('রিপোর্ট কপি হয়েছে!', 'success'); });
+            
+            // রিপোর্ট এরিয়াটিকে কপি (Clone) করা হচ্ছে
+            let exportDiv = document.getElementById('exportArea');
+            let clone = exportDiv.cloneNode(true);
+            
+            // কপি করা অংশে যত no-print (এডিট/ডিলিট বাটন) আছে তা ডিলিট করা হচ্ছে
+            let noPrintElements = clone.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.remove());
+            
+            let textToCopy = clone.innerText;
+
+            // যদি আধুনিক ক্লিপবোর্ড API কাজ করে (যেমন লাইভ সার্ভারে)
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    showToast('রিপোর্ট কপি হয়েছে!', 'success');
+                }).catch(err => {
+                    fallbackCopy(textToCopy); // কাজ না করলে ফলব্যাক চলবে
+                });
+            } else {
+                // লোকাল ফাইল বা পুরনো ব্রাউজারের জন্য ফলব্যাক
+                fallbackCopy(textToCopy);
+            }
         }
+
+        function fallbackCopy(text) {
+            let textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";  // পেজ যেন উপরে-নিচে স্ক্রল না হয়
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                let successful = document.execCommand('copy');
+                if(successful) {
+                    showToast('রিপোর্ট কপি হয়েছে!', 'success');
+                } else {
+                    showToast('কপি করা সম্ভব হয়নি!', 'error');
+                }
+            } catch (err) {
+                showToast('কপি করা সম্ভব হয়নি!', 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+        
         function downloadJPG() {
             if(bags.length === 0) { showToast('কোনো হিসাব নেই!', 'error'); return; }
             const area = document.getElementById('exportArea');
-            html2canvas(area, {scale: 2, backgroundColor: "#ffffff"}).then(canvas => {
+            html2canvas(area, {
+                scale: 2, 
+                backgroundColor: "#ffffff",
+                ignoreElements: function(element) {
+                    if (element.classList && element.classList.contains('no-print')) {
+                        return true;
+                    }
+                    return false;
+                }
+            }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = 'Supari_Memo.jpg'; link.href = canvas.toDataURL('image/jpeg', 1.0); link.click();
+                link.download = 'Supari_Memo.jpg'; 
+                link.href = canvas.toDataURL('image/jpeg', 1.0); 
+                link.click();
             });
         }
+
         function printReport() {
             if(bags.length === 0) { showToast('হিসাব করার জন্য আগে বস্তার ওজন দিন!', 'error'); return; }
             window.print();
