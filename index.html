@@ -3,100 +3,2564 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>সুপারি হিসাব অ্যাপ</title>
+  <title>সুপারি হিসাব অ্যাপ - কাঁচা-পাকা ও শুকনো সুপারি ক্যালকুলেটর</title>
+  <meta name="description" content="কাঁচা-পাকা ও শুকনো সুপারি কেনা-বেচার সহজ, দ্রুত ও নির্ভুল হিসাব ক্যালকুলেটর">
+  <meta property="og:title" content="সুপারি হিসাব অ্যাপ">
+  <meta property="og:description" content="কাঁচা-পাকা ও শুকনো সুপারি কেনা-বেচার সহজ, দ্রুত ও নির্ভুল হিসাব ক্যালকুলেটর">
+  
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#10b981">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" href="icon.svg">
+  
+  <!-- Fonts & Local Libraries for 100% Offline Capability -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="html2canvas.min.js"></script>
+
   <style>
     :root {
-      --primary: #0ea5e9;
-      --success: #10b981;
-      --success-hover: #059669;
-      --bg-color: #f0fdfa;
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --primary-light: #ecfdf5;
+      --primary-dark: #065f46;
+      --accent: #0ea5e9;
+      --accent-hover: #0284c7;
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --warning: #f59e0b;
+      --warning-light: #fffbeb;
+      --bg-color: #f1f5f9;
       --card-bg: #ffffff;
-      --text-main: #0f172a;
+      --text-dark: #0f172a;
       --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.07);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
     }
-    * { box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; }
-    body { background-color: var(--bg-color); margin: 0; padding: 20px 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; overscroll-behavior: none; }
-    
-    .app-container { width: 100%; max-width: 400px; background: var(--card-bg); padding: 35px 20px; border-radius: 20px; box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.15); text-align: center; }
-    
-    .logo-container svg { width: 80px; height: 80px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); margin-bottom: 10px; }
-    h2 { color: var(--success-hover); margin: 0 0 5px 0; font-size: 24px; font-weight: 700; }
-    p.subtitle { color: var(--text-muted); font-size: 15px; margin-bottom: 30px; }
-    
-    /* মেনু বাটন ডিজাইন */
-    .menu-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 18px; margin-bottom: 18px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 2px solid #e2e8f0; border-radius: 15px; text-decoration: none; color: var(--text-main); font-size: 18px; font-weight: 700; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .menu-btn:hover, .menu-btn:active { border-color: var(--success); background: #ecfdf5; transform: translateY(-2px); box-shadow: 0 8px 12px -2px rgba(16, 185, 129, 0.15); }
-    
-    .icon-svg { width: 32px; height: 32px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15)); }
-    
-    .footer { margin-top: 35px; font-size: 14px; color: var(--text-muted); border-top: 1px dashed #cbd5e1; padding-top: 15px;}
-    .footer a { color: var(--success-hover); text-decoration: none; font-weight: bold; transition: 0.2s;}
-    .footer a:hover { color: #047857; text-decoration: underline; }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background-color: var(--bg-color);
+      color: var(--text-dark);
+      overscroll-behavior-y: none;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .app-wrapper {
+      width: 100%;
+      max-width: 520px;
+      min-height: 100vh;
+      background: var(--card-bg);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 35px rgba(0,0,0,0.05);
+    }
+
+    @media (min-width: 540px) {
+      body {
+        padding: 20px 10px;
+      }
+      .app-wrapper {
+        min-height: auto;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 25px;
+      }
+    }
+
+    /* === Header Bar === */
+    .app-header {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: white;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .header-left, .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 70px;
+    }
+
+    .header-right {
+      justify-content: flex-end;
+    }
+
+    .header-center {
+      text-align: center;
+      flex: 1;
+    }
+
+    .header-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nav-icon-btn {
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .nav-icon-btn:hover, .nav-icon-btn:active {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(0.97);
+    }
+
+    /* === Views / Navigation === */
+    .view-panel {
+      display: none;
+      flex: 1;
+      padding: 16px;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .view-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === Home View Styling === */
+    .home-hero {
+      text-align: center;
+      padding: 24px 16px 15px;
+    }
+
+    .home-logo {
+      width: 88px;
+      height: 88px;
+      margin: 0 auto 12px;
+      filter: drop-shadow(0 6px 12px rgba(16, 185, 129, 0.25));
+      animation: gentleFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .home-title {
+      color: var(--primary-dark);
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0 0 6px;
+    }
+
+    .home-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin: 0 auto 24px;
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    .module-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      padding: 18px;
+      margin-bottom: 16px;
+      background: #ffffff;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: var(--text-dark);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-sm);
+      text-align: left;
+    }
+
+    .module-card:hover, .module-card:active {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
+    }
+
+    .module-icon-box {
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .module-card:hover .module-icon-box {
+      background: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .module-info h3 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .module-info p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .module-arrow {
+      margin-left: auto;
+      color: var(--text-muted);
+      font-size: 20px;
+      transition: transform 0.2s;
+    }
+
+    .module-card:hover .module-arrow {
+      transform: translateX(4px);
+      color: var(--primary);
+    }
+
+    /* === Segmented Tabs === */
+    .segmented-tabs {
+      display: flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: var(--radius-md);
+      margin-bottom: 16px;
+      gap: 4px;
+    }
+
+    .tab-item {
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .tab-item.active {
+      background: #ffffff;
+      color: var(--primary-hover);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* === Settings & Rule Dropdown === */
+    .settings-bar {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .settings-bar select {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      color: var(--text-dark);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .settings-bar select:focus {
+      border-color: var(--primary);
+    }
+
+    .settings-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .setting-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+
+    .setting-card label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    /* === Inputs & Grids === */
+    .grid-inputs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .input-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .input-box label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .input-box input, .std-input {
+      width: 100%;
+      height: 44px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      outline: none;
+      background: #f8fafc;
+      color: var(--text-dark);
+      transition: all 0.2s;
+    }
+
+    .input-box input:focus, .std-input:focus {
+      border-color: var(--primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+    }
+
+    .rate-box-wrapper {
+      max-width: 280px;
+      margin: 0 auto 18px;
+    }
+
+    .weight-row-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .weight-row-group .std-input {
+      flex: 1;
+    }
+
+    /* === Buttons === */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: var(--text-dark);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-danger-outline {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+
+    .action-grid {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .action-grid .btn {
+      flex: 1;
+    }
+
+    /* === Recent & Calculation Highlights === */
+    .calc-banner {
+      background: var(--primary-light);
+      border: 1.5px dashed #34d399;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      text-align: center;
+      color: var(--primary-dark);
+      font-size: 14px;
+      line-height: 1.5;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .calc-banner strong {
+      font-size: 16px;
+      color: #047857;
+    }
+
+    /* === Report & Printable Receipt Section === */
+    .receipt-section {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-top: 10px;
+      position: relative;
+    }
+
+    .receipt-header {
+      text-align: center;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .receipt-header h3 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+
+    .receipt-header p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .receipt-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+
+    .receipt-table th, .receipt-table td {
+      padding: 8px 6px;
+      text-align: center;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .receipt-table th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 12px;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .table-actions {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .icon-btn-table {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      padding: 3px;
+      border-radius: 4px;
+      transition: transform 0.15s;
+    }
+
+    .icon-btn-table:hover {
+      transform: scale(1.2);
+    }
+
+    /* === Summary Card === */
+    .summary-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 7px;
+      color: var(--text-dark);
+    }
+
+    .summary-row.highlight-sub {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .summary-row.highlight-red {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .summary-row.total-row {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed #cbd5e1;
+      font-size: 17px;
+      color: #047857;
+      font-weight: 800;
+    }
+
+    /* === Deduction Trigger & Panel (Requirement 3) === */
+    .deduction-trigger-wrapper {
+      margin-top: 12px;
+      padding-top: 8px;
+      text-align: center;
+    }
+
+    .btn-deduction-trigger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: #fffbeb;
+      border: 1.5px dashed #f59e0b;
+      color: #b45309;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    .btn-deduction-trigger:hover, .btn-deduction-trigger:active {
+      background: #fef3c7;
+      border-color: #d97706;
+    }
+
+    .btn-deduction-trigger.active {
+      background: #fef3c7;
+      border-style: solid;
+    }
+
+    .deduction-panel {
+      display: none;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 10px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .deduction-panel.open {
+      display: block;
+    }
+
+    .deduction-panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-badge-clear {
+      background: #fecaca;
+      border: none;
+      color: #b91c1c;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    /* === Export Buttons Grid === */
+    .export-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .export-grid .btn {
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    .btn-copy { background: #475569; color: white; }
+    .btn-jpg { background: #f59e0b; color: white; }
+    .btn-print { background: #0284c7; color: white; }
+    .btn-save { background: #10b981; color: white; }
+    .btn-clear-all {
+      grid-column: span 2;
+      background: #fff1f2;
+      color: var(--danger);
+      border: 1px solid #fecdd3;
+    }
+
+    /* === Sidebar & Overlays === */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+      z-index: 998;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 310px;
+      max-width: 85vw;
+      height: 100vh;
+      background: #ffffff;
+      box-shadow: -5px 0 25px rgba(0,0,0,0.15);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .drawer.open {
+      right: 0;
+    }
+
+    .drawer-header {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .drawer-close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      background: #f8fafc;
+    }
+
+    .history-type-tabs {
+      display: flex;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      gap: 3px;
+    }
+
+    .history-type-btn {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .history-type-btn.active {
+      background: white;
+      color: var(--primary-dark);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .history-item-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .history-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    .history-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin: 0;
+    }
+
+    .history-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .history-summary {
+      font-size: 13px;
+      font-weight: 700;
+      color: #047857;
+      margin-bottom: 8px;
+    }
+
+    .history-card-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .history-card-actions button {
+      flex: 1;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-hist-load { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .btn-hist-del { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+
+    /* === Toast Notification === */
+    #toast {
+      visibility: hidden;
+      min-width: 260px;
+      max-width: 88vw;
+      background: rgba(15, 23, 42, 0.95);
+      color: #ffffff;
+      text-align: center;
+      border-radius: 50px;
+      padding: 12px 22px;
+      position: fixed;
+      z-index: 2000;
+      left: 50%;
+      bottom: -60px;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+      bottom: 25px;
+    }
+
+    /* === Custom Confirm Modal === */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 2001;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 22px;
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-box h4 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      color: var(--text-dark);
+    }
+
+    .modal-box p {
+      margin: 0 0 18px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-modal-cancel { background: #e2e8f0; color: var(--text-dark); }
+    .btn-modal-confirm { background: var(--danger); color: white; }
+
+    /* === Receipt & JPG Photo Memo Footer (Created by Rahat Sharif) - Hidden in App Screen, Only in Print & Memo Export === */
+    .receipt-creator-footer {
+      display: none;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 2px dashed #cbd5e1;
+    }
+
+    .creator-card {
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);
+      border: 1.5px solid #a7f3d0;
+      border-radius: 14px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08);
+    }
+
+    .creator-inner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .creator-icon {
+      width: 34px;
+      height: 34px;
+      background: #ffffff;
+      border: 1px solid #86efac;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(5, 150, 105, 0.12);
+      flex-shrink: 0;
+    }
+
+    .creator-text-group {
+      text-align: left;
+      line-height: 1.25;
+    }
+
+    .creator-subtitle {
+      font-size: 11px;
+      font-weight: 600;
+      color: #059669;
+      letter-spacing: 0.2px;
+    }
+
+    .creator-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: 0.1px;
+      margin-top: 2px;
+    }
+
+    .creator-highlight {
+      color: #047857;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    .creator-tag {
+      background: #ffffff;
+      border: 1px solid #86efac;
+      color: #047857;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    @media (max-width: 380px) {
+      .creator-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .creator-tag {
+        align-self: flex-start;
+      }
+    }
+
+    .app-footer {
+      text-align: center;
+      margin-top: auto;
+      padding: 16px 10px 14px;
+      border-top: 1px dashed var(--border-color);
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .app-footer a {
+      color: var(--primary-hover);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    /* ========================================================= */
+    /* === PRINT FORMAT - UNIFIED & CONSISTENT (Requirement 5) === */
+    /* ========================================================= */
+    @media print {
+      @page {
+        size: A4;
+        margin: 12mm;
+      }
+
+      body, html {
+        background: white !important;
+        color: #0f172a !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        overflow: auto !important;
+      }
+
+      .app-wrapper {
+        box-shadow: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+      }
+
+      /* Hide everything except active print receipt area */
+      .app-header, .drawer, .overlay, .modal-overlay, #toast, 
+      .segmented-tabs, .settings-bar, .settings-grid-2, .grid-inputs, 
+      .rate-box-wrapper, .weight-row-group, .action-grid, .calc-banner, 
+      .export-grid, .app-footer, .no-print, .deduction-trigger-wrapper, 
+      .deduction-panel, .home-hero, .module-card, #tab-kacha-rate, #tab-shukno-direct {
+        display: none !important;
+      }
+
+      /* When printing kacha-paka: only print its receipt */
+      body.printing-kacha #view-home,
+      body.printing-kacha #view-shukno {
+        display: none !important;
+      }
+      body.printing-kacha #kachaExportArea {
+        display: block !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+
+      /* When printing shukno: only print its receipt */
+      body.printing-shukno #view-home,
+      body.printing-shukno #view-kacha-paka {
+        display: none !important;
+      }
+      body.printing-shukno #shuknoExportArea {
+        display: block !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+
+      .receipt-section {
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      .receipt-header {
+        border-bottom: 2px solid #0f172a !important;
+        margin-bottom: 16px !important;
+        padding-bottom: 12px !important;
+      }
+
+      .receipt-header h3 {
+        font-size: 22px !important;
+        color: #0f172a !important;
+      }
+
+      .receipt-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 1px solid #cbd5e1 !important;
+        margin-bottom: 20px !important;
+      }
+
+      .receipt-table th, .receipt-table td {
+        border: 1px solid #cbd5e1 !important;
+        padding: 10px 8px !important;
+        color: #0f172a !important;
+        font-size: 14px !important;
+      }
+
+      .receipt-table th {
+        background-color: #f8fafc !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .action-col, .action-cell, .table-actions {
+        display: none !important;
+      }
+
+      .summary-card {
+        border: 1px solid #cbd5e1 !important;
+        background: #f8fafc !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        padding: 16px !important;
+        margin-top: 15px !important;
+      }
+
+      .summary-row.total-row {
+        font-size: 18px !important;
+        border-top: 1.5px dashed #0f172a !important;
+      }
+
+      .receipt-creator-footer {
+        display: block !important;
+        margin-top: 30px !important;
+        padding-top: 14px !important;
+        border-top: 1.5px dashed #475569 !important;
+      }
+
+      .creator-card {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        padding: 8px 12px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .creator-icon {
+        background: #ffffff !important;
+        border: 1px solid #94a3b8 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .creator-title {
+        color: #0f172a !important;
+      }
+
+      .creator-highlight {
+        color: #047857 !important;
+        font-weight: 800 !important;
+      }
+
+      .creator-tag {
+        background: #ffffff !important;
+        border: 1px solid #94a3b8 !important;
+        color: #0f172a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
   </style>
 </head>
 <body>
 
-<div class="app-container">
-  <!-- মূল লোগো -->
-  <div class="logo-container">
-    <img src="icon.svg" alt="Logo" width="80" height="80">
+  <!-- Toast Notification Box -->
+  <div id="toast"></div>
+
+  <!-- Custom Confirmation Modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+      <h4 id="confirmModalTitle">নিশ্চিত করুন</h4>
+      <p id="confirmModalMsg">আপনি কি এই হিসাবটি মুছে ফেলতে চান?</p>
+      <div class="modal-buttons">
+        <button class="btn-modal-cancel" onclick="closeConfirmModal()">বাতিল</button>
+        <button class="btn-modal-confirm" id="confirmModalOkBtn">মুছে ফেলুন</button>
+      </div>
+    </div>
   </div>
-  
-  <h2>সুপারি হিসাব অ্যাপ</h2>
-  <p class="subtitle">আপনি কোন হিসাবটি করতে চান নির্বাচন করুন</p>
 
-  <!-- কাঁচা-পাকা সুপারি বাটন -->
-  <a href="kacha-paka.html" class="menu-btn">
-    <!-- কাঁচা-পাকা সুপারির আইকন (সবুজ-কমলা) -->
-    <svg class="icon-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="rawGrad" cx="35%" cy="35%" r="65%">
-          <stop offset="0%" stop-color="#f59e0b"/> <!-- পাকা কমলা রঙ -->
-          <stop offset="50%" stop-color="#ea580c"/>
-          <stop offset="100%" stop-color="#15803d"/> <!-- কাঁচা সবুজ রঙ -->
-        </radialGradient>
-      </defs>
-      <path d="M50 15 C80 15, 85 50, 70 80 C60 95, 40 95, 30 80 C15 50, 20 15, 50 15 Z" fill="url(#rawGrad)"/>
-      <path d="M45 18 C48 10, 52 10, 55 18 Z" fill="#166534"/> <!-- বোঁটা -->
-      <ellipse cx="40" cy="35" rx="6" ry="12" fill="#ffedd5" opacity="0.3" transform="rotate(-20 40 35)"/> <!-- গ্লোস -->
-    </svg>
-    কাঁচা-পাকা সুপারি
-  </a>
-
-  <!-- শুকনো সুপারি বাটন -->
-  <a href="shukno.html" class="menu-btn">
-    <!-- শুকনো সুপারির আইকন (খয়েরি কুঁচকানো) -->
-    <svg class="icon-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="dryGrad" cx="40%" cy="40%" r="60%">
-          <stop offset="0%" stop-color="#9a3412"/> <!-- হালকা খয়েরি -->
-          <stop offset="60%" stop-color="#78350f"/>
-          <stop offset="100%" stop-color="#451a03"/> <!-- গাঢ় খয়েরি -->
-        </radialGradient>
-      </defs>
-      <path d="M50 18 C85 18, 80 55, 65 82 C55 95, 45 95, 35 82 C20 55, 15 18, 50 18 Z" fill="url(#dryGrad)"/>
-      <!-- শুকনো সুপারির গায়ের দাগ বা টেক্সচার -->
-      <path d="M35 30 Q40 55 32 78 M65 30 Q60 55 68 78 M50 25 Q55 55 48 82 M42 28 Q48 50 40 80 M58 28 Q52 50 60 80" stroke="#280f02" stroke-width="2" fill="none" opacity="0.6" stroke-linecap="round"/>
-      <path d="M45 18 C48 12, 52 12, 55 18 Z" fill="#3f1e04"/> <!-- শুকনো বোঁটা -->
-    </svg>
-    শুকনো সুপারি হিসাব
-  </a>
-
-  <div class="footer">
-    Created by <a href="https://www.facebook.com/rahatsharif504" target="_blank">Rahat Sharif</a>
+  <!-- History Sidebar Drawer -->
+  <div class="overlay" id="drawerOverlay" onclick="closeHistoryDrawer()"></div>
+  <div class="drawer" id="historyDrawer">
+    <div class="drawer-header">
+      <span>সেভ করা হিসাবের হিস্ট্রি</span>
+      <button class="drawer-close-btn" onclick="closeHistoryDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body">
+      <div class="history-type-tabs">
+        <button class="history-type-btn active" id="histTabKacha" onclick="switchHistoryTab('kacha')">কাঁচা-পাকা সুপারি</button>
+        <button class="history-type-btn" id="histTabShukno" onclick="switchHistoryTab('shukno')">শুকনো সুপারি</button>
+      </div>
+      <div id="historyListContainer"></div>
+    </div>
   </div>
-</div>
 
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js');
+  <!-- Main App Shell -->
+  <div class="app-wrapper">
+    
+    <!-- Top Header Bar -->
+    <header class="app-header">
+      <div class="header-left">
+        <button class="nav-icon-btn" id="headerBackBtn" onclick="navigate('home')" style="display: none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          মেনু
+        </button>
+      </div>
+      <div class="header-center">
+        <h1 class="header-title" id="appHeaderTitle">সুপারি হিসাব অ্যাপ</h1>
+      </div>
+      <div class="header-right">
+        <button class="nav-icon-btn" onclick="openHistoryDrawer()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          হিস্ট্রি
+        </button>
+      </div>
+    </header>
+
+    <!-- ====================================================== -->
+    <!-- 1. HOME VIEW (মূল মেনু নির্বাচন) -->
+    <!-- ====================================================== -->
+    <div class="view-panel active" id="view-home">
+      <div class="home-hero">
+        <div class="home-logo">
+          <img src="icon.svg" alt="Supari Logo" width="88" height="88">
+        </div>
+        <h2 class="home-title">সুপারি হিসাব অ্যাপ</h2>
+        <p class="home-subtitle">আপনি কোন হিসাবটি করতে চান নিচে নির্বাচন করুন</p>
+      </div>
+
+      <!-- কাঁচা-পাকা সুপারি বাটন -->
+      <div class="module-card" onclick="navigate('kacha-paka')">
+        <div class="module-icon-box">
+          <svg class="icon-svg" viewBox="0 0 100 100" width="38" height="38" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="rawGradHome" cx="35%" cy="35%" r="65%">
+                <stop offset="0%" stop-color="#f59e0b"/>
+                <stop offset="50%" stop-color="#ea580c"/>
+                <stop offset="100%" stop-color="#15803d"/>
+              </radialGradient>
+            </defs>
+            <path d="M50 15 C80 15, 85 50, 70 80 C60 95, 40 95, 30 80 C15 50, 20 15, 50 15 Z" fill="url(#rawGradHome)"/>
+            <path d="M45 18 C48 10, 52 10, 55 18 Z" fill="#166534"/>
+            <ellipse cx="40" cy="35" rx="6" ry="12" fill="#ffedd5" opacity="0.3" transform="rotate(-20 40 35)"/>
+          </svg>
+        </div>
+        <div class="module-info">
+          <h3>কাঁচা-পাকা সুপারি হিসাব</h3>
+          <p>কুড়ি, ঘা ও পিস অনুযায়ী হিসাব এবং দর যাচাই</p>
+        </div>
+        <div class="module-arrow">➔</div>
+      </div>
+
+      <!-- শুকনো সুপারি বাটন (Requirement 4: শুকনো সুপারির হিসাব) -->
+      <div class="module-card" onclick="navigate('shukno')">
+        <div class="module-icon-box">
+          <svg class="icon-svg" viewBox="0 0 100 100" width="38" height="38" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="dryGradHome" cx="40%" cy="40%" r="60%">
+                <stop offset="0%" stop-color="#9a3412"/>
+                <stop offset="60%" stop-color="#78350f"/>
+                <stop offset="100%" stop-color="#451a03"/>
+              </radialGradient>
+            </defs>
+            <path d="M50 18 C85 18, 80 55, 65 82 C55 95, 45 95, 35 82 C20 55, 15 18, 50 18 Z" fill="url(#dryGradHome)"/>
+            <path d="M35 30 Q40 55 32 78 M65 30 Q60 55 68 78 M50 25 Q55 55 48 82 M42 28 Q48 50 40 80 M58 28 Q52 50 60 80" stroke="#280f02" stroke-width="2" fill="none" opacity="0.6" stroke-linecap="round"/>
+            <path d="M45 18 C48 12, 52 12, 55 18 Z" fill="#3f1e04"/>
+          </svg>
+        </div>
+        <div class="module-info">
+          <h3>শুকনো সুপারির হিসাব</h3>
+          <p>বস্তা ও মোট ওজন হিসাব এবং খালি বস্তার ওজন বাদ</p>
+        </div>
+        <div class="module-arrow">➔</div>
+      </div>
+    </div>
+
+
+    <!-- ====================================================== -->
+    <!-- 2. কাঁচা-পাকা সুপারি ভিউ (KACHA-PAKA VIEW) -->
+    <!-- ====================================================== -->
+    <div class="view-panel" id="view-kacha-paka">
+      
+      <!-- Subtabs -->
+      <div class="segmented-tabs no-print">
+        <button class="tab-item active" id="tabBtnKachaMain" onclick="switchKachaSubtab('main')">মূল হিসাব</button>
+        <button class="tab-item" id="tabBtnKachaRate" onclick="switchKachaSubtab('rate')">দর যাচাই</button>
+      </div>
+
+      <!-- সাবট্যাব ১: মূল হিসাব -->
+      <div id="subtab-kacha-main">
+        <div class="settings-bar no-print">
+          <span>হিসাবের নিয়ম:</span>
+          <select id="kachaGhaRule" onchange="onKachaRuleChange()">
+            <option value="21" selected>২১ ঘা = ১ কুড়ি</option>
+            <option value="20">২০ ঘা = ১ কুড়ি</option>
+          </select>
+        </div>
+
+        <div class="grid-inputs no-print">
+          <div class="input-box">
+            <label>কুড়ি</label>
+            <input type="text" id="kachaInputKuri" placeholder="০" inputmode="numeric" oninput="forceBnDigits(event)">
+          </div>
+          <div class="input-box">
+            <label>ঘা</label>
+            <input type="text" id="kachaInputGha" placeholder="০" inputmode="numeric" oninput="forceBnDigits(event)">
+          </div>
+          <div class="input-box">
+            <label>টি (পিস)</label>
+            <input type="text" id="kachaInputTi" placeholder="০" inputmode="numeric" oninput="forceBnDigits(event)">
+          </div>
+        </div>
+
+        <!-- Requirement 2: প্রতি কুড়ির দাম ডিফল্ট ফাঁকা -->
+        <div class="input-box rate-box-wrapper no-print">
+          <label>প্রতি কুড়ির দাম (৳)</label>
+          <input type="text" id="kachaInputRate" placeholder="০" inputmode="decimal" oninput="forceBnDigits(event)">
+        </div>
+
+        <div class="action-grid no-print">
+          <button class="btn btn-danger-outline" onclick="confirmResetKachaReport()">রিপোর্ট মুছুন</button>
+          <button class="btn btn-primary" onclick="addKachaItem()">হিসাব যোগ করুন</button>
+        </div>
+
+        <div class="calc-banner no-print" id="kachaRecentBanner"></div>
+
+        <!-- প্রিন্ট ও রিপোর্টের জন্য এক্সপোর্ট এরিয়া (Requirement 5: শুকনো সুপারির প্রিন্ট পেজের মতো) -->
+        <div class="receipt-section" id="kachaExportArea">
+          <div class="receipt-header">
+            <h3 id="kachaPrintTitle">কাঁচা-পাকা সুপারি বিক্রির রসিদ</h3>
+            <p id="kachaPrintSubtitle">তারিখ: <span id="kachaPrintDate"></span> | হিসাবের নিয়ম: <span id="kachaPrintRuleText">২১ ঘা = ১ কুড়ি</span></p>
+          </div>
+
+          <table class="receipt-table" id="kachaTable">
+            <thead>
+              <tr>
+                <th style="width: 38px;">নং</th>
+                <th>পরিমাণ</th>
+                <th>দর (৳)</th>
+                <th>মোট টাকা (৳)</th>
+                <th class="action-col no-print" style="width: 60px;">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="kachaTableBody"></tbody>
+          </table>
+
+          <div id="kachaEmptyMsg" style="text-align:center; padding: 18px; color: var(--text-muted); font-size: 13px;">
+            এখনো কোনো হিসাব যোগ করা হয়নি।
+          </div>
+
+          <div class="summary-card" id="kachaSummaryCard" style="display: none;">
+            <div class="summary-row"><span>মোট এন্ট্রি:</span> <strong id="kachaTotalEntries">০টি</strong></div>
+            <div class="summary-row"><span>সর্বমোট সুপারি:</span> <strong id="kachaTotalQtyText">০ কুড়ি</strong></div>
+            <div class="summary-row"><span>মোট কুড়ি (দশমিক):</span> <strong id="kachaTotalKuriDec">০.০০</strong></div>
+            <div class="summary-row total-row">
+              <span>সর্বমোট দাম:</span>
+              <strong>৳ <span id="kachaGrandTotal">০</span></strong>
+            </div>
+          </div>
+
+          <!-- Receipt Memo Footer: Beautiful Creator Badge (Created by Rahat Sharif) -->
+          <div class="receipt-creator-footer">
+            <div class="creator-card">
+              <div class="creator-inner">
+                <div class="creator-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                  </svg>
+                </div>
+                <div class="creator-text-group">
+                  <div class="creator-subtitle">সুপারি হিসাব ক্যালকুলেটর</div>
+                  <div class="creator-title">Created by <span class="creator-highlight">Rahat Sharif</span></div>
+                </div>
+              </div>
+              <div class="creator-tag">Verified App</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Buttons (Requirement 5 & 6) -->
+        <div class="export-grid no-print" id="kachaActionBtns" style="display: none;">
+          <button class="btn btn-copy" onclick="copyKachaReport()">📋 কপি করুন</button>
+          <button class="btn btn-jpg" onclick="downloadKachaJPG()">🖼️ JPG সেভ</button>
+          <button class="btn btn-print" onclick="printKachaReport()">🖨️ প্রিন্ট করুন</button>
+          <button class="btn btn-save" onclick="saveKachaToHistory()">💾 সেভ করুন</button>
+        </div>
+      </div>
+
+      <!-- সাবট্যাব ২: দর যাচাই -->
+      <div id="subtab-kacha-rate" style="display: none;">
+        <div class="settings-bar">
+          <span>হিসাবের নিয়ম:</span>
+          <select id="kachaRateCheckRule">
+            <option value="21" selected>২১ ঘা = ১ কুড়ি</option>
+            <option value="20">২০ ঘা = ১ কুড়ি</option>
+          </select>
+        </div>
+
+        <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 14px;">
+          ক্রেতা নির্দিষ্ট পরিমাণের যে দাম বলেছে তা লিখুন। এক কুড়ির দাম বের হয়ে যাবে।
+        </p>
+
+        <div class="grid-inputs">
+          <div class="input-box">
+            <label>কুড়ি</label>
+            <input type="text" id="findKuri" placeholder="০" inputmode="numeric" oninput="forceBnDigits(event)">
+          </div>
+          <div class="input-box">
+            <label>ঘা</label>
+            <input type="text" id="findGha" placeholder="০" inputmode="numeric" oninput="forceBnDigits(event)">
+          </div>
+          <div class="input-box">
+            <label>টি (পিস)</label>
+            <input type="text" id="findTi" placeholder="০" inputmode="numeric" oninput="forceBnDigits(event)">
+          </div>
+        </div>
+
+        <div class="input-box rate-box-wrapper">
+          <label>উক্ত পরিমাণের দাম (৳)</label>
+          <input type="text" id="findPrice" placeholder="০" inputmode="decimal" oninput="forceBnDigits(event)">
+        </div>
+
+        <div class="action-grid">
+          <button class="btn btn-secondary" onclick="clearFindRateFields()">ক্লিয়ার</button>
+          <button class="btn btn-primary" onclick="calculateKuriRate()">দর যাচাই করুন</button>
+        </div>
+
+        <div class="calc-banner" id="findRateResultBanner" style="display: none; text-align: left;"></div>
+      </div>
+    </div>
+
+
+    <!-- ====================================================== -->
+    <!-- 3. শুকনো সুপারি ভিউ (SHUKNO VIEW - Requirement 4) -->
+    <!-- ====================================================== -->
+    <div class="view-panel" id="view-shukno">
+      
+      <!-- Subtabs -->
+      <div class="segmented-tabs no-print">
+        <button class="tab-item active" id="tabBtnShuknoBasta" onclick="switchShuknoSubtab('basta')">বস্তা হিসাব</button>
+        <button class="tab-item" id="tabBtnShuknoDirect" onclick="switchShuknoSubtab('direct')">মোট ওজন হিসাব</button>
+      </div>
+
+      <!-- Settings Bar (Rule + Rate) -->
+      <div class="settings-grid-2 no-print">
+        <div class="setting-card">
+          <label>হিসাবের নিয়ম</label>
+          <select class="std-input" id="shuknoRuleSelect" style="height: 38px; font-size: 13px;" onchange="onShuknoSettingsChange()">
+            <option value="82" selected>৮২ কেজি = ১ হাজার</option>
+            <option value="80">৮০ কেজি = ১ হাজার</option>
+          </select>
+        </div>
+        <!-- Requirement 2: হাজারের দাম ডিফল্ট ফাঁকা থাকবে -->
+        <div class="setting-card">
+          <label>হাজারের দাম (৳)</label>
+          <input type="text" class="std-input" id="shuknoPricePerHajar" style="height: 38px; font-size: 14px;" placeholder="০" inputmode="numeric" oninput="forceBnDigits(event)" onchange="onShuknoSettingsChange()">
+        </div>
+      </div>
+
+      <!-- সাবট্যাব ১: বস্তা হিসাব -->
+      <div id="subtab-shukno-basta">
+        <!-- নতুন বস্তার ওজন যোগ করা -->
+        <label style="display: block; font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px;" class="no-print">নতুন বস্তার ওজন (বস্তাসহ)</label>
+        <div class="weight-row-group no-print">
+          <input type="text" class="std-input" id="shuknoBagKg" placeholder="কেজি" inputmode="numeric" oninput="forceBnDigits(event)">
+          <input type="text" class="std-input" id="shuknoBagGm" placeholder="গ্রাম" inputmode="numeric" oninput="forceBnDigits(event)">
+          <button class="btn btn-primary" onclick="addShuknoBag()">যোগ করুন</button>
+        </div>
+
+        <div class="calc-banner no-print" id="shuknoRecentBanner"></div>
+
+        <!-- রিপোর্ট টেবিল ও এক্সপোর্ট এরিয়া -->
+        <div class="receipt-section" id="shuknoExportArea">
+          <div class="receipt-header">
+            <!-- Requirement 4: শুকনো সুপারের হিসাব / শুকনো সুপারি বিক্রির রসিদ -->
+            <h3 id="shuknoPrintTitle">শুকনো সুপারি বিক্রির রসিদ</h3>
+            <p id="shuknoPrintSubtitle">১ হাজার = ৮২ কেজি | দর = ৳ ০</p>
+          </div>
+
+          <table class="receipt-table" id="shuknoTable">
+            <thead>
+              <tr>
+                <th style="width: 38px;">বস্তা</th>
+                <th>ওজন</th>
+                <th>সুপারি পরিমাণ</th>
+                <th>দাম (৳)</th>
+                <th class="action-col no-print" style="width: 50px;">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="shuknoTableBody"></tbody>
+          </table>
+
+          <div id="shuknoEmptyMsg" style="text-align:center; padding: 18px; color: var(--text-muted); font-size: 13px;">
+            হিসাব করার জন্য উপরে বস্তার ওজন যোগ করুন।
+          </div>
+
+          <!-- Summary Card -->
+          <div class="summary-card" id="shuknoSummaryCard" style="display: none;">
+            <div class="summary-row"><span>মোট বস্তা:</span> <strong id="shuknoTotalBags">০</strong></div>
+            <div class="summary-row highlight-sub" id="shuknoGrossRow" style="display: none;">
+              <span>বস্তাসহ মোট ওজন:</span> <span id="shuknoGrossWeightText">০ কেজি</span>
+            </div>
+            <div class="summary-row highlight-red" id="shuknoDeductedRow" style="display: none;">
+              <span>বাদ দেওয়া বস্তার ওজন:</span> <strong id="shuknoDeductedWeightText">০ কেজি</strong>
+            </div>
+            <div class="summary-row"><span>সুপারির নিট ওজন:</span> <strong id="shuknoNetWeightText">০ কেজি</strong></div>
+            <div class="summary-row" style="color: var(--primary-dark);"><span>মোট সুপারি:</span> <strong id="shuknoTotalSupariText">০ হাজার, ০ শত, ০ কেজি</strong></div>
+            
+            <!-- সর্বমোট দাম -->
+            <div class="summary-row total-row">
+              <span>সর্বমোট দাম:</span>
+              <strong>৳ <span id="shuknoGrandTotal">০</span></strong>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- Requirement 3: সর্বমোট দাম এর নিচে বস্তার ওজন বাদ দেওয়ার আইকন অপশন -->
+            <!-- ============================================================ -->
+            <div class="deduction-trigger-wrapper no-print">
+              <button class="btn-deduction-trigger" id="btnToggleDeduction" onclick="toggleDeductionPanel()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <span>বস্তার ওজন বাদ দিন (খালি বস্তা)</span>
+                <span id="deductionToggleIcon" style="font-size: 11px;">▼</span>
+              </button>
+
+              <div class="deduction-panel" id="shuknoDeductionPanel">
+                <div class="deduction-panel-title">
+                  <span>খালি বস্তার মোট ওজন লিখুন</span>
+                  <button class="btn-badge-clear" onclick="clearShuknoDeduction()">মুছে দিন</button>
+                </div>
+                <div class="weight-row-group" style="margin-bottom: 0;">
+                  <input type="text" class="std-input" id="shuknoEmptyKg" placeholder="কেজি" inputmode="numeric" oninput="forceBnDigits(event)">
+                  <input type="text" class="std-input" id="shuknoEmptyGm" placeholder="গ্রাম" inputmode="numeric" oninput="forceBnDigits(event)">
+                  <button class="btn btn-warning" onclick="applyShuknoDeduction()">বাদ দিন</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Receipt Memo Footer: Beautiful Creator Badge (Created by Rahat Sharif) -->
+          <div class="receipt-creator-footer">
+            <div class="creator-card">
+              <div class="creator-inner">
+                <div class="creator-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                  </svg>
+                </div>
+                <div class="creator-text-group">
+                  <div class="creator-subtitle">সুপারি হিসাব ক্যালকুলেটর</div>
+                  <div class="creator-title">Created by <span class="creator-highlight">Rahat Sharif</span></div>
+                </div>
+              </div>
+              <div class="creator-tag">Verified App</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Buttons (Requirement 6) -->
+        <div class="export-grid no-print" id="shuknoActionBtns" style="display: none;">
+          <button class="btn btn-copy" onclick="copyShuknoReport()">📋 কপি করুন</button>
+          <button class="btn btn-jpg" onclick="downloadShuknoJPG()">🖼️ JPG সেভ</button>
+          <button class="btn btn-print" onclick="printShuknoReport()">🖨️ প্রিন্ট করুন</button>
+          <button class="btn btn-save" onclick="saveShuknoToHistory()">💾 সেভ করুন</button>
+          <button class="btn btn-clear-all" onclick="confirmResetShuknoReport()">🗑️ রিসেট করুন (ক্লিয়ার)</button>
+        </div>
+      </div>
+
+      <!-- সাবট্যাব ২: মোট ওজন হিসাব (Direct Weight) -->
+      <div id="subtab-shukno-direct" style="display: none;">
+        <label style="display: block; font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px;">সুপারির মোট ওজন</label>
+        <div class="weight-row-group" style="margin-bottom: 14px;">
+          <input type="text" class="std-input" id="directGrossKg" placeholder="কেজি" inputmode="numeric" oninput="forceBnDigits(event)">
+          <input type="text" class="std-input" id="directGrossGm" placeholder="গ্রাম" inputmode="numeric" oninput="forceBnDigits(event)">
+        </div>
+
+        <div class="action-grid">
+          <button class="btn btn-primary" style="flex: 2;" onclick="calculateShuknoDirect()">হিসাব করুন</button>
+          <button class="btn btn-danger-outline" style="flex: 1;" onclick="clearShuknoDirectFields()">ক্লিয়ার</button>
+        </div>
+
+        <div class="receipt-section" id="directResultCard" style="display: none;">
+          <div class="summary-card" style="border: none; padding: 0; background: transparent;">
+            <div class="summary-row"><span>মোট ওজন:</span> <strong id="directNetWeightText">০ কেজি</strong></div>
+            <div class="summary-row" style="color: var(--primary-dark);"><span>পরিমাণ:</span> <strong id="directSupariQtyText"></strong></div>
+            <div class="summary-row total-row">
+              <span>মোট দাম:</span>
+              <strong>৳ <span id="directPriceText">০</span></strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Footer Credit -->
+    <footer class="app-footer">
+      Created by <a href="https://www.facebook.com/rahatsharif504" target="_blank" rel="noopener">Rahat Sharif</a>
+    </footer>
+  </div>
+
+  <!-- Main Unified JavaScript -->
+  <script>
+    /* ======================================================== */
+    /* 1. DIGIT CONVERSIONS & CORE FORMATTERS                   */
+    /* ======================================================== */
+    const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    const engDigits = {'0':'০', '1':'১', '2':'২', '3':'৩', '4':'৪', '5':'৫', '6':'৬', '7':'৭', '8':'৮', '9':'৯'};
+    const bnToEngMap = {'০':'0', '১':'1', '২':'2', '৩':'3', '৪':'4', '৫':'5', '৬':'6', '৭':'7', '৮':'8', '৯':'9'};
+
+    function toBnNum(num) {
+      if (num === null || num === undefined || num === '') return '০';
+      return num.toString().replace(/\d/g, d => bnDigits[d]);
+    }
+
+    function toEngNum(str) {
+      if (!str) return '0';
+      return str.toString().replace(/[০-৯]/g, d => bnToEngMap[d] || d);
+    }
+
+    function parseBnFloat(str) {
+      if (!str) return 0;
+      const eng = toEngNum(str).replace(/[^\d.]/g, '');
+      return parseFloat(eng) || 0;
+    }
+
+    function forceBnDigits(e) {
+      let val = e.target.value;
+      e.target.value = val.replace(/\d/g, d => bnDigits[d]);
+    }
+
+    function formatWeightKgGm(weightInKg) {
+      if (!weightInKg || weightInKg <= 0) return '০ কেজি';
+      const totalGm = Math.round(weightInKg * 1000);
+      const kg = Math.floor(totalGm / 1000);
+      const gm = totalGm % 1000;
+      const parts = [];
+      if (kg > 0) parts.push(toBnNum(kg) + ' কেজি');
+      if (gm > 0) parts.push(toBnNum(gm) + ' গ্রাম');
+      return parts.length > 0 ? parts.join(' ') : '০ কেজি';
+    }
+
+    /* ======================================================== */
+    /* 2. TOAST NOTIFICATIONS & MODALS                          */
+    /* ======================================================== */
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerHTML = msg;
+      toast.className = 'show';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.className = '';
+      }, 3200);
+    }
+
+    let confirmCallback = null;
+    function openConfirmModal(title, msg, onConfirm) {
+      document.getElementById('confirmModalTitle').innerText = title;
+      document.getElementById('confirmModalMsg').innerText = msg;
+      confirmCallback = onConfirm;
+      document.getElementById('confirmModal').classList.add('show');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('show');
+      confirmCallback = null;
+    }
+
+    document.getElementById('confirmModalOkBtn').addEventListener('click', () => {
+      if (confirmCallback) confirmCallback();
+      closeConfirmModal();
     });
-  }
-</script>
+
+    /* ======================================================== */
+    /* 3. NAVIGATION & ROUTING                                  */
+    /* ======================================================== */
+    let currentView = 'home';
+
+    function navigate(viewName, pushState = true) {
+      currentView = viewName;
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+
+      const backBtn = document.getElementById('headerBackBtn');
+      const titleEl = document.getElementById('appHeaderTitle');
+
+      if (viewName === 'kacha-paka') {
+        document.getElementById('view-kacha-paka').classList.add('active');
+        backBtn.style.display = 'inline-flex';
+        titleEl.innerText = 'কাঁচা-পাকা সুপারি হিসাব';
+        if (pushState) window.location.hash = '#kacha-paka';
+      } else if (viewName === 'shukno') {
+        document.getElementById('view-shukno').classList.add('active');
+        backBtn.style.display = 'inline-flex';
+        // Requirement 4: শুকনো সুপারের হিসাব / শুকনো সুপারি হিসাব
+        titleEl.innerText = 'শুকনো সুপারির হিসাব';
+        if (pushState) window.location.hash = '#shukno';
+      } else {
+        document.getElementById('view-home').classList.add('active');
+        backBtn.style.display = 'none';
+        titleEl.innerText = 'সুপারি হিসাব অ্যাপ';
+        if (pushState) window.location.hash = '#home';
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash;
+      if (hash === '#kacha-paka') navigate('kacha-paka', false);
+      else if (hash === '#shukno') navigate('shukno', false);
+      else navigate('home', false);
+    });
+
+    /* ======================================================== */
+    /* 4. HISTORY SIDEBAR DRAWER (SHARED FOR BOTH)              */
+    /* ======================================================== */
+    const KACHA_HIST_KEY = 'supari_history_kacha';
+    const SHUKNO_HIST_KEY = 'supari_history_shukno';
+    let currentHistTab = 'kacha';
+
+    function openHistoryDrawer() {
+      document.getElementById('historyDrawer').classList.add('open');
+      document.getElementById('drawerOverlay').classList.add('show');
+      if (currentView === 'shukno') {
+        switchHistoryTab('shukno');
+      } else {
+        switchHistoryTab('kacha');
+      }
+    }
+
+    function closeHistoryDrawer() {
+      document.getElementById('historyDrawer').classList.remove('open');
+      document.getElementById('drawerOverlay').classList.remove('show');
+    }
+
+    function switchHistoryTab(type) {
+      currentHistTab = type;
+      document.getElementById('histTabKacha').classList.toggle('active', type === 'kacha');
+      document.getElementById('histTabShukno').classList.toggle('active', type === 'shukno');
+      renderHistoryList();
+    }
+
+    function renderHistoryList() {
+      const container = document.getElementById('historyListContainer');
+      const key = currentHistTab === 'kacha' ? KACHA_HIST_KEY : SHUKNO_HIST_KEY;
+      const list = JSON.parse(localStorage.getItem(key) || '[]');
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); padding: 40px 10px; font-size: 13px;">
+            <div style="font-size: 32px; margin-bottom: 8px;">📭</div>
+            কোনো সংরক্ষিত ${currentHistTab === 'kacha' ? 'কাঁচা-পাকা' : 'শুকনো'} হিসাব নেই।
+          </div>`;
+        return;
+      }
+
+      let html = '';
+      list.forEach(item => {
+        html += `
+          <div class="history-item-card">
+            <div class="history-card-header">
+              <h5 class="history-title">${item.title || 'হিসাব'}</h5>
+              <span class="history-date">${item.date}</span>
+            </div>
+            <div class="history-summary">সর্বমোট: ৳ ${toBnNum(item.totalPrice)}</div>
+            <div class="history-card-actions">
+              <button class="btn-hist-load" onclick="loadHistoryItem('${currentHistTab}', ${item.id})">📂 লোড</button>
+              <button class="btn-hist-del" onclick="deleteHistoryItem('${currentHistTab}', ${item.id})">🗑️ মুছুন</button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function loadHistoryItem(type, id) {
+      const key = type === 'kacha' ? KACHA_HIST_KEY : SHUKNO_HIST_KEY;
+      const list = JSON.parse(localStorage.getItem(key) || '[]');
+      const found = list.find(i => i.id === id);
+      if (!found) return;
+
+      if (type === 'kacha') {
+        kachaItems = JSON.parse(JSON.stringify(found.items));
+        document.getElementById('kachaGhaRule').value = found.rule || 21;
+        navigate('kacha-paka');
+        switchKachaSubtab('main');
+        renderKachaReport();
+        showToast('✅ কাঁচা-পাকা হিসাব লোড করা হয়েছে');
+      } else {
+        shuknoBags = [...found.bags];
+        shuknoBaseRule = found.rule || 82;
+        document.getElementById('shuknoRuleSelect').value = shuknoBaseRule;
+        document.getElementById('shuknoPricePerHajar').value = found.pricePerHajar || '';
+        shuknoDeductedEmptyKg = found.emptyBagKg || 0;
+        navigate('shukno');
+        switchShuknoSubtab('basta');
+        updateShuknoReport();
+        showToast('✅ শুকনো সুপারি হিসাব লোড করা হয়েছে');
+      }
+      closeHistoryDrawer();
+    }
+
+    function deleteHistoryItem(type, id) {
+      openConfirmModal('হিসাব মুছুন', 'আপনি কি নিশ্চিত যে এই হিস্ট্রি রেকর্ডটি মুছে ফেলতে চান?', () => {
+        const key = type === 'kacha' ? KACHA_HIST_KEY : SHUKNO_HIST_KEY;
+        let list = JSON.parse(localStorage.getItem(key) || '[]');
+        list = list.filter(i => i.id !== id);
+        localStorage.setItem(key, JSON.stringify(list));
+        renderHistoryList();
+        showToast('🗑️ হিসাবটি মুছে ফেলা হয়েছে');
+      });
+    }
+
+    /* ======================================================== */
+    /* 5. KACHA-PAKA SUPARI CALCULATOR LOGIC                    */
+    /* ======================================================== */
+    let kachaItems = [];
+    const tiPerGha = 10;
+
+    function switchKachaSubtab(tab) {
+      document.getElementById('tabBtnKachaMain').classList.toggle('active', tab === 'main');
+      document.getElementById('tabBtnKachaRate').classList.toggle('active', tab === 'rate');
+      document.getElementById('subtab-kacha-main').style.display = tab === 'main' ? 'block' : 'none';
+      document.getElementById('subtab-kacha-rate').style.display = tab === 'rate' ? 'block' : 'none';
+    }
+
+    function onKachaRuleChange() {
+      localStorage.setItem('kacha_gha_rule', document.getElementById('kachaGhaRule').value);
+      renderKachaReport();
+    }
+
+    function addKachaItem() {
+      const ghaPerKuri = parseInt(document.getElementById('kachaGhaRule').value);
+      const kuri = parseBnFloat(document.getElementById('kachaInputKuri').value);
+      const gha = parseBnFloat(document.getElementById('kachaInputGha').value);
+      const ti = parseBnFloat(document.getElementById('kachaInputTi').value);
+      const rate = parseBnFloat(document.getElementById('kachaInputRate').value);
+
+      const tiPerKuri = ghaPerKuri * tiPerGha;
+      const totalTi = (kuri * tiPerKuri) + (gha * tiPerGha) + ti;
+
+      if (totalTi <= 0 || rate <= 0) {
+        showToast('⚠️ সঠিক পরিমাণ ও প্রতি কুড়ির দর (টাকা) লিখুন');
+        return;
+      }
+
+      const totalKuri = totalTi / tiPerKuri;
+      const totalPrice = Math.round(totalKuri * rate * 100) / 100;
+
+      let parts = [];
+      if (kuri > 0) parts.push(`${toBnNum(kuri)} কুড়ি`);
+      if (gha > 0) parts.push(`${toBnNum(gha)} ঘা`);
+      if (ti > 0) parts.push(`${toBnNum(ti)} টি`);
+      const qtyString = parts.join(' ') || `${toBnNum(totalTi)} টি`;
+
+      const item = { kuri, gha, ti, totalTi, totalKuri, rate, totalPrice, qtyString };
+      kachaItems.push(item);
+      saveKachaDraft();
+
+      const banner = document.getElementById('kachaRecentBanner');
+      banner.style.display = 'block';
+      banner.innerHTML = `সর্বশেষ যোগ: <strong>${qtyString}</strong> (${toBnNum(rate)} ৳ দরে) <br>মোট: <strong>৳ ${toBnNum(totalPrice.toFixed(2))}</strong>`;
+
+      document.getElementById('kachaInputKuri').value = '';
+      document.getElementById('kachaInputGha').value = '';
+      document.getElementById('kachaInputTi').value = '';
+      // Rate is retained or can be edited easily
+      renderKachaReport();
+      showToast('✅ কাঁচা-পাকা হিসাব যোগ করা হয়েছে');
+    }
+
+    function renderKachaReport() {
+      const ghaPerKuri = parseInt(document.getElementById('kachaGhaRule').value);
+      const tbody = document.getElementById('kachaTableBody');
+      const emptyMsg = document.getElementById('kachaEmptyMsg');
+      const summaryCard = document.getElementById('kachaSummaryCard');
+      const actionBtns = document.getElementById('kachaActionBtns');
+      const printRuleEl = document.getElementById('kachaPrintRuleText');
+
+      printRuleEl.innerText = `${toBnNum(ghaPerKuri)} ঘা = ১ কুড়ি`;
+
+      if (kachaItems.length === 0) {
+        tbody.innerHTML = '';
+        emptyMsg.style.display = 'block';
+        summaryCard.style.display = 'none';
+        actionBtns.style.display = 'none';
+        return;
+      }
+
+      emptyMsg.style.display = 'none';
+      summaryCard.style.display = 'block';
+      actionBtns.style.display = 'grid';
+
+      let totalTi = 0;
+      let totalKuri = 0;
+      let grandTotal = 0;
+      let html = '';
+
+      kachaItems.forEach((item, idx) => {
+        totalTi += item.totalTi;
+        totalKuri += item.totalKuri;
+        grandTotal += item.totalPrice;
+
+        html += `
+          <tr>
+            <td>${toBnNum(idx + 1)}</td>
+            <td style="font-weight: 600;">${item.qtyString}</td>
+            <td>${toBnNum(item.rate)}</td>
+            <td style="font-weight: 700;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
+            <td class="action-cell no-print">
+              <div class="table-actions">
+                <button class="icon-btn-table" onclick="editKachaItem(${idx})" title="এডিট">✏️</button>
+                <button class="icon-btn-table" onclick="deleteKachaItem(${idx})" title="মুছুন">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+
+      // Calculate total kuri, gha, ti breakdown
+      const tiPerKuri = ghaPerKuri * tiPerGha;
+      const finalKuri = Math.floor(totalTi / tiPerKuri);
+      const remAfterKuri = totalTi % tiPerKuri;
+      const finalGha = Math.floor(remAfterKuri / tiPerGha);
+      const finalTi = remAfterKuri % tiPerGha;
+
+      let finalQtyParts = [];
+      if (finalKuri > 0) finalQtyParts.push(`${toBnNum(finalKuri)} কুড়ি`);
+      if (finalGha > 0) finalQtyParts.push(`${toBnNum(finalGha)} ঘা`);
+      if (finalTi > 0) finalQtyParts.push(`${toBnNum(finalTi)} টি`);
+
+      document.getElementById('kachaTotalEntries').innerText = `${toBnNum(kachaItems.length)}টি`;
+      document.getElementById('kachaTotalQtyText').innerText = finalQtyParts.join(' ') || '০ কুড়ি';
+      document.getElementById('kachaTotalKuriDec').innerText = toBnNum(totalKuri.toFixed(2));
+      document.getElementById('kachaGrandTotal').innerText = toBnNum(grandTotal.toFixed(2));
+
+      const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('kachaPrintDate').innerText = toBnNum(new Date().toLocaleDateString('bn-BD', dateOptions));
+    }
+
+    function editKachaItem(index) {
+      const item = kachaItems[index];
+      document.getElementById('kachaInputKuri').value = item.kuri > 0 ? toBnNum(item.kuri) : '';
+      document.getElementById('kachaInputGha').value = item.gha > 0 ? toBnNum(item.gha) : '';
+      document.getElementById('kachaInputTi').value = item.ti > 0 ? toBnNum(item.ti) : '';
+      document.getElementById('kachaInputRate').value = item.rate > 0 ? toBnNum(item.rate) : '';
+
+      kachaItems.splice(index, 1);
+      saveKachaDraft();
+      renderKachaReport();
+      document.getElementById('kachaRecentBanner').style.display = 'none';
+      window.scrollTo({ top: 120, behavior: 'smooth' });
+      showToast('✏️ পরিবর্তনের জন্য ইনপুট বক্সে নেওয়া হয়েছে');
+    }
+
+    function deleteKachaItem(index) {
+      openConfirmModal('আইটেম মুছুন', 'আপনি কি নিশ্চিত যে এই হিসাবটি তালিকা থেকে মুছতে চান?', () => {
+        kachaItems.splice(index, 1);
+        saveKachaDraft();
+        renderKachaReport();
+        document.getElementById('kachaRecentBanner').style.display = 'none';
+        showToast('🗑️ হিসাবটি মুছে ফেলা হয়েছে');
+      });
+    }
+
+    function confirmResetKachaReport() {
+      if (kachaItems.length === 0) {
+        showToast('ℹ️ রিপোর্ট ইতিমধ্যে ফাঁকা আছে');
+        return;
+      }
+      openConfirmModal('রিপোর্ট মুছুন', 'আপনি কি নিশ্চিত যে সম্পূর্ণ কাঁচা-পাকা সুপারি রিপোর্ট মুছে ফেলতে চান?', () => {
+        kachaItems = [];
+        saveKachaDraft();
+        renderKachaReport();
+        document.getElementById('kachaRecentBanner').style.display = 'none';
+        showToast('🗑️ সম্পূর্ণ রিপোর্ট মুছে ফেলা হয়েছে');
+      });
+    }
+
+    function saveKachaDraft() {
+      localStorage.setItem('kacha_draft_items', JSON.stringify(kachaItems));
+    }
+
+    function saveKachaToHistory() {
+      if (kachaItems.length === 0) {
+        showToast('⚠️ সেভ করার জন্য কোনো হিসাব নেই');
+        return;
+      }
+      const history = JSON.parse(localStorage.getItem(KACHA_HIST_KEY) || '[]');
+      const dateOptions = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      const dateStr = toBnNum(new Date().toLocaleDateString('bn-BD', dateOptions));
+      const grandTotal = kachaItems.reduce((acc, i) => acc + i.totalPrice, 0);
+
+      const record = {
+        id: Date.now(),
+        title: `কাঁচা-পাকা (${toBnNum(history.length + 1)})`,
+        date: dateStr,
+        items: JSON.parse(JSON.stringify(kachaItems)),
+        rule: parseInt(document.getElementById('kachaGhaRule').value),
+        totalPrice: grandTotal.toFixed(2)
+      };
+
+      history.unshift(record);
+      localStorage.setItem(KACHA_HIST_KEY, JSON.stringify(history));
+      showToast('💾 হিসাব হিস্ট্রিতে সেভ করা হয়েছে!');
+    }
+
+    function copyKachaReport() {
+      if (kachaItems.length === 0) return;
+      let text = "--- কাঁচা-পাকা সুপারি হিসাব রসিদ ---\n";
+      text += `তারিখ: ${document.getElementById('kachaPrintDate').innerText}\n`;
+      text += `হিসাবের নিয়ম: ${document.getElementById('kachaPrintRuleText').innerText}\n\n`;
+      kachaItems.forEach((item, i) => {
+        text += `${toBnNum(i + 1)}. ${item.qtyString} | দর: ${toBnNum(item.rate)} ৳ | দাম: ${toBnNum(item.totalPrice.toFixed(2))} ৳\n`;
+      });
+      text += `\nসর্বমোট সুপারি: ${document.getElementById('kachaTotalQtyText').innerText}\n`;
+      text += `সর্বমোট দাম: ৳ ${document.getElementById('kachaGrandTotal').innerText}\n`;
+      text += `\nCreated by Rahat Sharif\n`;
+
+      copyToClipboard(text, 'কাঁচা-পাকা রসিদ কপি হয়েছে!');
+    }
+
+    function downloadKachaJPG() {
+      if (kachaItems.length === 0) return;
+      const area = document.getElementById('kachaExportArea');
+      const footer = area.querySelector('.receipt-creator-footer');
+      if (footer) footer.style.display = 'block';
+      html2canvas(area, {
+        scale: 2.5,
+        backgroundColor: '#ffffff',
+        ignoreElements: el => el.classList && el.classList.contains('no-print')
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'Kacha_Paka_Supari_Memo.jpg';
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+        showToast('🖼️ JPG রসিদ ডাউনলোড হয়েছে');
+      }).finally(() => {
+        if (footer) footer.style.display = 'none';
+      });
+    }
+
+    function printKachaReport() {
+      if (kachaItems.length === 0) return;
+      document.body.classList.add('printing-kacha');
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-kacha');
+      }, 500);
+    }
+
+    /* Subtab 2: Rate Checker */
+    function clearFindRateFields() {
+      document.getElementById('findKuri').value = '';
+      document.getElementById('findGha').value = '';
+      document.getElementById('findTi').value = '';
+      document.getElementById('findPrice').value = '';
+      document.getElementById('findRateResultBanner').style.display = 'none';
+    }
+
+    function calculateKuriRate() {
+      const ghaPerKuri = parseInt(document.getElementById('kachaRateCheckRule').value);
+      const kuri = parseBnFloat(document.getElementById('findKuri').value);
+      const gha = parseBnFloat(document.getElementById('findGha').value);
+      const ti = parseBnFloat(document.getElementById('findTi').value);
+      const price = parseBnFloat(document.getElementById('findPrice').value);
+
+      const totalTi = (kuri * ghaPerKuri * tiPerGha) + (gha * tiPerGha) + ti;
+      if (totalTi <= 0 || price <= 0) {
+        showToast('⚠️ সঠিক পরিমাণ ও মোট দাম দিন');
+        return;
+      }
+
+      const pricePerTi = price / totalTi;
+      const pricePerGha = pricePerTi * tiPerGha;
+      const pricePerKuri = pricePerTi * (ghaPerKuri * tiPerGha);
+
+      const banner = document.getElementById('findRateResultBanner');
+      banner.style.display = 'block';
+      banner.innerHTML = `
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">বর্তমান দর অনুযায়ী:</div>
+        <div style="font-size: 16px; margin-bottom: 6px;">১ কুড়ির দাম: <strong style="font-size: 20px; color: var(--danger); font-weight:800;">${toBnNum(Math.round(pricePerKuri))} ৳</strong></div>
+        <div style="font-size: 14px; border-top: 1px dashed #34d399; padding-top: 6px;">১ ঘার দাম: <strong>${toBnNum(pricePerGha.toFixed(2))} ৳</strong></div>
+      `;
+      showToast('✅ ১ কুড়ির দর বের করা হয়েছে');
+    }
+
+    /* ======================================================== */
+    /* 6. SHUKNO SUPARI CALCULATOR LOGIC                        */
+    /* ======================================================== */
+    let shuknoBags = [];
+    let shuknoBaseRule = 82; // 82 or 80
+    let shuknoDeductedEmptyKg = 0; // Empty bag deduction in kg
+
+    function switchShuknoSubtab(tab) {
+      document.getElementById('tabBtnShuknoBasta').classList.toggle('active', tab === 'basta');
+      document.getElementById('tabBtnShuknoDirect').classList.toggle('active', tab === 'direct');
+      document.getElementById('subtab-shukno-basta').style.display = tab === 'basta' ? 'block' : 'none';
+      document.getElementById('subtab-shukno-direct').style.display = tab === 'direct' ? 'block' : 'none';
+    }
+
+    function onShuknoSettingsChange() {
+      shuknoBaseRule = parseInt(document.getElementById('shuknoRuleSelect').value) || 82;
+      updateShuknoReport();
+      calculateShuknoDirect();
+    }
+
+    function calculateShuknoBreakdown(netWeightKg) {
+      if (netWeightKg <= 0) {
+        return { totalPrice: 0, priceStr: '০', textFormat: '০ কেজি' };
+      }
+      // Requirement 2: rate defaults to blank; if empty, price calculation is 0
+      const pricePerHajar = parseBnFloat(document.getElementById('shuknoPricePerHajar').value);
+      const totalPrice = (netWeightKg / shuknoBaseRule) * pricePerHajar;
+
+      const hajar = Math.floor(netWeightKg / shuknoBaseRule);
+      let remainderKg = netWeightKg % shuknoBaseRule;
+      const weightPerShotok = shuknoBaseRule / 10;
+      const shotok = Math.floor(remainderKg / weightPerShotok);
+      const remainingKgForFormat = remainderKg % weightPerShotok;
+
+      let text = '';
+      if (hajar > 0) text += `${toBnNum(hajar)} হাজার, `;
+      if (shotok > 0 || hajar > 0) text += `${toBnNum(shotok)} শত, `;
+      text += formatWeightKgGm(remainingKgForFormat);
+
+      return {
+        totalPrice: Math.round(totalPrice),
+        priceStr: toBnNum(Math.round(totalPrice).toLocaleString('en-IN')),
+        textFormat: text
+      };
+    }
+
+    function addShuknoBag() {
+      const kg = parseBnFloat(document.getElementById('shuknoBagKg').value);
+      const gm = parseBnFloat(document.getElementById('shuknoBagGm').value);
+      const grossWeight = kg + (gm / 1000);
+
+      if (grossWeight <= 0) {
+        showToast('⚠️ দয়া করে সঠিক বস্তার ওজন লিখুন');
+        return;
+      }
+
+      shuknoBags.push(grossWeight);
+      const breakdown = calculateShuknoBreakdown(grossWeight);
+
+      const banner = document.getElementById('shuknoRecentBanner');
+      banner.style.display = 'block';
+      banner.innerHTML = `সর্বশেষ যোগ: <strong>${formatWeightKgGm(grossWeight)}</strong> <br>পরিমাণ: ${breakdown.textFormat} <br>মোট: <strong>৳ ${breakdown.priceStr}</strong>`;
+
+      document.getElementById('shuknoBagKg').value = '';
+      document.getElementById('shuknoBagGm').value = '';
+      document.getElementById('shuknoBagKg').focus();
+
+      updateShuknoReport();
+      showToast('✅ বস্তা যোগ করা হয়েছে');
+    }
+
+    function editShuknoBag(index) {
+      const gross = shuknoBags[index];
+      const totalGm = Math.round(gross * 1000);
+      const kg = Math.floor(totalGm / 1000);
+      const gm = totalGm % 1000;
+
+      document.getElementById('shuknoBagKg').value = kg > 0 ? toBnNum(kg) : '';
+      document.getElementById('shuknoBagGm').value = gm > 0 ? toBnNum(gm) : '';
+
+      shuknoBags.splice(index, 1);
+      updateShuknoReport();
+      document.getElementById('shuknoBagKg').focus();
+      showToast('✏️ এডিট করার জন্য ওজন ইনপুট বক্সে নেওয়া হয়েছে');
+    }
+
+    function deleteShuknoBag(index) {
+      openConfirmModal('বস্তা মুছুন', 'আপনি কি নিশ্চিত যে এই বস্তার হিসাবটি মুছতে চান?', () => {
+        shuknoBags.splice(index, 1);
+        updateShuknoReport();
+        showToast('🗑️ বস্তা মুছে ফেলা হয়েছে');
+      });
+    }
+
+    function confirmResetShuknoReport() {
+      if (shuknoBags.length === 0) {
+        showToast('ℹ️ কোনো হিসাব তালিকাভুক্ত নেই');
+        return;
+      }
+      openConfirmModal('রিসেট করুন', 'আপনি কি নিশ্চিত যে শুকনো সুপারি হিসাব রিসেট করতে চান?', () => {
+        shuknoBags = [];
+        shuknoDeductedEmptyKg = 0;
+        document.getElementById('shuknoBagKg').value = '';
+        document.getElementById('shuknoBagGm').value = '';
+        document.getElementById('shuknoEmptyKg').value = '';
+        document.getElementById('shuknoEmptyGm').value = '';
+        document.getElementById('shuknoRecentBanner').style.display = 'none';
+        updateShuknoReport();
+        showToast('🗑️ সম্পূর্ণ হিসাব মুছে ফেলা হয়েছে');
+      });
+    }
+
+    /* Requirement 3: Toggle deduction panel placed under total price */
+    function toggleDeductionPanel() {
+      const panel = document.getElementById('shuknoDeductionPanel');
+      const btn = document.getElementById('btnToggleDeduction');
+      const icon = document.getElementById('deductionToggleIcon');
+      panel.classList.toggle('open');
+      btn.classList.toggle('active', panel.classList.contains('open'));
+      icon.innerText = panel.classList.contains('open') ? '▲' : '▼';
+    }
+
+    function applyShuknoDeduction() {
+      const kg = parseBnFloat(document.getElementById('shuknoEmptyKg').value);
+      const gm = parseBnFloat(document.getElementById('shuknoEmptyGm').value);
+      const emptyW = kg + (gm / 1000);
+
+      shuknoDeductedEmptyKg = emptyW;
+      document.getElementById('shuknoEmptyKg').value = '';
+      document.getElementById('shuknoEmptyGm').value = '';
+
+      updateShuknoReport();
+      if (emptyW > 0) {
+        showToast(`✅ মোট ওজন থেকে ${formatWeightKgGm(emptyW)} খালি বস্তার ওজন বাদ দেওয়া হয়েছে`);
+      } else {
+        showToast('ℹ️ কোনো ওজন বাদ দেওয়া হয়নি');
+      }
+    }
+
+    function clearShuknoDeduction() {
+      shuknoDeductedEmptyKg = 0;
+      document.getElementById('shuknoEmptyKg').value = '';
+      document.getElementById('shuknoEmptyGm').value = '';
+      updateShuknoReport();
+      showToast('🗑️ খালি বস্তার বাদ দেওয়া ওজন ক্লিয়ার করা হয়েছে');
+    }
+
+    function updateShuknoReport() {
+      const tbody = document.getElementById('shuknoTableBody');
+      const emptyMsg = document.getElementById('shuknoEmptyMsg');
+      const summaryCard = document.getElementById('shuknoSummaryCard');
+      const actionBtns = document.getElementById('shuknoActionBtns');
+      const subtitleEl = document.getElementById('shuknoPrintSubtitle');
+
+      const rateNum = parseBnFloat(document.getElementById('shuknoPricePerHajar').value);
+      subtitleEl.innerText = `১ হাজার = ${toBnNum(shuknoBaseRule)} কেজি | দর = ৳ ${toBnNum(rateNum.toLocaleString('en-IN'))}`;
+
+      if (shuknoBags.length === 0) {
+        tbody.innerHTML = '';
+        emptyMsg.style.display = 'block';
+        summaryCard.style.display = 'none';
+        actionBtns.style.display = 'none';
+        return;
+      }
+
+      emptyMsg.style.display = 'none';
+      summaryCard.style.display = 'block';
+      actionBtns.style.display = 'grid';
+
+      let totalGrossWeight = 0;
+      let html = '';
+
+      shuknoBags.forEach((gross, idx) => {
+        totalGrossWeight += gross;
+        const rowBreakdown = calculateShuknoBreakdown(gross);
+        html += `
+          <tr>
+            <td>${toBnNum(idx + 1)}</td>
+            <td style="font-weight: 600;">${formatWeightKgGm(gross)}</td>
+            <td style="font-size: 11px;">${rowBreakdown.textFormat}</td>
+            <td style="font-weight: 700;">৳ ${rowBreakdown.priceStr}</td>
+            <td class="action-cell no-print">
+              <div class="table-actions">
+                <button class="icon-btn-table" onclick="editShuknoBag(${idx})" title="এডিট">✏️</button>
+                <button class="icon-btn-table" onclick="deleteShuknoBag(${idx})" title="মুছুন">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+
+      let netWeight = totalGrossWeight - shuknoDeductedEmptyKg;
+      if (netWeight < 0) netWeight = 0;
+
+      const finalBreakdown = calculateShuknoBreakdown(netWeight);
+
+      document.getElementById('shuknoTotalBags').innerText = `${toBnNum(shuknoBags.length)}টি`;
+
+      const grossRow = document.getElementById('shuknoGrossRow');
+      const deductedRow = document.getElementById('shuknoDeductedRow');
+
+      if (shuknoDeductedEmptyKg > 0) {
+        grossRow.style.display = 'flex';
+        deductedRow.style.display = 'flex';
+        document.getElementById('shuknoGrossWeightText').innerText = formatWeightKgGm(totalGrossWeight);
+        document.getElementById('shuknoDeductedWeightText').innerText = `- ${formatWeightKgGm(shuknoDeductedEmptyKg)}`;
+      } else {
+        grossRow.style.display = 'none';
+        deductedRow.style.display = 'none';
+      }
+
+      document.getElementById('shuknoNetWeightText').innerText = formatWeightKgGm(netWeight);
+      document.getElementById('shuknoTotalSupariText').innerText = finalBreakdown.textFormat;
+      document.getElementById('shuknoGrandTotal').innerText = finalBreakdown.priceStr;
+
+      // Save draft state
+      localStorage.setItem('shukno_draft_state', JSON.stringify({
+        bags: shuknoBags,
+        rule: shuknoBaseRule,
+        rate: document.getElementById('shuknoPricePerHajar').value,
+        deductedEmptyKg: shuknoDeductedEmptyKg
+      }));
+    }
+
+    function saveShuknoToHistory() {
+      if (shuknoBags.length === 0) {
+        showToast('⚠️ সেভ করার জন্য কোনো হিসাব নেই');
+        return;
+      }
+      const history = JSON.parse(localStorage.getItem(SHUKNO_HIST_KEY) || '[]');
+      const dateOptions = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      const dateStr = toBnNum(new Date().toLocaleDateString('bn-BD', dateOptions));
+
+      const totalGross = shuknoBags.reduce((a, b) => a + b, 0);
+      let netW = totalGross - shuknoDeductedEmptyKg;
+      if (netW < 0) netW = 0;
+      const finalBreakdown = calculateShuknoBreakdown(netW);
+
+      const record = {
+        id: Date.now(),
+        // Requirement 4: শুকনো সুপারির হিসাব
+        title: `শুকনো সুপারি (${toBnNum(history.length + 1)})`,
+        date: dateStr,
+        bags: [...shuknoBags],
+        rule: shuknoBaseRule,
+        pricePerHajar: document.getElementById('shuknoPricePerHajar').value,
+        emptyBagKg: shuknoDeductedEmptyKg,
+        totalPrice: finalBreakdown.priceStr
+      };
+
+      history.unshift(record);
+      localStorage.setItem(SHUKNO_HIST_KEY, JSON.stringify(history));
+      showToast('💾 শুকনো সুপারি হিসাব হিস্ট্রিতে সেভ করা হয়েছে!');
+    }
+
+    function copyShuknoReport() {
+      if (shuknoBags.length === 0) return;
+      const rateNum = parseBnFloat(document.getElementById('shuknoPricePerHajar').value);
+      let text = "--- শুকনো সুপারি বিক্রির রসিদ ---\n";
+      text += `হিসাবের নিয়ম: ১ হাজার = ${toBnNum(shuknoBaseRule)} কেজি | দর: ৳ ${toBnNum(rateNum.toLocaleString('en-IN'))}\n\n`;
+
+      shuknoBags.forEach((gross, idx) => {
+        const row = calculateShuknoBreakdown(gross);
+        text += `বস্তা ${toBnNum(idx + 1)}: ${formatWeightKgGm(gross)} | ${row.textFormat} | ৳ ${row.priceStr}\n`;
+      });
+
+      const totalGross = shuknoBags.reduce((a, b) => a + b, 0);
+      let netW = totalGross - shuknoDeductedEmptyKg;
+      if (netW < 0) netW = 0;
+      const finalBreakdown = calculateShuknoBreakdown(netW);
+
+      text += `\nমোট বস্তা: ${toBnNum(shuknoBags.length)}টি\n`;
+      if (shuknoDeductedEmptyKg > 0) {
+        text += `বস্তাসহ মোট ওজন: ${formatWeightKgGm(totalGross)}\n`;
+        text += `বাদ দেওয়া বস্তার ওজন: ${formatWeightKgGm(shuknoDeductedEmptyKg)}\n`;
+      }
+      text += `সুপারির নিট ওজন: ${formatWeightKgGm(netW)}\n`;
+      text += `মোট সুপারি: ${finalBreakdown.textFormat}\n`;
+      text += `সর্বমোট দাম: ৳ ${finalBreakdown.priceStr}\n`;
+      text += `\nCreated by Rahat Sharif\n`;
+
+      copyToClipboard(text, 'শুকনো সুপারি রসিদ কপি হয়েছে!');
+    }
+
+    function downloadShuknoJPG() {
+      if (shuknoBags.length === 0) return;
+      const area = document.getElementById('shuknoExportArea');
+      const footer = area.querySelector('.receipt-creator-footer');
+      if (footer) footer.style.display = 'block';
+      html2canvas(area, {
+        scale: 2.5,
+        backgroundColor: '#ffffff',
+        ignoreElements: el => el.classList && el.classList.contains('no-print')
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'Shukno_Supari_Memo.jpg';
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+        showToast('🖼️ JPG রসিদ ডাউনলোড হয়েছে');
+      }).finally(() => {
+        if (footer) footer.style.display = 'none';
+      });
+    }
+
+    function printShuknoReport() {
+      if (shuknoBags.length === 0) return;
+      document.body.classList.add('printing-shukno');
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-shukno');
+      }, 500);
+    }
+
+    /* Shukno Subtab 2: Direct Weight Calculation */
+    function calculateShuknoDirect() {
+      const grossKg = parseBnFloat(document.getElementById('directGrossKg').value);
+      const grossGm = parseBnFloat(document.getElementById('directGrossGm').value);
+      const totalWeight = grossKg + (grossGm / 1000);
+
+      if (totalWeight <= 0) {
+        document.getElementById('directResultCard').style.display = 'none';
+        showToast('⚠️ অনুগ্রহ করে সুপারির সঠিক ওজন লিখুন');
+        return;
+      }
+
+      const breakdown = calculateShuknoBreakdown(totalWeight);
+
+      document.getElementById('directNetWeightText').innerText = formatWeightKgGm(totalWeight);
+      document.getElementById('directSupariQtyText').innerText = breakdown.textFormat;
+      document.getElementById('directPriceText').innerText = breakdown.priceStr;
+      document.getElementById('directResultCard').style.display = 'block';
+    }
+
+    function clearShuknoDirectFields() {
+      document.getElementById('directGrossKg').value = '';
+      document.getElementById('directGrossGm').value = '';
+      document.getElementById('directResultCard').style.display = 'none';
+    }
+
+    /* Clipboard Copy Helper */
+    function copyToClipboard(text, successMsg) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(`📋 ${successMsg}`);
+        }).catch(() => fallbackCopy(text, successMsg));
+      } else {
+        fallbackCopy(text, successMsg);
+      }
+    }
+
+    function fallbackCopy(text, successMsg) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(`📋 ${successMsg}`);
+      } catch (err) {
+        showToast('⚠️ কপি করতে সমস্যা হয়েছে');
+      }
+      document.body.removeChild(ta);
+    }
+
+    /* ======================================================== */
+    /* 7. APP INITIALIZATION & LOCALSTORAGE RESTORATION         */
+    /* ======================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Restore Kacha Draft
+      const savedKachaItems = localStorage.getItem('kacha_draft_items');
+      const savedKachaRule = localStorage.getItem('kacha_gha_rule');
+      if (savedKachaRule) document.getElementById('kachaGhaRule').value = savedKachaRule;
+      if (savedKachaItems) {
+        try {
+          kachaItems = JSON.parse(savedKachaItems);
+          renderKachaReport();
+        } catch (e) {}
+      }
+
+      // 2. Restore Shukno Draft
+      const savedShuknoState = localStorage.getItem('shukno_draft_state');
+      if (savedShuknoState) {
+        try {
+          const state = JSON.parse(savedShuknoState);
+          if (state.bags) shuknoBags = state.bags;
+          if (state.rule) {
+            shuknoBaseRule = state.rule;
+            document.getElementById('shuknoRuleSelect').value = state.rule;
+          }
+          // Note: Requirement 2 says rate should default to blank/empty
+          if (state.rate) {
+            document.getElementById('shuknoPricePerHajar').value = state.rate;
+          }
+          if (state.deductedEmptyKg) {
+            shuknoDeductedEmptyKg = state.deductedEmptyKg;
+          }
+          updateShuknoReport();
+        } catch (e) {}
+      }
+
+      // 3. Check URL hash for direct view routing
+      const hash = window.location.hash;
+      if (hash === '#kacha-paka') navigate('kacha-paka', false);
+      else if (hash === '#shukno') navigate('shukno', false);
+      else navigate('home', false);
+
+      // 4. Offline & Service Worker Registration
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => {
+              reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                if (installingWorker) {
+                  installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      showToast('⚡ অফলাইন ক্যাশ আপডেট সম্পন্ন হয়েছে');
+                    }
+                  };
+                }
+              };
+            })
+            .catch(() => {});
+        });
+      }
+
+      window.addEventListener('online', () => {
+        showToast('🌐 ইন্টারনেট সংযোগ ফিরে এসেছে');
+      });
+
+      window.addEventListener('offline', () => {
+        showToast('📶 অফলাইন মোড সক্রিয়: নেট ছাড়া হিসাব চলবে');
+      });
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,7 @@
+{
+  "name": "সুপারি হিসাব অ্যাপ",
+  "description": "কাঁচা-পাকা ও শুকনো সুপারি কেনা-বেচার সহজ ও নির্ভুল হিসাব ক্যালকুলেটর",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
