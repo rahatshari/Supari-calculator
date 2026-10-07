@@ -11,7 +11,13 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#10b981">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="pwa-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="pwa-512x512.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="সুপারি হিসাব">
   
   <!-- Fonts & Local Libraries for 100% Offline Capability -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -152,6 +158,92 @@
 
     .nav-icon-btn:hover, .nav-icon-btn:active {
       background: rgba(255, 255, 255, 0.3);
+      transform: scale(0.97);
+    }
+
+    .install-header-btn {
+      background: rgba(255, 255, 255, 0.25) !important;
+      border: 1px solid rgba(255, 255, 255, 0.5) !important;
+      font-weight: 700 !important;
+      color: #ffffff !important;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    .install-header-btn:hover, .install-header-btn:active {
+      background: rgba(255, 255, 255, 0.38) !important;
+    }
+
+    /* === PWA Install Banner === */
+    .install-banner {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border: 1.5px solid #a7f3d0;
+      border-radius: var(--radius-lg);
+      padding: 13px 15px;
+      margin: 0 0 18px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.12);
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .install-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .install-icon-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .install-banner-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #065f46;
+      line-height: 1.3;
+      margin-bottom: 2px;
+    }
+
+    .install-banner-desc {
+      font-size: 11.5px;
+      color: #047857;
+      line-height: 1.3;
+      font-weight: 500;
+    }
+
+    .install-action-btn {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: white;
+      border: none;
+      padding: 9px 13px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .install-action-btn:hover, .install-action-btn:active {
+      background: linear-gradient(135deg, #047857 0%, #059669 100%);
       transform: scale(0.97);
     }
 
@@ -1306,6 +1398,41 @@
     </div>
   </div>
 
+  <!-- Modal: iOS Safari Install Instruction -->
+  <div class="modal-overlay" id="iosInstallModal">
+    <div class="modal-box" style="max-width: 380px; width: 94%; text-align: left; border-radius: 18px; padding: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+        <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px;">
+          <span>📲</span> <span>অ্যাপ ইনস্টল নির্দেশিকা</span>
+        </h4>
+        <button onclick="closeIosInstallModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; line-height: 1;">✕</button>
+      </div>
+
+      <p style="font-size: 13px; color: #475569; margin: 0 0 12px; line-height: 1.5;">
+        আইফোন বা সাফারিতে অ্যাপ হিসেবে ইনস্টল করতে নিচের ৩টি ধাপ অনুসরণ করুন:
+      </p>
+
+      <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; font-size: 12.5px; line-height: 1.6; color: #1e293b;">
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;">
+          <span style="background: #10b981; color: white; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0;">১</span>
+          <div>সাফারি ব্রাউজারের নিচে <strong>Share (শেয়ার)</strong> বাটনে ট্যাপ করুন।</div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;">
+          <span style="background: #10b981; color: white; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0;">২</span>
+          <div>তালিকা থেকে <strong>'Add to Home Screen'</strong> (হোম স্ক্রিনে যোগ করুন) নির্বাচন করুন।</div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="background: #10b981; color: white; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0;">৩</span>
+          <div>উপরে ডানপাশে <strong>'Add'</strong> চাপলেই অ্যাপটি মোবাইলে সেভ হয়ে যাবে।</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="closeIosInstallModal()" style="width: 100%; padding: 11px; font-weight: 700; border-radius: 10px; font-size: 14px;">
+        ঠিক আছে, বুঝেছি
+      </button>
+    </div>
+  </div>
+
   <!-- History Sidebar Drawer -->
   <div class="overlay" id="drawerOverlay" onclick="closeHistoryDrawer()"></div>
   <div class="drawer" id="historyDrawer">
@@ -1338,6 +1465,10 @@
         <h1 class="header-title" id="appHeaderTitle">সুপারি হিসাব অ্যাপ</h1>
       </div>
       <div class="header-right">
+        <button class="nav-icon-btn install-header-btn" id="headerInstallBtn" onclick="triggerPwaInstall()" style="display: none;" title="অ্যাপ ইনস্টল করুন">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          ইন্সটল
+        </button>
         <button class="nav-icon-btn" onclick="openHistoryDrawer()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           হিস্ট্রি
@@ -1355,6 +1486,27 @@
         </div>
         <h2 class="home-title">সুপারি হিসাব অ্যাপ</h2>
         <p class="home-subtitle">আপনি কোন হিসাবটি করতে চান নিচে নির্বাচন করুন</p>
+      </div>
+
+      <!-- App Install Banner (Visible only when not installed) -->
+      <div id="homeInstallBanner" class="install-banner" style="display: none;">
+        <div class="install-banner-left">
+          <div class="install-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </div>
+          <div>
+            <div class="install-banner-title">অ্যাপটি মোবাইলে ইনস্টল করুন</div>
+            <div class="install-banner-desc">নেট ছাড়া সরাসরি ব্যবহারের জন্য এক ক্লিকে ইনস্টল করুন</div>
+          </div>
+        </div>
+        <button class="install-action-btn" onclick="triggerPwaInstall()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          ইন্সটল করুন
+        </button>
       </div>
 
       <!-- কাঁচা-পাকা সুপারি বাটন -->
@@ -4819,6 +4971,110 @@
     }
 
     /* ======================================================== */
+    /* PWA INSTALLATION (ইন্সটল বাটন হ্যান্ডলিং)                 */
+    /* ======================================================== */
+    let deferredInstallPrompt = null;
+
+    function isStandaloneMode() {
+      const isStandaloneMedia = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+      const isNavigatorStandalone = window.navigator.standalone === true;
+      const isAndroidApp = document.referrer && document.referrer.includes('android-app://');
+      return Boolean(isStandaloneMedia || isNavigatorStandalone || isAndroidApp);
+    }
+
+    function isPwaAlreadyInstalled() {
+      if (isStandaloneMode()) return true;
+      if (localStorage.getItem('pwa_installed') === 'true') return true;
+      return false;
+    }
+
+    function hideInstallButtons() {
+      const headerBtn = document.getElementById('headerInstallBtn');
+      const homeBanner = document.getElementById('homeInstallBanner');
+      if (headerBtn) headerBtn.style.display = 'none';
+      if (homeBanner) homeBanner.style.display = 'none';
+    }
+
+    function showInstallButtons() {
+      if (isPwaAlreadyInstalled()) {
+        hideInstallButtons();
+        return;
+      }
+      const headerBtn = document.getElementById('headerInstallBtn');
+      const homeBanner = document.getElementById('homeInstallBanner');
+      if (headerBtn) headerBtn.style.display = 'inline-flex';
+      if (homeBanner) homeBanner.style.display = 'flex';
+    }
+
+    // Capture beforeinstallprompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      localStorage.removeItem('pwa_installed');
+      if (!isStandaloneMode()) {
+        showInstallButtons();
+      }
+    });
+
+    // Capture appinstalled event - fired when installation finishes
+    window.addEventListener('appinstalled', () => {
+      hideInstallButtons();
+      localStorage.setItem('pwa_installed', 'true');
+      deferredInstallPrompt = null;
+      showToast('🎉 অ্যাপটি সফলভাবে আপনার ডিভাইসে ইনস্টল হয়েছে!');
+    });
+
+    // Listen for display-mode standalone changes
+    if (window.matchMedia) {
+      window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+        if (e.matches) {
+          hideInstallButtons();
+          localStorage.setItem('pwa_installed', 'true');
+        }
+      });
+    }
+
+    async function triggerPwaInstall() {
+      if (isStandaloneMode()) {
+        hideInstallButtons();
+        showToast('ℹ️ অ্যাপটি ইতোমধ্যে ইনস্টল অবস্থায় চালু আছে');
+        return;
+      }
+
+      if (deferredInstallPrompt) {
+        try {
+          deferredInstallPrompt.prompt();
+          const { outcome } = await deferredInstallPrompt.userChoice;
+          if (outcome === 'accepted') {
+            hideInstallButtons();
+            localStorage.setItem('pwa_installed', 'true');
+            showToast('✅ অ্যাপ ইনস্টল করা হচ্ছে...');
+          }
+          deferredInstallPrompt = null;
+        } catch (err) {
+          console.warn('Install error:', err);
+        }
+      } else {
+        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIos) {
+          openIosInstallModal();
+        } else {
+          showToast('ℹ️ ব্রাউজারের মেনু (⋮ বা Share) থেকে "Install app" বা "Add to Home screen" চাপুন');
+        }
+      }
+    }
+
+    function openIosInstallModal() {
+      const modal = document.getElementById('iosInstallModal');
+      if (modal) modal.classList.add('show');
+    }
+
+    function closeIosInstallModal() {
+      const modal = document.getElementById('iosInstallModal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    /* ======================================================== */
     /* 8. APP INITIALIZATION & LOCALSTORAGE RESTORATION         */
     /* ======================================================== */
     window.addEventListener('DOMContentLoaded', () => {
@@ -4892,6 +5148,13 @@
       window.addEventListener('offline', () => {
         showToast('📶 অফলাইন মোড সক্রিয়: নেট ছাড়া হিসাব চলবে');
       });
+
+      // 6. Check PWA Installation state
+      if (isPwaAlreadyInstalled()) {
+        hideInstallButtons();
+      } else {
+        showInstallButtons();
+      }
     });
   </script>
 </body>

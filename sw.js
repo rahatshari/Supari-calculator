@@ -1,4 +1,4 @@
-const CACHE_NAME = 'supari-calc-v12';
+const CACHE_NAME = 'supari-calc-v13';
 
 const STATIC_ASSETS = [
   './',
@@ -6,6 +6,10 @@ const STATIC_ASSETS = [
   './html2canvas.min.js',
   './manifest.json',
   './icon.svg',
+  './pwa-192x192.png',
+  './pwa-512x512.png',
+  './apple-touch-icon.png',
+  './pwa-maskable-512x512.png',
   './kacha-paka.html',
   './shukno.html'
 ];
