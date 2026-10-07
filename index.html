@@ -1883,9 +1883,18 @@
           <span style="font-size: 11px; background: #ecfdf5; color: #047857; padding: 2px 8px; border-radius: 12px; font-weight: 700;">কুড়ি/ঘা/টি হিসাব</span>
         </div>
 
-        <div class="input-box" style="margin-bottom: 10px;">
-          <label style="font-size: 12px;">বিক্রেতা / গ্রাহকের নাম (ঐচ্ছিক)</label>
-          <input type="text" id="kroyDirectSeller" placeholder="যেমন: সালাম বেপারি বা করিম মিয়া">
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 10px; margin-bottom: 10px;">
+          <div class="input-box">
+            <label style="font-size: 12px;">বিক্রেতা / গ্রাহকের নাম (ঐচ্ছিক)</label>
+            <input type="text" id="kroyDirectSeller" placeholder="যেমন: সালাম বেপারি বা করিম মিয়া">
+          </div>
+          <div class="input-box">
+            <label style="font-size: 12px; font-weight: 700;">হিসাবের নিয়ম</label>
+            <select id="kroyDirectGhaRule" class="std-input" style="height: 44px; padding: 6px 8px; font-size: 13px; font-weight: 700;" onchange="onKroyKachaRuleChange()">
+              <option value="21" selected>২১ ঘা = ১ কুড়ি</option>
+              <option value="20">২০ ঘা = ১ কুড়ি</option>
+            </select>
+          </div>
         </div>
 
         <div class="grid-inputs" style="margin-bottom: 10px;">
@@ -1943,12 +1952,9 @@
         <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 10px; margin-bottom: 10px;">
           <div class="input-box">
             <label style="font-size: 12px;">হিসাবের নিয়ম</label>
-            <select id="kroyShuknoRule" class="std-input" style="height: 44px; padding: 6px 8px; font-size: 13px; font-weight: 700;" onchange="calcKroyShuknoPreview()">
-              <option value="80" selected>৮০ কেজি = ১ হাজার</option>
-              <option value="82">৮২ কেজি = ১ হাজার</option>
-              <option value="84">৮৪ কেজি = ১ হাজার</option>
-              <option value="72">৭২ কেজি = ১ হাজার</option>
-              <option value="100">১০০ কেজি = ১ হাজার</option>
+            <select id="kroyShuknoRule" class="std-input" style="height: 44px; padding: 6px 8px; font-size: 13px; font-weight: 700;" onchange="onKroyShuknoRuleChange()">
+              <option value="82" selected>৮২ কেজি = ১ হাজার</option>
+              <option value="80">৮০ কেজি = ১ হাজার</option>
             </select>
           </div>
           <div class="input-box">
@@ -3558,13 +3564,23 @@
       showToast('📅 আজকের খাতা নির্বাচন করা হয়েছে');
     }
 
+    function onKroyKachaRuleChange() {
+      calcKroyDirectPreview();
+      renderKroyKhata();
+    }
+
+    function onKroyShuknoRuleChange() {
+      calcKroyShuknoPreview();
+      renderKroyKhata();
+    }
+
     /* Modal workflow to save calculated lot from Kacha or Shukno */
     function openKroyAddModalFromCurrentSummary() {
       if (kachaItems.length === 0) {
         showToast('⚠️ ক্রয় খাতায় যোগ করার মতো কোনো হিসাব নেই');
         return;
       }
-      const ghaPerKuri = parseInt(document.getElementById('kachaGhaRule').value);
+      const ghaPerKuri = parseInt(document.getElementById('kachaGhaRule').value) || 21;
       let totalTi = 0;
       let totalKuri = 0;
       let grandTotal = 0;
@@ -3592,8 +3608,10 @@
         type: 'kacha',
         qtyText: qtyText,
         kuri: totalKuri,
+        rule: ghaPerKuri,
+        ruleText: `${toBnNum(ghaPerKuri)} ঘা = ১ কুড়ি`,
         rate: avgRate,
-        rateText: `গড় দর: ৳ ${toBnNum(Math.round(avgRate))} / কুড়ি`,
+        rateText: `গড় দর: ৳ ${toBnNum(Math.round(avgRate))} / কুড়ি (${toBnNum(ghaPerKuri)} ঘা)`,
         totalPrice: grandTotal
       };
 
@@ -3607,13 +3625,16 @@
     function openKroyAddModalFromItem(idx) {
       const item = kachaItems[idx];
       if (!item) return;
+      const ghaPerKuri = parseInt(document.getElementById('kachaGhaRule').value) || 21;
 
       pendingKroyItem = {
         type: 'kacha',
         qtyText: item.qtyString,
         kuri: item.totalKuri,
+        rule: ghaPerKuri,
+        ruleText: `${toBnNum(ghaPerKuri)} ঘা = ১ কুড়ি`,
         rate: item.rate,
-        rateText: `দর: ৳ ${toBnNum(item.rate)} / কুড়ি`,
+        rateText: `দর: ৳ ${toBnNum(item.rate)} / কুড়ি (${toBnNum(ghaPerKuri)} ঘা)`,
         totalPrice: item.totalPrice
       };
 
@@ -3640,11 +3661,12 @@
         bags: shuknoBags.length,
         weightKg: netW,
         rule: shuknoBaseRule,
+        ruleText: `${toBnNum(shuknoBaseRule)} কেজি = ১ হাজার`,
         hajarShotokText: breakdown.textFormat,
         qtyText: `${toBnNum(shuknoBags.length)} বস্তা (${formatWeightKgGm(netW)})`,
         kuri: 0,
         rate: rateNum,
-        rateText: `১ হাজার = ৳ ${toBnNum(rateNum)}`,
+        rateText: `১ হাজার = ৳ ${toBnNum(rateNum)} (${toBnNum(shuknoBaseRule)} কেজি)`,
         totalPrice: breakdown.totalPrice
       };
 
@@ -3671,11 +3693,12 @@
         bags: 1,
         weightKg: totalWeight,
         rule: shuknoBaseRule,
+        ruleText: `${toBnNum(shuknoBaseRule)} কেজি = ১ হাজার`,
         hajarShotokText: breakdown.textFormat,
         qtyText: `১ লট (${formatWeightKgGm(totalWeight)})`,
         kuri: 0,
         rate: rateNum,
-        rateText: `১ হাজার = ৳ ${toBnNum(rateNum)}`,
+        rateText: `১ হাজার = ৳ ${toBnNum(rateNum)} (${toBnNum(shuknoBaseRule)} কেজি)`,
         totalPrice: breakdown.totalPrice
       };
 
@@ -3707,7 +3730,8 @@
         kuri: pendingKroyItem.kuri || 0,
         bags: pendingKroyItem.bags || 1,
         weightKg: pendingKroyItem.weightKg || 0,
-        rule: pendingKroyItem.rule || 80,
+        rule: pendingKroyItem.rule || (pendingKroyItem.type === 'shukno' ? 82 : 21),
+        ruleText: pendingKroyItem.ruleText || '',
         hajarShotokText: pendingKroyItem.hajarShotokText || '',
         rate: pendingKroyItem.rate || 0,
         rateText: pendingKroyItem.rateText || '',
@@ -3727,12 +3751,13 @@
 
     /* Direct Entry 1: Kaacha-Paka Supari */
     function calcKroyDirectPreview() {
+      const ghaRuleSelect = document.getElementById('kroyDirectGhaRule');
+      const ghaPerKuri = parseInt(ghaRuleSelect ? ghaRuleSelect.value : 21) || 21;
       const kuri = parseBnFloat(document.getElementById('kroyDirectKuri').value);
       const gha = parseBnFloat(document.getElementById('kroyDirectGha').value);
       const ti = parseBnFloat(document.getElementById('kroyDirectTi').value);
       const rate = parseBnFloat(document.getElementById('kroyDirectRate').value);
 
-      const ghaPerKuri = 21;
       const tiPerKuri = ghaPerKuri * tiPerGha;
       const totalTi = (kuri * tiPerKuri) + (gha * tiPerGha) + ti;
       const totalKuri = totalTi / tiPerKuri;
@@ -3759,12 +3784,13 @@
 
     function addDirectKroyItem() {
       const seller = document.getElementById('kroyDirectSeller').value.trim() || 'সাধারণ বিক্রেতা';
+      const ghaRuleSelect = document.getElementById('kroyDirectGhaRule');
+      const ghaPerKuri = parseInt(ghaRuleSelect ? ghaRuleSelect.value : 21) || 21;
       const kuri = parseBnFloat(document.getElementById('kroyDirectKuri').value);
       const gha = parseBnFloat(document.getElementById('kroyDirectGha').value);
       const ti = parseBnFloat(document.getElementById('kroyDirectTi').value);
       const rate = parseBnFloat(document.getElementById('kroyDirectRate').value);
 
-      const ghaPerKuri = 21;
       const tiPerKuri = ghaPerKuri * tiPerGha;
       const totalTi = (kuri * tiPerKuri) + (gha * tiPerGha) + ti;
 
@@ -3790,8 +3816,10 @@
         type: 'kacha',
         qtyText: qtyText,
         kuri: totalKuri,
+        rule: ghaPerKuri,
+        ruleText: `${toBnNum(ghaPerKuri)} ঘা = ১ কুড়ি`,
         rate: rate,
-        rateText: `দর: ৳ ${toBnNum(rate)} / কুড়ি`,
+        rateText: `দর: ৳ ${toBnNum(rate)} / কুড়ি (${toBnNum(ghaPerKuri)} ঘা)`,
         totalPrice: totalPrice
       };
 
@@ -3816,7 +3844,8 @@
       const gm = parseBnFloat(document.getElementById('kroyShuknoGm').value);
       const totalWeight = kg + (gm / 1000);
       const rate = parseBnFloat(document.getElementById('kroyShuknoRate').value);
-      const rule = parseBnFloat(document.getElementById('kroyShuknoRule').value) || 80;
+      const ruleSelect = document.getElementById('kroyShuknoRule');
+      const rule = parseBnFloat(ruleSelect ? ruleSelect.value : 82) || 82;
 
       const bar = document.getElementById('kroyShuknoPreviewBar');
       const qtyEl = document.getElementById('kroyShuknoPreviewQty');
@@ -3850,7 +3879,8 @@
       const gm = parseBnFloat(document.getElementById('kroyShuknoGm').value);
       const totalWeight = kg + (gm / 1000);
       const rate = parseBnFloat(document.getElementById('kroyShuknoRate').value);
-      const rule = parseBnFloat(document.getElementById('kroyShuknoRule').value) || 80;
+      const ruleSelect = document.getElementById('kroyShuknoRule');
+      const rule = parseBnFloat(ruleSelect ? ruleSelect.value : 82) || 82;
 
       if (totalWeight <= 0) {
         showToast('⚠️ সুপারির সঠিক ওজন (কেজি ও গ্রাম) লিখুন');
@@ -3883,10 +3913,11 @@
         bags: bags,
         weightKg: totalWeight,
         rule: rule,
+        ruleText: `${toBnNum(rule)} কেজি = ১ হাজার`,
         hajarShotokText: breakdownText,
         qtyText: `${toBnNum(bags)} বস্তা (${formatWeightKgGm(totalWeight)})`,
         rate: rate,
-        rateText: `১ হাজার = ৳ ${toBnNum(rate)}`,
+        rateText: `১ হাজার = ৳ ${toBnNum(rate)} (${toBnNum(rule)} কেজি)`,
         totalPrice: totalPrice
       };
 
@@ -3913,7 +3944,10 @@
         switchKroyTypeTab('shukno');
         document.getElementById('kroyShuknoSeller').value = entry.seller === 'সাধারণ বিক্রেতা' ? '' : entry.seller;
         document.getElementById('kroyShuknoBags').value = entry.bags ? toBnNum(entry.bags) : '১';
-        if (entry.rule) document.getElementById('kroyShuknoRule').value = entry.rule;
+        if (entry.rule) {
+          const ruleSelect = document.getElementById('kroyShuknoRule');
+          if (ruleSelect) ruleSelect.value = entry.rule;
+        }
         if (entry.weightKg > 0) {
           const totGm = Math.round(entry.weightKg * 1000);
           const kg = Math.floor(totGm / 1000);
@@ -3926,6 +3960,10 @@
       } else {
         switchKroyTypeTab('kacha');
         document.getElementById('kroyDirectSeller').value = entry.seller === 'সাধারণ বিক্রেতা' ? '' : entry.seller;
+        if (entry.rule) {
+          const ruleSelect = document.getElementById('kroyDirectGhaRule');
+          if (ruleSelect) ruleSelect.value = entry.rule;
+        }
         document.getElementById('kroyDirectRate').value = entry.rate > 0 ? toBnNum(entry.rate) : '';
         calcKroyDirectPreview();
       }
@@ -4004,7 +4042,8 @@
         kachaKuri += (e.kuri || 0);
         kachaSpent += (e.totalPrice || 0);
       });
-      const ghaPerKuri = 21;
+      const kachaRuleEl = document.getElementById('kroyDirectGhaRule');
+      const ghaPerKuri = parseInt(kachaRuleEl ? kachaRuleEl.value : 21) || 21;
       const tiPerKuri = ghaPerKuri * tiPerGha;
       const totalTi = Math.round(kachaKuri * tiPerKuri);
       const finalKuri = Math.floor(totalTi / tiPerKuri);
@@ -4028,7 +4067,8 @@
         shuknoBags += (e.bags || 1);
         shuknoSpent += (e.totalPrice || 0);
       });
-      const defaultRule = 80;
+      const shuknoRuleEl = document.getElementById('kroyShuknoRule');
+      const defaultRule = parseInt(shuknoRuleEl ? shuknoRuleEl.value : 82) || 82;
       const hajarCount = Math.floor(shuknoWeight / defaultRule);
       const remKg = shuknoWeight % defaultRule;
       const weightPerShotok = defaultRule / 10;
@@ -4121,7 +4161,7 @@
 
       if (currentKroyTab === 'kacha') {
         printTitleEl.innerText = 'দৈনিক কাঁচা-পাকা সুপারি ক্রয় খাতা (খরিদ চালান)';
-        printSubtitleEl.innerText = `তারিখ: ${dateBn} | কাঁচা-পাকা সুপারি আড়ত হিসাব`;
+        printSubtitleEl.innerText = `তারিখ: ${dateBn} | কাঁচা-পাকা সুপারি হিসাব (${toBnNum(ghaPerKuri)} ঘা = ১ কুড়ি)`;
 
         let rowsHtml = '';
         kachaEntries.forEach((item, idx) => {
@@ -4131,7 +4171,10 @@
               <td style="font-size: 11.5px; color: var(--text-muted);">${item.time || '-'}</td>
               <td style="font-weight: 700; color: #0f172a;">${item.seller}</td>
               <td style="font-weight: 600;">${item.qtyText}</td>
-              <td style="font-size: 12px;">৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}</td>
+              <td style="font-size: 12px;">
+                ৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}
+                <div style="font-size: 10.5px; color: #047857; font-weight: 600;">${toBnNum(item.rule || 21)} ঘা/কুড়ি</div>
+              </td>
               <td style="font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
               <td class="action-cell no-print">
                 <div class="table-actions">
@@ -4166,7 +4209,7 @@
             <strong>${toBnNum(kachaEntries.length)} জন</strong>
           </div>
           <div class="summary-row" style="color: #065f46;">
-            <span>দিনশেষে মোট কেনা সুপারি:</span>
+            <span>দিনশেষে মোট কেনা সুপারি (${toBnNum(ghaPerKuri)} ঘা নিয়মে):</span>
             <strong>${kachaQtyText}</strong>
           </div>
           <div class="summary-row" style="color: #475569;">
@@ -4185,7 +4228,7 @@
 
       } else if (currentKroyTab === 'shukno') {
         printTitleEl.innerText = 'দৈনিক শুকনো সুপারি ক্রয় খাতা (খরিদ চালান)';
-        printSubtitleEl.innerText = `তারিখ: ${dateBn} | শুকনো সুপারি আড়ত হিসাব`;
+        printSubtitleEl.innerText = `তারিখ: ${dateBn} | শুকনো সুপারি হিসাব (${toBnNum(defaultRule)} কেজি = ১ হাজার)`;
 
         let rowsHtml = '';
         shuknoEntries.forEach((item, idx) => {
@@ -4195,7 +4238,10 @@
               <td style="font-size: 11.5px; color: var(--text-muted);">${item.time || '-'}</td>
               <td style="font-weight: 700; color: #0f172a;">${item.seller}</td>
               <td style="font-weight: 600;">${item.qtyText}</td>
-              <td style="font-size: 12px; color: #78350f;">${item.hajarShotokText || '-'}</td>
+              <td style="font-size: 12px; color: #78350f;">
+                ${item.hajarShotokText || '-'}
+                <div style="font-size: 10.5px; color: #b45309; font-weight: 600;">${toBnNum(item.rule || 82)} কেজি/হাজার</div>
+              </td>
               <td style="font-size: 12px;">৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}</td>
               <td style="font-weight: 700; color: #b45309;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
               <td class="action-cell no-print">
@@ -4240,7 +4286,7 @@
             <strong>${formatWeightKgGm(shuknoWeight)}</strong>
           </div>
           <div class="summary-row" style="color: #475569;">
-            <span>ভাঙানো পরিমাণ:</span>
+            <span>ভাঙানো পরিমাণ (${toBnNum(defaultRule)} কেজি নিয়মে):</span>
             <strong>${shuknoBreakdownText}</strong>
           </div>
           <div class="summary-row total-row" style="color: #b91c1c;">
@@ -4265,7 +4311,10 @@
                 <td style="font-size: 11.5px; color: var(--text-muted);">${item.time || '-'}</td>
                 <td style="font-weight: 700;">${item.seller}</td>
                 <td>${item.qtyText}</td>
-                <td style="font-size: 12px;">৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}</td>
+                <td style="font-size: 12px;">
+                  ৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}
+                  <span style="font-size: 10.5px; color: #047857; font-weight: 600;">(${toBnNum(item.rule || 21)} ঘা)</span>
+                </td>
                 <td style="font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
                 <td class="action-cell no-print">
                   <div class="table-actions">
@@ -4309,8 +4358,14 @@
                 <td>${toBnNum(idx + 1)}</td>
                 <td style="font-size: 11.5px; color: var(--text-muted);">${item.time || '-'}</td>
                 <td style="font-weight: 700;">${item.seller}</td>
-                <td>${item.qtyText}</td>
-                <td style="font-size: 12px;">৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}</td>
+                <td>
+                  ${item.qtyText}
+                  <div style="font-size: 11px; color: #78350f;">${item.hajarShotokText || ''}</div>
+                </td>
+                <td style="font-size: 12px;">
+                  ৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}
+                  <span style="font-size: 10.5px; color: #b45309; font-weight: 600;">(${toBnNum(item.rule || 82)} কেজি)</span>
+                </td>
                 <td style="font-weight: 700; color: #b45309;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
                 <td class="action-cell no-print">
                   <div class="table-actions">
@@ -4334,7 +4389,7 @@
                     <th style="width: 32px;">নং</th>
                     <th>সময়</th>
                     <th>বিক্রেতা</th>
-                    <th>ওজন ও বস্তা</th>
+                    <th>ওজন ও পরিমাণ</th>
                     <th>দর (৳)</th>
                     <th>খরচ (৳)</th>
                     <th class="action-col no-print" style="width: 60px;">অ্যাকশন</th>
@@ -4385,11 +4440,13 @@
           totalKuri += (e.kuri || 0);
           totalSpent += (e.totalPrice || 0);
         });
+        const kachaRuleEl = document.getElementById('kroyDirectGhaRule');
+        const activeKachaRule = parseInt(kachaRuleEl ? kachaRuleEl.value : 21) || 21;
         text += `--- দৈনিক কাঁচা-পাকা সুপারি ক্রয় খাতা ---\n`;
-        text += `তারিখ: ${dateBn}\n`;
+        text += `তারিখ: ${dateBn} (হিসাবের নিয়ম: ${toBnNum(activeKachaRule)} ঘা = ১ কুড়ি)\n`;
         text += `মোট চালান: ${toBnNum(kachaEntries.length)} জন\n\n`;
         kachaEntries.forEach((e, i) => {
-          text += `${toBnNum(i + 1)}. [${e.time}] ${e.seller} - ${e.qtyText} | দর: ৳ ${toBnNum(Math.round(e.rate))} | মোট: ৳ ${toBnNum(e.totalPrice.toFixed(2))}\n`;
+          text += `${toBnNum(i + 1)}. [${e.time}] ${e.seller} - ${e.qtyText} | দর: ৳ ${toBnNum(Math.round(e.rate))} (${toBnNum(e.rule || activeKachaRule)} ঘা) | মোট: ৳ ${toBnNum(e.totalPrice.toFixed(2))}\n`;
         });
         text += `\n--------------------------------\n`;
         text += `মোট কেনা সুপারি: ${document.getElementById('kroyDashTotalQty').innerText}\n`;
@@ -4402,11 +4459,13 @@
           totalWeight += (e.weightKg || 0);
           totalSpent += (e.totalPrice || 0);
         });
+        const shuknoRuleEl = document.getElementById('kroyShuknoRule');
+        const activeShuknoRule = parseInt(shuknoRuleEl ? shuknoRuleEl.value : 82) || 82;
         text += `--- দৈনিক শুকনো সুপারি ক্রয় খাতা ---\n`;
-        text += `তারিখ: ${dateBn}\n`;
+        text += `তারিখ: ${dateBn} (হিসাবের নিয়ম: ${toBnNum(activeShuknoRule)} কেজি = ১ হাজার)\n`;
         text += `মোট চালান: ${toBnNum(shuknoEntries.length)} জন\n\n`;
         shuknoEntries.forEach((e, i) => {
-          text += `${toBnNum(i + 1)}. [${e.time}] ${e.seller} - ${e.qtyText} | ভাঙানো: ${e.hajarShotokText || '-'} | মোট: ৳ ${toBnNum(e.totalPrice.toFixed(2))}\n`;
+          text += `${toBnNum(i + 1)}. [${e.time}] ${e.seller} - ${e.qtyText} | ভাঙানো: ${e.hajarShotokText || '-'} (${toBnNum(e.rule || activeShuknoRule)} কেজি) | মোট: ৳ ${toBnNum(e.totalPrice.toFixed(2))}\n`;
         });
         text += `\n--------------------------------\n`;
         text += `মোট শুকনো ওজন: ${formatWeightKgGm(totalWeight)}\n`;
@@ -4483,7 +4542,8 @@
           totalKuri += (e.kuri || 0);
           totalSpent += (e.totalPrice || 0);
         });
-        const ghaPerKuri = 21;
+        const kachaRuleEl = document.getElementById('kroyDirectGhaRule');
+        const ghaPerKuri = parseInt(kachaRuleEl ? kachaRuleEl.value : 21) || 21;
         const tiPerKuri = ghaPerKuri * tiPerGha;
         const totalTi = Math.round(totalKuri * tiPerKuri);
         const finalKuri = Math.floor(totalTi / tiPerKuri);
@@ -4505,7 +4565,10 @@
               <td style="padding: 7px 5px; text-align: center; font-size: 11px; color: #64748b;">${item.time || '-'}</td>
               <td style="padding: 7px 5px; text-align: left; font-weight: 700; color: #0f172a;">${item.seller}</td>
               <td style="padding: 7px 5px; text-align: center; font-weight: 600;">${item.qtyText}</td>
-              <td style="padding: 7px 5px; text-align: center; font-size: 11.5px;">৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}</td>
+              <td style="padding: 7px 5px; text-align: center; font-size: 11.5px;">
+                ৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}
+                <span style="font-size: 10px; color: #047857;">(${toBnNum(item.rule || ghaPerKuri)} ঘা)</span>
+              </td>
               <td style="padding: 7px 5px; text-align: right; font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
             </tr>
           `;
@@ -4516,7 +4579,7 @@
             <div style="text-align: center; border-bottom: 2px solid #047857; padding-bottom: 14px; margin-bottom: 16px;">
               <h2 style="margin: 0 0 6px; font-size: 24px; font-weight: 800; color: #047857;">দৈনিক কাঁচা-পাকা সুপারি ক্রয় খাতা (খরিদ চালান)</h2>
               <div style="font-size: 13.5px; color: #475569; font-weight: 600;">
-                তারিখ: <span style="color: #0f172a; font-weight: 700;">${dateBn}</span> | কাঁচা-পাকা সুপারি হিসাব
+                তারিখ: <span style="color: #0f172a; font-weight: 700;">${dateBn}</span> | কাঁচা-পাকা সুপারি হিসাব (${toBnNum(ghaPerKuri)} ঘা = ১ কুড়ি)
               </div>
             </div>
 
@@ -4540,7 +4603,7 @@
                 <strong style="color: #0f172a; font-size: 15px;">${toBnNum(kachaEntries.length)} জন</strong>
               </div>
               <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #065f46;">
-                <span>দিনশেষে মোট কেনা সুপারি:</span>
+                <span>দিনশেষে মোট কেনা সুপারি (${toBnNum(ghaPerKuri)} ঘা নিয়মে):</span>
                 <strong style="font-size: 16px;">${totalQtyText}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569;">
@@ -4569,6 +4632,8 @@
           totalBags += (e.bags || 1);
           totalSpent += (e.totalPrice || 0);
         });
+        const shuknoRuleEl = document.getElementById('kroyShuknoRule');
+        const defaultRule = parseInt(shuknoRuleEl ? shuknoRuleEl.value : 82) || 82;
 
         let tableRows = '';
         shuknoEntries.forEach((item, idx) => {
@@ -4578,7 +4643,10 @@
               <td style="padding: 7px 5px; text-align: center; font-size: 11px; color: #64748b;">${item.time || '-'}</td>
               <td style="padding: 7px 5px; text-align: left; font-weight: 700; color: #0f172a;">${item.seller}</td>
               <td style="padding: 7px 5px; text-align: center; font-weight: 600;">${item.qtyText}</td>
-              <td style="padding: 7px 5px; text-align: center; font-size: 11.5px; color: #92400e;">${item.hajarShotokText || '-'}</td>
+              <td style="padding: 7px 5px; text-align: center; font-size: 11.5px; color: #92400e;">
+                ${item.hajarShotokText || '-'}
+                <span style="font-size: 10px; color: #b45309;">(${toBnNum(item.rule || defaultRule)} কেজি)</span>
+              </td>
               <td style="padding: 7px 5px; text-align: right; font-weight: 700; color: #b45309;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
             </tr>
           `;
@@ -4589,7 +4657,7 @@
             <div style="text-align: center; border-bottom: 2px solid #b45309; padding-bottom: 14px; margin-bottom: 16px;">
               <h2 style="margin: 0 0 6px; font-size: 24px; font-weight: 800; color: #b45309;">দৈনিক শুকনো সুপারি ক্রয় খাতা (খরিদ চালান)</h2>
               <div style="font-size: 13.5px; color: #475569; font-weight: 600;">
-                তারিখ: <span style="color: #0f172a; font-weight: 700;">${dateBn}</span> | শুকনো সুপারি হিসাব
+                তারিখ: <span style="color: #0f172a; font-weight: 700;">${dateBn}</span> | শুকনো সুপারি হিসাব (${toBnNum(defaultRule)} কেজি = ১ হাজার)
               </div>
             </div>
 
@@ -4617,7 +4685,7 @@
                 <strong style="font-size: 16px;">${toBnNum(totalBags)} টি</strong>
               </div>
               <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #78350f;">
-                <span>সর্বমোট শুকনো ওজন:</span>
+                <span>সর্বমোট শুকনো ওজন (${toBnNum(defaultRule)} কেজি নিয়মে):</span>
                 <strong>${formatWeightKgGm(totalWeight)}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 2px dashed #fcd34d; font-size: 20px; font-weight: 800; color: #b45309;">
@@ -4656,7 +4724,7 @@
                     <tr style="border-bottom: 1px solid #f1f5f9;">
                       <td style="padding: 5px 4px; text-align: center;">${toBnNum(idx + 1)}</td>
                       <td style="padding: 5px 4px; font-weight: 700;">${item.seller}</td>
-                      <td style="padding: 5px 4px; text-align: center;">${item.qtyText}</td>
+                      <td style="padding: 5px 4px; text-align: center;">${item.qtyText} <span style="font-size: 10px; color: #047857;">(${toBnNum(item.rule || 21)} ঘা)</span></td>
                       <td style="padding: 5px 4px; text-align: right; font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
                     </tr>
                   `).join('')}
@@ -4687,7 +4755,7 @@
                     <tr style="border-bottom: 1px solid #fef3c7;">
                       <td style="padding: 5px 4px; text-align: center;">${toBnNum(idx + 1)}</td>
                       <td style="padding: 5px 4px; font-weight: 700;">${item.seller}</td>
-                      <td style="padding: 5px 4px; text-align: center;">${item.qtyText}</td>
+                      <td style="padding: 5px 4px; text-align: center;">${item.qtyText} <span style="font-size: 10px; color: #b45309;">(${toBnNum(item.rule || 82)} কেজি)</span></td>
                       <td style="padding: 5px 4px; text-align: right; font-weight: 700; color: #b45309;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
                     </tr>
                   `).join('')}
