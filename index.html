@@ -1082,7 +1082,8 @@
 
       /* When printing kacha-paka: only print its receipt */
       body.printing-kacha #view-home,
-      body.printing-kacha #view-shukno {
+      body.printing-kacha #view-shukno,
+      body.printing-kacha #view-kroy-khata {
         display: none !important;
       }
       body.printing-kacha #kachaExportArea {
@@ -1093,10 +1094,23 @@
 
       /* When printing shukno: only print its receipt */
       body.printing-shukno #view-home,
-      body.printing-shukno #view-kacha-paka {
+      body.printing-shukno #view-kacha-paka,
+      body.printing-shukno #view-kroy-khata {
         display: none !important;
       }
       body.printing-shukno #shuknoExportArea {
+        display: block !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+
+      /* When printing kroy-khata: only print its receipt */
+      body.printing-kroy #view-home,
+      body.printing-kroy #view-kacha-paka,
+      body.printing-kroy #view-shukno {
+        display: none !important;
+      }
+      body.printing-kroy #kroyExportArea {
         display: block !important;
         border: none !important;
         padding: 0 !important;
@@ -1253,6 +1267,45 @@
     </div>
   </div>
 
+  <!-- Modal: Add To Kroy Khata Confirmation -->
+  <div class="modal-overlay" id="kroyConfirmModal">
+    <div class="modal-box" style="max-width: 400px; width: 94%; text-align: left; border-radius: 16px; padding: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+        <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px;">
+          <span>🛒</span> <span>সুপারি ক্রয় নিশ্চিতকরণ</span>
+        </h4>
+        <button onclick="closeKroyConfirmModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; line-height: 1;">✕</button>
+      </div>
+
+      <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1.5px solid #a7f3d0; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
+          <span style="color: #64748b;">সুপারির পরিমাণ:</span>
+          <strong id="kroyModalQtyText" style="color: #0f172a; font-size: 14px;">০ কুড়ি</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
+          <span style="color: #64748b;">দর:</span>
+          <strong id="kroyModalRateText" style="color: #0f172a;">০ ৳</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px dashed #6ee7b7; font-size: 17px; font-weight: 800; color: #047857;">
+          <span>মোট মূল্য (খরচ):</span>
+          <span id="kroyModalPriceText">৳ ০</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; display: block;">বিক্রেতার নাম বা পরিচয় (ঐচ্ছিক):</label>
+        <input type="text" id="kroyModalSellerName" class="std-input" placeholder="যেমন: রহিম মিয়া বা লট নং" style="width: 100%; box-sizing: border-box;">
+      </div>
+
+      <div class="modal-buttons" style="display: flex; gap: 8px;">
+        <button class="btn btn-modal-cancel" onclick="closeKroyConfirmModal()" style="flex: 1; padding: 10px; border-radius: 8px;">বাতিল</button>
+        <button class="btn btn-primary" onclick="confirmSaveToKroyKhata()" style="flex: 2; padding: 10px; font-weight: 700; border-radius: 8px;">
+          ✅ ক্রয় খাতায় যোগ করুন
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- History Sidebar Drawer -->
   <div class="overlay" id="drawerOverlay" onclick="closeHistoryDrawer()"></div>
   <div class="drawer" id="historyDrawer">
@@ -1262,8 +1315,9 @@
     </div>
     <div class="drawer-body">
       <div class="history-type-tabs">
-        <button class="history-type-btn active" id="histTabKacha" onclick="switchHistoryTab('kacha')">কাঁচা-পাকা সুপারি</button>
+        <button class="history-type-btn active" id="histTabKacha" onclick="switchHistoryTab('kacha')">কাঁচা-পাকা</button>
         <button class="history-type-btn" id="histTabShukno" onclick="switchHistoryTab('shukno')">শুকনো সুপারি</button>
+        <button class="history-type-btn" id="histTabKroy" onclick="switchHistoryTab('kroy')">ক্রয় খাতা</button>
       </div>
       <div id="historyListContainer"></div>
     </div>
@@ -1345,6 +1399,25 @@
         <div class="module-info">
           <h3>শুকনো সুপারির হিসাব</h3>
           <p>বস্তা ও মোট ওজন হিসাব এবং খালি বস্তার ওজন বাদ</p>
+        </div>
+        <div class="module-arrow">➔</div>
+      </div>
+
+      <!-- দৈনিক সুপারি ক্রয় খাতা (নতুন ফিচার) -->
+      <div class="module-card" onclick="navigate('kroy-khata')">
+        <div class="module-icon-box" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-color: #6ee7b7;">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </div>
+        <div class="module-info">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 style="margin-bottom: 2px;">দৈনিক সুপারি ক্রয় খাতা</h3>
+            <span style="font-size: 10px; font-weight: 800; background: #10b981; color: white; padding: 2px 7px; border-radius: 10px;">নতুন</span>
+          </div>
+          <p>ক্রয়কৃত সুপারি ট্র্যাকিং, মোট কুড়ি ও দিনশেষের মোট খরচের হিসাব</p>
         </div>
         <div class="module-arrow">➔</div>
       </div>
@@ -1438,6 +1511,11 @@
               <span>সর্বমোট দাম:</span>
               <strong>৳ <span id="kachaGrandTotal">০</span></strong>
             </div>
+
+            <!-- এই হিসাবটি সরাসরি ক্রয় খাতায় পাঠানোর বাটন -->
+            <button class="btn no-print" onclick="openKroyAddModalFromCurrentSummary()" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; font-weight: 700; padding: 10px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13.5px; box-shadow: 0 2px 6px rgba(5,150,105,0.25);">
+              🛒 এই সম্পূর্ণ হিসাবটি ক্রয় খাতায় যোগ করুন
+            </button>
           </div>
 
           <!-- Receipt Memo Footer: Beautiful Creator Badge (Created by Rahat Sharif) -->
@@ -1594,6 +1672,11 @@
               <strong>৳ <span id="shuknoGrandTotal">০</span></strong>
             </div>
 
+            <!-- এই শুকনো সুপারি হিসাবটি সরাসরি ক্রয় খাতায় পাঠানোর বাটন -->
+            <button class="btn no-print" onclick="openKroyAddModalFromShuknoSummary()" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; font-weight: 700; padding: 10px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; box-shadow: 0 2px 6px rgba(5,150,105,0.25);">
+              🛒 এই শুকনো সুপারি হিসাবটি ক্রয় খাতায় যোগ করুন
+            </button>
+
             <!-- ============================================================ -->
             <!-- Requirement 3: সর্বমোট দাম এর নিচে বস্তার ওজন বাদ দেওয়ার আইকন অপশন -->
             <!-- ============================================================ -->
@@ -1670,6 +1753,179 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ====================================================== -->
+    <!-- 4. সুপারি ক্রয় খাতা ভিউ (KROY KHATA VIEW - নতুন ফিচার) -->
+    <!-- ====================================================== -->
+    <div class="view-panel" id="view-kroy-khata">
+      
+      <!-- তারিখ নির্বাচন ও আজকের তারিখ ব্যানার -->
+      <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;" class="no-print">
+        <div>
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">খাতার তারিখ</div>
+          <div style="font-size: 15px; font-weight: 800; color: #065f46;" id="kroyActiveDateFormatted">আজকের খাতা</div>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <input type="date" id="kroyDateSelector" class="std-input" style="padding: 6px 10px; font-size: 13px; margin: 0; width: auto;" onchange="onKroyDateChange(this.value)">
+          <button class="btn btn-secondary" onclick="setKroyDateToToday()" style="padding: 6px 12px; font-size: 12.5px; margin: 0; white-space: nowrap;">আজকে</button>
+        </div>
+      </div>
+
+      <!-- দিনশেষের সারসংক্ষেপ ড্যাশবোর্ড (Dashboard Cards) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;" class="no-print">
+        <!-- Card 1: মোট কেনা সুপারি -->
+        <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1.5px solid #a7f3d0; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(5,150,105,0.06);">
+          <div style="font-size: 12px; font-weight: 700; color: #065f46; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+            <span>📦</span> <span>মোট কেনা সুপারি</span>
+          </div>
+          <div style="font-size: 17px; font-weight: 800; color: #047857; line-height: 1.3;" id="kroyDashTotalQty">
+            ০ কুড়ি
+          </div>
+          <div style="font-size: 11.5px; color: #059669; font-weight: 600; margin-top: 3px;">
+            দশমিক: <span id="kroyDashKuriDec">০.০০</span> কুড়ি
+          </div>
+        </div>
+
+        <!-- Card 2: দিনশেষে মোট খরচ -->
+        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(37,99,235,0.06);">
+          <div style="font-size: 12px; font-weight: 700; color: #1e40af; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+            <span>💰</span> <span>দিনশেষে মোট খরচ</span>
+          </div>
+          <div style="font-size: 19px; font-weight: 800; color: #1d4ed8; line-height: 1.3;" id="kroyDashTotalPrice">
+            ৳ ০
+          </div>
+          <div style="font-size: 11.5px; color: #2563eb; font-weight: 600; margin-top: 3px;">
+            বিক্রেতা: <span id="kroyDashTotalSellers">০</span> জন | গড়: ৳<span id="kroyDashAvgRate">০</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- সরাসরি নতুন ক্রয় এন্ট্রি ফর্ম (Direct Entry Form) -->
+      <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 16px;" class="no-print">
+        <div style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="display: flex; align-items: center; gap: 6px;"><span>➕</span> <span>সরাসরি নতুন ক্রয় যোগ করুন</span></span>
+          <span style="font-size: 11px; color: var(--text-muted);">(কাঁচা-পাকা সুপারি)</span>
+        </div>
+
+        <div class="input-box" style="margin-bottom: 10px;">
+          <label style="font-size: 12px;">বিক্রেতা / গ্রাহকের নাম (ঐচ্ছিক)</label>
+          <input type="text" id="kroyDirectSeller" placeholder="যেমন: সালাম বেপারি বা করিম মিয়া">
+        </div>
+
+        <div class="grid-inputs" style="margin-bottom: 10px;">
+          <div class="input-box">
+            <label style="font-size: 12px;">কুড়ি</label>
+            <input type="text" id="kroyDirectKuri" placeholder="০" inputmode="numeric" oninput="forceBnDigits(event); calcKroyDirectPreview()">
+          </div>
+          <div class="input-box">
+            <label style="font-size: 12px;">ঘা</label>
+            <input type="text" id="kroyDirectGha" placeholder="০" inputmode="numeric" oninput="forceBnDigits(event); calcKroyDirectPreview()">
+          </div>
+          <div class="input-box">
+            <label style="font-size: 12px;">টি (পিস)</label>
+            <input type="text" id="kroyDirectTi" placeholder="০" inputmode="numeric" oninput="forceBnDigits(event); calcKroyDirectPreview()">
+          </div>
+        </div>
+
+        <div class="input-box rate-box-wrapper" style="margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px;">
+            <label for="kroyDirectRate" style="font-size: 12px; font-weight: 700; margin-bottom: 0;">প্রতি কুড়ির দর (৳)</label>
+            <span id="kroyDirectGhaHint" style="font-size: 11px; font-weight: 700; color: #047857; display: none;">
+              ১ ঘা = ৳ <span id="kroyDirectGhaVal">০</span>
+            </span>
+          </div>
+          <input type="text" id="kroyDirectRate" placeholder="০" inputmode="decimal" oninput="forceBnDigits(event); calcKroyDirectPreview()">
+        </div>
+
+        <!-- লাইভ হিসাব প্রিভিউ বার -->
+        <div id="kroyDirectPreviewBar" style="display: none; background: #f0fdf4; border: 1px dashed #86efac; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; justify-content: space-between; align-items: center;">
+          <span style="font-size: 12.5px; color: #065f46; font-weight: 600;">হিসাবকৃত মোট খরচ:</span>
+          <strong style="font-size: 16px; color: #047857;" id="kroyDirectPreviewTotal">৳ ০</strong>
+        </div>
+
+        <button class="btn btn-primary" onclick="addDirectKroyItem()" style="width: 100%;">
+          🛒 ক্রয় খাতায় জমা করুন
+        </button>
+      </div>
+
+      <!-- আজকের ক্রয় খাতা রসিদ ও টেবিল এরিয়া (Export Area) -->
+      <div class="receipt-section" id="kroyExportArea">
+        <div class="receipt-header">
+          <h3 id="kroyPrintTitle">দৈনিক সুপারি ক্রয় খাতা (খরিদ চালান)</h3>
+          <p id="kroyPrintSubtitle">তারিখ: <span id="kroyPrintDateText"></span> | আড়ত / পাইকারি হিসাব</p>
+        </div>
+
+        <table class="receipt-table" id="kroyTable">
+          <thead>
+            <tr>
+              <th style="width: 34px;">নং</th>
+              <th>সময়</th>
+              <th>বিক্রেতা</th>
+              <th>পরিমাণ</th>
+              <th>দর (৳)</th>
+              <th>মোট খরচ (৳)</th>
+              <th class="action-col no-print" style="width: 60px;">অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody id="kroyTableBody"></tbody>
+        </table>
+
+        <div id="kroyEmptyMsg" style="text-align: center; padding: 24px 12px; color: var(--text-muted); font-size: 13.5px;">
+          📭 এই তারিখে কোনো সুপারি ক্রয় করা হয়নি।<br>
+          <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">কাঁচা-পাকা হিসাব থেকে অথবা উপরের ফর্ম থেকে ক্রয় এন্ট্রি দিন।</small>
+        </div>
+
+        <!-- দিনশেষের পাকা সামারি কার্ড -->
+        <div class="summary-card" id="kroySummaryCard" style="display: none;">
+          <div class="summary-row">
+            <span>মোট বিক্রেতা / চালান:</span>
+            <strong id="kroySumTotalSellers">০ জন</strong>
+          </div>
+          <div class="summary-row" style="color: #065f46;">
+            <span>দিনশেষে মোট কেনা সুপারি:</span>
+            <strong id="kroySumTotalQty">০ কুড়ি</strong>
+          </div>
+          <div class="summary-row" style="color: #475569;">
+            <span>মোট কুড়ি (দশমিক):</span>
+            <strong id="kroySumKuriDec">০.০০</strong>
+          </div>
+          <div class="summary-row" style="color: #047857;">
+            <span>গড় দর (প্রতি কুড়ি):</span>
+            <strong id="kroySumAvgRate">৳ ০.০০</strong>
+          </div>
+          <div class="summary-row total-row">
+            <span>দিনশেষে সর্বমোট খরচ:</span>
+            <strong>৳ <span id="kroySumGrandTotal">০</span></strong>
+          </div>
+        </div>
+
+        <!-- Receipt Memo Footer: Beautiful Creator Badge -->
+        <div class="receipt-creator-footer">
+          <div class="creator-card">
+            <div class="creator-inner">
+              <div class="creator-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+              </div>
+              <div class="creator-text-group">
+                <div class="creator-subtitle">সুপারি হিসাব ক্যালকুলেটর</div>
+                <div class="creator-title">Created by <span class="creator-highlight">Rahat Sharif</span></div>
+              </div>
+            </div>
+            <div class="creator-tag">Verified App</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export Buttons -->
+      <div class="export-grid no-print" id="kroyActionBtns" style="display: none; margin-top: 14px;">
+        <button class="btn btn-copy" onclick="copyKroyReport()">📋 কপি করুন</button>
+        <button class="btn btn-jpg" onclick="downloadKroyJPG()">🖼️ JPG সেভ</button>
+        <button class="btn btn-print" onclick="printKroyReport()">🖨️ প্রিন্ট করুন</button>
+        <button class="btn btn-clear-all" onclick="confirmResetKroyReport()">🗑️ এই দিনের খাতা মুছুন</button>
       </div>
     </div>
 
@@ -1775,6 +2031,12 @@
         // Requirement 4: শুকনো সুপারের হিসাব / শুকনো সুপারি হিসাব
         titleEl.innerText = 'শুকনো সুপারির হিসাব';
         if (pushState) window.location.hash = '#shukno';
+      } else if (viewName === 'kroy-khata') {
+        document.getElementById('view-kroy-khata').classList.add('active');
+        backBtn.style.display = 'inline-flex';
+        titleEl.innerText = 'দৈনিক সুপারি ক্রয় খাতা';
+        if (pushState) window.location.hash = '#kroy-khata';
+        initKroyKhataView();
       } else {
         document.getElementById('view-home').classList.add('active');
         backBtn.style.display = 'none';
@@ -1789,6 +2051,7 @@
       const hash = window.location.hash;
       if (hash === '#kacha-paka') navigate('kacha-paka', false);
       else if (hash === '#shukno') navigate('shukno', false);
+      else if (hash === '#kroy-khata') navigate('kroy-khata', false);
       else navigate('home', false);
     });
 
@@ -1797,6 +2060,7 @@
     /* ======================================================== */
     const KACHA_HIST_KEY = 'supari_history_kacha';
     const SHUKNO_HIST_KEY = 'supari_history_shukno';
+    const KROY_KHATA_DB_KEY = 'supari_kroy_khata_db';
     let currentHistTab = 'kacha';
 
     function openHistoryDrawer() {
@@ -1804,6 +2068,8 @@
       document.getElementById('drawerOverlay').classList.add('show');
       if (currentView === 'shukno') {
         switchHistoryTab('shukno');
+      } else if (currentView === 'kroy-khata') {
+        switchHistoryTab('kroy');
       } else {
         switchHistoryTab('kacha');
       }
@@ -1818,11 +2084,57 @@
       currentHistTab = type;
       document.getElementById('histTabKacha').classList.toggle('active', type === 'kacha');
       document.getElementById('histTabShukno').classList.toggle('active', type === 'shukno');
+      document.getElementById('histTabKroy').classList.toggle('active', type === 'kroy');
       renderHistoryList();
     }
 
     function renderHistoryList() {
       const container = document.getElementById('historyListContainer');
+      
+      if (currentHistTab === 'kroy') {
+        const db = JSON.parse(localStorage.getItem(KROY_KHATA_DB_KEY) || '{}');
+        const dates = Object.keys(db).sort().reverse();
+
+        if (dates.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; color: var(--text-muted); padding: 40px 10px; font-size: 13px;">
+              <div style="font-size: 32px; margin-bottom: 8px;">🛒</div>
+              কোনো সংরক্ষিত ক্রয় খাতার হিসাব নেই।
+            </div>`;
+          return;
+        }
+
+        let html = '';
+        dates.forEach(d => {
+          const entries = db[d] || [];
+          if (entries.length === 0) return;
+          let totKuri = 0;
+          let totCost = 0;
+          entries.forEach(e => {
+            if (e.type !== 'shukno') totKuri += (e.kuri || 0);
+            totCost += (e.totalPrice || 0);
+          });
+          html += `
+            <div class="history-item-card">
+              <div class="history-card-header">
+                <h5 class="history-title">📅 ${formatBnDate(d)}</h5>
+                <span class="history-date">${toBnNum(entries.length)}টি চালান</span>
+              </div>
+              <div style="font-size: 12.5px; color: #065f46; font-weight: 700; margin-bottom: 3px;">
+                কেনা সুপারি: ${totKuri > 0 ? toBnNum(totKuri.toFixed(2)) + ' কুড়ি' : toBnNum(entries.length) + 'টি চালান'}
+              </div>
+              <div class="history-summary">দিনশেষে মোট খরচ: ৳ ${toBnNum(Math.round(totCost).toLocaleString('en-IN'))}</div>
+              <div class="history-card-actions">
+                <button class="btn-hist-load" onclick="loadKroyDateFromHistory('${d}')">📂 খাতা খুলুন</button>
+                <button class="btn-hist-del" onclick="deleteKroyDateFromHistory('${d}')">🗑️ মুছুন</button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+        return;
+      }
+
       const key = currentHistTab === 'kacha' ? KACHA_HIST_KEY : SHUKNO_HIST_KEY;
       const list = JSON.parse(localStorage.getItem(key) || '[]');
 
@@ -1852,6 +2164,26 @@
         `;
       });
       container.innerHTML = html;
+    }
+
+    function loadKroyDateFromHistory(dateStr) {
+      activeKroyDate = dateStr;
+      navigate('kroy-khata');
+      closeHistoryDrawer();
+      showToast(`📅 ${formatBnDate(dateStr)}-এর খাতা লোড করা হয়েছে`);
+    }
+
+    function deleteKroyDateFromHistory(dateStr) {
+      openConfirmModal('খাতা মুছুন', `${formatBnDate(dateStr)}-এর সম্পূর্ণ ক্রয় হিসাব কি মুছে ফেলতে চান?`, () => {
+        const db = JSON.parse(localStorage.getItem(KROY_KHATA_DB_KEY) || '{}');
+        delete db[dateStr];
+        localStorage.setItem(KROY_KHATA_DB_KEY, JSON.stringify(db));
+        renderHistoryList();
+        if (currentView === 'kroy-khata' && activeKroyDate === dateStr) {
+          renderKroyKhata();
+        }
+        showToast('🗑️ ক্রয় খাতা রেকর্ড মুছে ফেলা হয়েছে');
+      });
     }
 
     function loadHistoryItem(type, id) {
@@ -2019,6 +2351,7 @@
             <td style="font-weight: 700;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
             <td class="action-cell no-print">
               <div class="table-actions">
+                <button class="icon-btn-table" onclick="openKroyAddModalFromItem(${idx})" title="ক্রয় খাতায় যোগ" style="color: #059669; font-size: 13px;">🛒</button>
                 <button class="icon-btn-table" onclick="editKachaItem(${idx})" title="এডিট">✏️</button>
                 <button class="icon-btn-table" onclick="deleteKachaItem(${idx})" title="মুছুন">🗑️</button>
               </div>
@@ -2192,67 +2525,79 @@
     }
 
     /* Core Robust Off-screen Memo Renderer */
-    async function renderMemoToImage(memoHtml, fileName) {
+    async function renderMemoToImage(memoHtml, fileName, customWidth = 780) {
       showToast('⏳ মেমো ছবি তৈরি হচ্ছে...');
       
       const wrapper = document.createElement('div');
       wrapper.id = 'offscreen-memo-renderer';
-      wrapper.style.position = 'fixed';
-      wrapper.style.left = '0';
+      wrapper.style.position = 'absolute';
+      wrapper.style.left = '-9999px';
       wrapper.style.top = '0';
-      wrapper.style.width = '780px';
-      wrapper.style.maxWidth = '780px';
-      wrapper.style.zIndex = '-9999';
-      wrapper.style.opacity = '1';
-      wrapper.style.pointerEvents = 'none';
+      wrapper.style.width = customWidth + 'px';
+      wrapper.style.minWidth = customWidth + 'px';
+      wrapper.style.maxWidth = customWidth + 'px';
       wrapper.style.backgroundColor = '#ffffff';
       wrapper.style.boxSizing = 'border-box';
       wrapper.innerHTML = memoHtml;
       document.body.appendChild(wrapper);
 
       try {
-        await new Promise(r => setTimeout(r, 160));
+        await new Promise(r => setTimeout(r, 200));
 
         if (typeof html2canvas === 'undefined') {
           throw new Error('html2canvas লাইব্রেরি লোড হয়নি, দয়া করে আবার চেষ্টা করুন');
         }
 
+        const contentHeight = Math.max(wrapper.scrollHeight, wrapper.offsetHeight, 400);
+        const contentWidth = Math.max(wrapper.scrollWidth, wrapper.offsetWidth, customWidth);
+
+        let targetScale = 2;
+        if (contentHeight > 3600) targetScale = 1.25;
+        else if (contentHeight > 2200) targetScale = 1.5;
+
         const canvas = await html2canvas(wrapper, {
-          scale: 2,
+          scale: targetScale,
           useCORS: true,
           allowTaint: true,
           backgroundColor: '#ffffff',
           scrollX: 0,
           scrollY: 0,
-          windowWidth: 780,
+          width: contentWidth,
+          height: contentHeight,
+          windowWidth: contentWidth,
+          windowHeight: contentHeight + 200,
           logging: false
         });
 
         document.body.removeChild(wrapper);
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-
-        canvas.toBlob(blob => {
-          if (blob) {
-            const blobUrl = URL.createObjectURL(blob);
+        const handleResult = (url, isBlob, blobObj) => {
+          try {
             const link = document.createElement('a');
             link.download = fileName;
-            link.href = blobUrl;
+            link.href = url;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
-            openImagePreviewModal(dataUrl, fileName, blob);
-          } else {
-            const link = document.createElement('a');
-            link.download = fileName;
-            link.href = dataUrl;
-            link.click();
-            openImagePreviewModal(dataUrl, fileName, null);
-          }
-        }, 'image/jpeg', 0.95);
+          } catch(e) {}
+          openImagePreviewModal(url, fileName, blobObj);
+          showToast('🖼️ JPG রসিদ প্রস্তুত হয়েছে!');
+        };
 
-        showToast('🖼️ JPG রসিদ প্রস্তুত ও ডাউনলোড শুরু হয়েছে!');
+        if (canvas.toBlob) {
+          canvas.toBlob(blob => {
+            if (blob) {
+              const blobUrl = URL.createObjectURL(blob);
+              handleResult(blobUrl, true, blob);
+            } else {
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+              handleResult(dataUrl, false, null);
+            }
+          }, 'image/jpeg', 0.92);
+        } else {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+          handleResult(dataUrl, false, null);
+        }
       } catch (err) {
         if (document.body.contains(wrapper)) {
           document.body.removeChild(wrapper);
@@ -2291,8 +2636,10 @@
       const avgGhaRate = totalKuri > 0 ? (grandTotal / totalKuri / ghaPerKuri) : 0;
 
       let numCols = 1;
-      if (totalEntries > 40) numCols = 3;
-      else if (totalEntries > 10) numCols = 2;
+      let memoWidth = 780;
+      if (totalEntries > 80) { numCols = 4; memoWidth = 860; }
+      else if (totalEntries > 36) { numCols = 3; memoWidth = 800; }
+      else if (totalEntries > 14) { numCols = 2; memoWidth = 780; }
 
       let tableHtml = '';
       if (numCols === 1) {
@@ -2325,7 +2672,7 @@
         tableHtml += `</tbody></table>`;
       } else {
         const rowsPerCol = Math.ceil(totalEntries / numCols);
-        tableHtml = `<div style="display: flex; gap: 10px; margin-bottom: 16px; font-family: 'Noto Sans Bengali', sans-serif;">`;
+        tableHtml = `<div style="display: flex; gap: 8px; margin-bottom: 16px; font-family: 'Noto Sans Bengali', sans-serif;">`;
         for (let c = 0; c < numCols; c++) {
           const startIdx = c * rowsPerCol;
           const endIdx = Math.min(startIdx + rowsPerCol, totalEntries);
@@ -2333,13 +2680,13 @@
 
           tableHtml += `
             <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
-              <table style="width: 100%; border-collapse: collapse; font-size: ${numCols === 3 ? '11px' : '12px'};">
+              <table style="width: 100%; border-collapse: collapse; font-size: ${numCols >= 3 ? '10.5px' : '12px'};">
                 <thead>
                   <tr style="background: #f8fafc; border-bottom: 1.5px solid #cbd5e1; color: #475569; font-weight: 700;">
-                    <th style="padding: 6px 3px; text-align: center; width: 30px;">নং</th>
-                    <th style="padding: 6px 3px; text-align: center;">পরিমাণ</th>
-                    <th style="padding: 6px 3px; text-align: center;">দর</th>
-                    <th style="padding: 6px 3px; text-align: right;">মোট (৳)</th>
+                    <th style="padding: 5px 2px; text-align: center; width: 26px;">নং</th>
+                    <th style="padding: 5px 2px; text-align: center;">পরিমাণ</th>
+                    <th style="padding: 5px 2px; text-align: center;">দর</th>
+                    <th style="padding: 5px 2px; text-align: right;">মোট (৳)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2349,13 +2696,13 @@
             const itemGhaRate = item.ghaRate || (item.rate / ghaPerKuri);
             tableHtml += `
               <tr style="border-bottom: 1px solid #f1f5f9; ${i % 2 === 1 ? 'background: #f8fafc;' : ''}">
-                <td style="padding: 6px 3px; text-align: center; font-weight: 700; color: #64748b;">${toBnNum(i + 1)}</td>
-                <td style="padding: 6px 3px; text-align: center; font-weight: 600;">${item.qtyString}</td>
-                <td style="padding: 6px 3px; text-align: center; font-size: 11px;">
+                <td style="padding: 4px 2px; text-align: center; font-weight: 700; color: #64748b;">${toBnNum(i + 1)}</td>
+                <td style="padding: 4px 2px; text-align: center; font-weight: 600;">${item.qtyString}</td>
+                <td style="padding: 4px 2px; text-align: center; font-size: ${numCols >= 3 ? '9.5px' : '11px'};">
                   <div>${toBnNum(item.rate)} ৳</div>
                   <div style="color: #047857; font-weight: 700;">(১ ঘা: ৳ ${toBnNum(itemGhaRate.toFixed(2))})</div>
                 </td>
-                <td style="padding: 6px 3px; text-align: right; font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
+                <td style="padding: 4px 2px; text-align: right; font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
               </tr>
             `;
           }
@@ -2384,7 +2731,7 @@
       `;
 
       return `
-        <div style="width: 780px; background: #ffffff; padding: 24px 28px; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; color: #0f172a;">
+        <div style="width: ${memoWidth}px; background: #ffffff; padding: 24px 28px; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; color: #0f172a;">
           <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px;">
             <h2 style="margin: 0 0 6px; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px;">কাঁচা-পাকা সুপারি বিক্রির রসিদ</h2>
             <div style="font-size: 13.5px; color: #475569; font-weight: 600;">
@@ -2427,8 +2774,12 @@
         showToast('⚠️ সেভ করার জন্য কোনো হিসাব নেই');
         return;
       }
+      const totalEntries = kachaItems.length;
+      let memoWidth = 780;
+      if (totalEntries > 80) memoWidth = 860;
+      else if (totalEntries > 36) memoWidth = 800;
       const memoHtml = buildKachaMemoHtml();
-      renderMemoToImage(memoHtml, 'Kacha_Paka_Supari_Memo.jpg');
+      renderMemoToImage(memoHtml, 'Kacha_Paka_Supari_Memo.jpg', memoWidth);
     }
 
     function printKachaReport() {
@@ -2774,9 +3125,10 @@
       const finalBreakdown = calculateShuknoBreakdown(netW);
 
       let numCols = 1;
-      if (totalBags > 80) numCols = 4;
-      else if (totalBags > 36) numCols = 3;
-      else if (totalBags > 12) numCols = 2;
+      let memoWidth = 780;
+      if (totalBags > 80) { numCols = 4; memoWidth = 860; }
+      else if (totalBags > 36) { numCols = 3; memoWidth = 800; }
+      else if (totalBags > 12) { numCols = 2; memoWidth = 780; }
 
       let tableHtml = '';
       if (numCols === 1) {
@@ -2862,7 +3214,7 @@
       `;
 
       return `
-        <div style="width: 780px; background: #ffffff; padding: 24px 28px; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; color: #0f172a;">
+        <div style="width: ${memoWidth}px; background: #ffffff; padding: 24px 28px; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; color: #0f172a;">
           <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px;">
             <h2 style="margin: 0 0 6px; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px;">শুকনো সুপারি বিক্রির রসিদ</h2>
             <div style="font-size: 13.5px; color: #475569; font-weight: 600;">
@@ -2911,8 +3263,12 @@
         showToast('⚠️ সেভ করার জন্য কোনো বস্তা যোগ করা হয়নি');
         return;
       }
+      const totalBags = shuknoBags.length;
+      let memoWidth = 780;
+      if (totalBags > 80) memoWidth = 860;
+      else if (totalBags > 36) memoWidth = 800;
       const memoHtml = buildShuknoMemoHtml();
-      renderMemoToImage(memoHtml, 'Shukno_Supari_Memo.jpg');
+      renderMemoToImage(memoHtml, 'Shukno_Supari_Memo.jpg', memoWidth);
     }
 
     function printShuknoReport() {
@@ -2978,7 +3334,662 @@
     }
 
     /* ======================================================== */
-    /* 7. APP INITIALIZATION & LOCALSTORAGE RESTORATION         */
+    /* 7. DAILY SUPARI PURCHASE BOOK (সুপারি ক্রয় খাতা)         */
+    /* ======================================================== */
+    let activeKroyDate = getTodayDateStr();
+    let pendingKroyItem = null;
+
+    function getTodayDateStr() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatBnDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      const dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return toBnNum(dt.toLocaleDateString('bn-BD', options));
+    }
+
+    function formatBnTime(dt) {
+      let h = dt.getHours();
+      const m = dt.getMinutes();
+      const ampm = h >= 12 ? 'বিকাল' : (h >= 6 ? 'সকাল' : 'ভোর');
+      if (h > 12) h -= 12;
+      if (h === 0) h = 12;
+      return `${ampm} ${toBnNum(h)}:${toBnNum(m.toString().padStart(2, '0'))}`;
+    }
+
+    function getKroyDb() {
+      try {
+        return JSON.parse(localStorage.getItem(KROY_KHATA_DB_KEY) || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveKroyDb(db) {
+      localStorage.setItem(KROY_KHATA_DB_KEY, JSON.stringify(db));
+    }
+
+    function getKroyEntriesForDate(dateStr) {
+      const db = getKroyDb();
+      return db[dateStr] || [];
+    }
+
+    function saveKroyEntriesForDate(dateStr, entries) {
+      const db = getKroyDb();
+      if (!entries || entries.length === 0) {
+        delete db[dateStr];
+      } else {
+        db[dateStr] = entries;
+      }
+      saveKroyDb(db);
+    }
+
+    function initKroyKhataView() {
+      const selector = document.getElementById('kroyDateSelector');
+      if (selector) {
+        if (!selector.value) {
+          selector.value = activeKroyDate;
+        } else {
+          activeKroyDate = selector.value;
+        }
+      }
+      renderKroyKhata();
+    }
+
+    function onKroyDateChange(val) {
+      if (!val) return;
+      activeKroyDate = val;
+      renderKroyKhata();
+      showToast(`📅 ${formatBnDate(val)}-এর খাতা লোড করা হয়েছে`);
+    }
+
+    function setKroyDateToToday() {
+      activeKroyDate = getTodayDateStr();
+      const selector = document.getElementById('kroyDateSelector');
+      if (selector) selector.value = activeKroyDate;
+      renderKroyKhata();
+      showToast('📅 আজকের খাতা নির্বাচন করা হয়েছে');
+    }
+
+    /* Modal workflow to save calculated lot from Kacha or Shukno */
+    function openKroyAddModalFromCurrentSummary() {
+      if (kachaItems.length === 0) {
+        showToast('⚠️ ক্রয় খাতায় যোগ করার মতো কোনো হিসাব নেই');
+        return;
+      }
+      const ghaPerKuri = parseInt(document.getElementById('kachaGhaRule').value);
+      let totalTi = 0;
+      let totalKuri = 0;
+      let grandTotal = 0;
+      kachaItems.forEach(item => {
+        totalTi += item.totalTi;
+        totalKuri += item.totalKuri;
+        grandTotal += item.totalPrice;
+      });
+
+      const tiPerKuri = ghaPerKuri * tiPerGha;
+      const finalKuri = Math.floor(totalTi / tiPerKuri);
+      const remAfterKuri = totalTi % tiPerKuri;
+      const finalGha = Math.floor(remAfterKuri / tiPerGha);
+      const finalTi = remAfterKuri % tiPerGha;
+
+      let parts = [];
+      if (finalKuri > 0) parts.push(`${toBnNum(finalKuri)} কুড়ি`);
+      if (finalGha > 0) parts.push(`${toBnNum(finalGha)} ঘা`);
+      if (finalTi > 0) parts.push(`${toBnNum(finalTi)} টি`);
+      const qtyText = parts.length > 0 ? parts.join(' ') : `${toBnNum(totalKuri.toFixed(2))} কুড়ি`;
+
+      const avgRate = totalKuri > 0 ? (grandTotal / totalKuri) : 0;
+
+      pendingKroyItem = {
+        type: 'kacha',
+        qtyText: qtyText,
+        kuri: totalKuri,
+        rate: avgRate,
+        rateText: `গড় দর: ৳ ${toBnNum(Math.round(avgRate))} / কুড়ি`,
+        totalPrice: grandTotal
+      };
+
+      document.getElementById('kroyModalQtyText').innerText = qtyText;
+      document.getElementById('kroyModalRateText').innerText = pendingKroyItem.rateText;
+      document.getElementById('kroyModalPriceText').innerText = `৳ ${toBnNum(grandTotal.toFixed(2))}`;
+      document.getElementById('kroyModalSellerName').value = '';
+      document.getElementById('kroyConfirmModal').classList.add('show');
+    }
+
+    function openKroyAddModalFromItem(idx) {
+      const item = kachaItems[idx];
+      if (!item) return;
+
+      pendingKroyItem = {
+        type: 'kacha',
+        qtyText: item.qtyString,
+        kuri: item.totalKuri,
+        rate: item.rate,
+        rateText: `দর: ৳ ${toBnNum(item.rate)} / কুড়ি`,
+        totalPrice: item.totalPrice
+      };
+
+      document.getElementById('kroyModalQtyText').innerText = item.qtyString;
+      document.getElementById('kroyModalRateText').innerText = pendingKroyItem.rateText;
+      document.getElementById('kroyModalPriceText').innerText = `৳ ${toBnNum(item.totalPrice.toFixed(2))}`;
+      document.getElementById('kroyModalSellerName').value = '';
+      document.getElementById('kroyConfirmModal').classList.add('show');
+    }
+
+    function openKroyAddModalFromShuknoSummary() {
+      if (shuknoBags.length === 0) {
+        showToast('⚠️ ক্রয় খাতায় যোগ করার মতো কোনো বস্তা নেই');
+        return;
+      }
+      const totalGross = shuknoBags.reduce((a, b) => a + b, 0);
+      let netW = totalGross - shuknoDeductedEmptyKg;
+      if (netW < 0) netW = 0;
+      const breakdown = calculateShuknoBreakdown(netW);
+      const rateNum = parseBnFloat(document.getElementById('shuknoPricePerHajar').value);
+
+      pendingKroyItem = {
+        type: 'shukno',
+        qtyText: `${toBnNum(shuknoBags.length)} বস্তা (${breakdown.textFormat})`,
+        kuri: 0,
+        rate: rateNum,
+        rateText: `১ হাজার = ৳ ${toBnNum(rateNum)}`,
+        totalPrice: breakdown.totalPrice
+      };
+
+      document.getElementById('kroyModalQtyText').innerText = pendingKroyItem.qtyText;
+      document.getElementById('kroyModalRateText').innerText = pendingKroyItem.rateText;
+      document.getElementById('kroyModalPriceText').innerText = `৳ ${breakdown.priceStr}`;
+      document.getElementById('kroyModalSellerName').value = '';
+      document.getElementById('kroyConfirmModal').classList.add('show');
+    }
+
+    function closeKroyConfirmModal() {
+      document.getElementById('kroyConfirmModal').classList.remove('show');
+      pendingKroyItem = null;
+    }
+
+    function confirmSaveToKroyKhata() {
+      if (!pendingKroyItem) return;
+      const sellerInput = document.getElementById('kroyModalSellerName');
+      const seller = sellerInput.value.trim() || 'সাধারণ বিক্রেতা';
+      const today = getTodayDateStr();
+
+      const entries = getKroyEntriesForDate(today);
+      const newEntry = {
+        id: Date.now(),
+        time: formatBnTime(new Date()),
+        seller: seller,
+        type: pendingKroyItem.type,
+        qtyText: pendingKroyItem.qtyText,
+        kuri: pendingKroyItem.kuri || 0,
+        rate: pendingKroyItem.rate || 0,
+        rateText: pendingKroyItem.rateText || '',
+        totalPrice: pendingKroyItem.totalPrice
+      };
+
+      entries.push(newEntry);
+      saveKroyEntriesForDate(today, entries);
+
+      closeKroyConfirmModal();
+      showToast(`🛒 আজকের ক্রয় খাতায় জমা হয়েছে! (মোট: ৳ ${toBnNum(newEntry.totalPrice.toFixed(0))}) <button onclick="navigate('kroy-khata')" style="margin-left: 6px; background: #ffffff; color: #065f46; border: none; padding: 2px 8px; border-radius: 4px; font-weight: 800; cursor: pointer;">খাতা দেখুন ➔</button>`);
+
+      if (currentView === 'kroy-khata') {
+        renderKroyKhata();
+      }
+    }
+
+    /* Direct Entry inside view-kroy-khata */
+    function calcKroyDirectPreview() {
+      const kuri = parseBnFloat(document.getElementById('kroyDirectKuri').value);
+      const gha = parseBnFloat(document.getElementById('kroyDirectGha').value);
+      const ti = parseBnFloat(document.getElementById('kroyDirectTi').value);
+      const rate = parseBnFloat(document.getElementById('kroyDirectRate').value);
+
+      const ghaPerKuri = 21;
+      const tiPerKuri = ghaPerKuri * tiPerGha;
+      const totalTi = (kuri * tiPerKuri) + (gha * tiPerGha) + ti;
+      const totalKuri = totalTi / tiPerKuri;
+      const totalPrice = Math.round(totalKuri * rate * 100) / 100;
+
+      const ghaValSpan = document.getElementById('kroyDirectGhaVal');
+      const ghaHint = document.getElementById('kroyDirectGhaHint');
+      if (rate > 0) {
+        ghaValSpan.innerText = toBnNum((rate / ghaPerKuri).toFixed(2));
+        ghaHint.style.display = 'inline';
+      } else {
+        ghaHint.style.display = 'none';
+      }
+
+      const bar = document.getElementById('kroyDirectPreviewBar');
+      const totalEl = document.getElementById('kroyDirectPreviewTotal');
+      if (totalTi > 0 && rate > 0) {
+        totalEl.innerText = `৳ ${toBnNum(totalPrice.toFixed(2))}`;
+        bar.style.display = 'flex';
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    function addDirectKroyItem() {
+      const seller = document.getElementById('kroyDirectSeller').value.trim() || 'সাধারণ বিক্রেতা';
+      const kuri = parseBnFloat(document.getElementById('kroyDirectKuri').value);
+      const gha = parseBnFloat(document.getElementById('kroyDirectGha').value);
+      const ti = parseBnFloat(document.getElementById('kroyDirectTi').value);
+      const rate = parseBnFloat(document.getElementById('kroyDirectRate').value);
+
+      const ghaPerKuri = 21;
+      const tiPerKuri = ghaPerKuri * tiPerGha;
+      const totalTi = (kuri * tiPerKuri) + (gha * tiPerGha) + ti;
+
+      if (totalTi <= 0 || rate <= 0) {
+        showToast('⚠️ সঠিক পরিমাণ (কুড়ি/ঘা/টি) ও প্রতি কুড়ির দর দিন');
+        return;
+      }
+
+      const totalKuri = totalTi / tiPerKuri;
+      const totalPrice = Math.round(totalKuri * rate * 100) / 100;
+
+      let parts = [];
+      if (kuri > 0) parts.push(`${toBnNum(kuri)} কুড়ি`);
+      if (gha > 0) parts.push(`${toBnNum(gha)} ঘা`);
+      if (ti > 0) parts.push(`${toBnNum(ti)} টি`);
+      const qtyText = parts.length > 0 ? parts.join(' ') : `${toBnNum(totalTi)} টি`;
+
+      const entries = getKroyEntriesForDate(activeKroyDate);
+      const newEntry = {
+        id: Date.now(),
+        time: formatBnTime(new Date()),
+        seller: seller,
+        type: 'kacha',
+        qtyText: qtyText,
+        kuri: totalKuri,
+        rate: rate,
+        rateText: `দর: ৳ ${toBnNum(rate)} / কুড়ি`,
+        totalPrice: totalPrice
+      };
+
+      entries.push(newEntry);
+      saveKroyEntriesForDate(activeKroyDate, entries);
+
+      document.getElementById('kroyDirectSeller').value = '';
+      document.getElementById('kroyDirectKuri').value = '';
+      document.getElementById('kroyDirectGha').value = '';
+      document.getElementById('kroyDirectTi').value = '';
+      document.getElementById('kroyDirectRate').value = '';
+      document.getElementById('kroyDirectPreviewBar').style.display = 'none';
+      document.getElementById('kroyDirectGhaHint').style.display = 'none';
+
+      renderKroyKhata();
+      showToast('✅ ক্রয় খাতায় এন্ট্রি সফলভাবে যোগ হয়েছে');
+    }
+
+    function editKroyItem(idx) {
+      const entries = getKroyEntriesForDate(activeKroyDate);
+      const entry = entries[idx];
+      if (!entry) return;
+
+      document.getElementById('kroyDirectSeller').value = entry.seller === 'সাধারণ বিক্রেতা' ? '' : entry.seller;
+      document.getElementById('kroyDirectRate').value = entry.rate > 0 ? toBnNum(entry.rate) : '';
+      
+      entries.splice(idx, 1);
+      saveKroyEntriesForDate(activeKroyDate, entries);
+      renderKroyKhata();
+
+      calcKroyDirectPreview();
+      window.scrollTo({ top: 180, behavior: 'smooth' });
+      showToast('✏️ পরিবর্তনের জন্য ইনপুট বক্সে নেওয়া হয়েছে');
+    }
+
+    function deleteKroyItem(idx) {
+      openConfirmModal('ক্রয় হিসাব মুছুন', 'আপনি কি নিশ্চিত যে এই চালানটি ক্রয় খাতা থেকে মুছতে চান?', () => {
+        const entries = getKroyEntriesForDate(activeKroyDate);
+        entries.splice(idx, 1);
+        saveKroyEntriesForDate(activeKroyDate, entries);
+        renderKroyKhata();
+        showToast('🗑️ ক্রয় হিসাব মুছে ফেলা হয়েছে');
+      });
+    }
+
+    function confirmResetKroyReport() {
+      const entries = getKroyEntriesForDate(activeKroyDate);
+      if (entries.length === 0) {
+        showToast('ℹ️ এই দিনের খাতা ইতিমধ্যে ফাঁকা');
+        return;
+      }
+      openConfirmModal('খাতা খালি করুন', `${formatBnDate(activeKroyDate)}-এর সমস্ত ক্রয় হিসাব মুছে ফেলতে চান?`, () => {
+        saveKroyEntriesForDate(activeKroyDate, []);
+        renderKroyKhata();
+        showToast('🗑️ এই দিনের ক্রয় খাতা মুছে ফেলা হয়েছে');
+      });
+    }
+
+    function renderKroyKhata() {
+      const selector = document.getElementById('kroyDateSelector');
+      if (selector) selector.value = activeKroyDate;
+
+      const dateBn = formatBnDate(activeKroyDate);
+      const isToday = (activeKroyDate === getTodayDateStr());
+
+      const activeDateEl = document.getElementById('kroyActiveDateFormatted');
+      if (activeDateEl) {
+        activeDateEl.innerText = isToday ? `আজকের খাতা (${dateBn})` : dateBn;
+      }
+      const printDateEl = document.getElementById('kroyPrintDateText');
+      if (printDateEl) printDateEl.innerText = dateBn;
+
+      const entries = getKroyEntriesForDate(activeKroyDate);
+      const tbody = document.getElementById('kroyTableBody');
+      const emptyMsg = document.getElementById('kroyEmptyMsg');
+      const summaryCard = document.getElementById('kroySummaryCard');
+      const actionBtns = document.getElementById('kroyActionBtns');
+
+      let totalKuri = 0;
+      let totalSpent = 0;
+      let dryCount = 0;
+
+      entries.forEach(e => {
+        if (e.type === 'shukno') {
+          dryCount++;
+        } else {
+          totalKuri += (e.kuri || 0);
+        }
+        totalSpent += (e.totalPrice || 0);
+      });
+
+      const ghaPerKuri = 21;
+      const tiPerKuri = ghaPerKuri * tiPerGha;
+      const totalTi = Math.round(totalKuri * tiPerKuri);
+      const finalKuri = Math.floor(totalTi / tiPerKuri);
+      const remAfterKuri = totalTi % tiPerKuri;
+      const finalGha = Math.floor(remAfterKuri / tiPerGha);
+      const finalTi = remAfterKuri % tiPerGha;
+
+      let parts = [];
+      if (finalKuri > 0) parts.push(`${toBnNum(finalKuri)} কুড়ি`);
+      if (finalGha > 0) parts.push(`${toBnNum(finalGha)} ঘা`);
+      if (finalTi > 0) parts.push(`${toBnNum(finalTi)} টি`);
+      let totalQtyText = parts.length > 0 ? parts.join(' ') : (totalKuri > 0 ? `${toBnNum(totalKuri.toFixed(2))} কুড়ি` : '০ কুড়ি');
+      if (dryCount > 0) {
+        totalQtyText += ` (+ ${toBnNum(dryCount)}টি শুকনো লট)`;
+      }
+
+      const avgRate = totalKuri > 0 ? (totalSpent / totalKuri) : 0;
+
+      // Update Dashboard Cards
+      document.getElementById('kroyDashTotalQty').innerText = totalQtyText;
+      document.getElementById('kroyDashKuriDec').innerText = toBnNum(totalKuri.toFixed(2));
+      document.getElementById('kroyDashTotalPrice').innerText = `৳ ${toBnNum(Math.round(totalSpent).toLocaleString('en-IN'))}`;
+      document.getElementById('kroyDashTotalSellers').innerText = toBnNum(entries.length);
+      document.getElementById('kroyDashAvgRate').innerText = toBnNum(Math.round(avgRate).toLocaleString('en-IN'));
+
+      if (entries.length === 0) {
+        tbody.innerHTML = '';
+        emptyMsg.style.display = 'block';
+        summaryCard.style.display = 'none';
+        actionBtns.style.display = 'none';
+        return;
+      }
+
+      emptyMsg.style.display = 'none';
+      summaryCard.style.display = 'block';
+      actionBtns.style.display = 'grid';
+
+      let html = '';
+      entries.forEach((item, idx) => {
+        html += `
+          <tr>
+            <td>${toBnNum(idx + 1)}</td>
+            <td style="font-size: 11.5px; color: var(--text-muted);">${item.time || '-'}</td>
+            <td style="font-weight: 700; color: #0f172a;">${item.seller}</td>
+            <td style="font-weight: 600;">${item.qtyText}</td>
+            <td style="font-size: 12px;">৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}</td>
+            <td style="font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
+            <td class="action-cell no-print">
+              <div class="table-actions">
+                <button class="icon-btn-table" onclick="editKroyItem(${idx})" title="এডিট">✏️</button>
+                <button class="icon-btn-table" onclick="deleteKroyItem(${idx})" title="মুছুন">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+
+      // Update Summary Card
+      document.getElementById('kroySumTotalSellers').innerText = `${toBnNum(entries.length)} জন / চালান`;
+      document.getElementById('kroySumTotalQty').innerText = totalQtyText;
+      document.getElementById('kroySumKuriDec').innerText = `${toBnNum(totalKuri.toFixed(2))} কুড়ি`;
+      document.getElementById('kroySumAvgRate').innerText = `৳ ${toBnNum(avgRate.toFixed(2))}`;
+      document.getElementById('kroySumGrandTotal').innerText = toBnNum(totalSpent.toFixed(2));
+    }
+
+    function copyKroyReport() {
+      const entries = getKroyEntriesForDate(activeKroyDate);
+      if (entries.length === 0) return;
+      const dateBn = formatBnDate(activeKroyDate);
+
+      let totalKuri = 0;
+      let totalSpent = 0;
+      entries.forEach(e => {
+        if (e.type !== 'shukno') totalKuri += (e.kuri || 0);
+        totalSpent += (e.totalPrice || 0);
+      });
+
+      let text = `--- দৈনিক সুপারি ক্রয় খাতা ---\n`;
+      text += `তারিখ: ${dateBn}\n`;
+      text += `মোট বিক্রেতা / চালান: ${toBnNum(entries.length)} জন\n\n`;
+
+      entries.forEach((e, i) => {
+        text += `${toBnNum(i + 1)}. [${e.time}] ${e.seller} - ${e.qtyText} | দর: ৳ ${toBnNum(Math.round(e.rate))} | মোট: ৳ ${toBnNum(e.totalPrice.toFixed(2))}\n`;
+      });
+
+      text += `\n--------------------------------\n`;
+      text += `দিনশেষে মোট কেনা সুপারি: ${document.getElementById('kroyDashTotalQty').innerText}\n`;
+      text += `মোট কুড়ি (দশমিক): ${toBnNum(totalKuri.toFixed(2))} কুড়ি\n`;
+      text += `গড় দর: ৳ ${toBnNum((totalKuri > 0 ? (totalSpent / totalKuri).toFixed(2) : '০'))}\n`;
+      text += `দিনশেষে সর্বমোট খরচ: ৳ ${toBnNum(totalSpent.toFixed(2))}\n`;
+      text += `\nCreated by Rahat Sharif\n`;
+
+      copyToClipboard(text, 'দৈনিক ক্রয় খাতা কপি হয়েছে!');
+    }
+
+    function printKroyReport() {
+      const entries = getKroyEntriesForDate(activeKroyDate);
+      if (entries.length === 0) return;
+      document.body.classList.add('printing-kroy');
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-kroy');
+      }, 500);
+    }
+
+    function buildKroyMemoHtml() {
+      const entries = getKroyEntriesForDate(activeKroyDate);
+      const dateBn = formatBnDate(activeKroyDate);
+      const totalEntries = entries.length;
+
+      let totalKuri = 0;
+      let totalSpent = 0;
+      let dryCount = 0;
+
+      entries.forEach(e => {
+        if (e.type === 'shukno') {
+          dryCount++;
+        } else {
+          totalKuri += (e.kuri || 0);
+        }
+        totalSpent += (e.totalPrice || 0);
+      });
+
+      const ghaPerKuri = 21;
+      const tiPerKuri = ghaPerKuri * tiPerGha;
+      const totalTi = Math.round(totalKuri * tiPerKuri);
+      const finalKuri = Math.floor(totalTi / tiPerKuri);
+      const remAfterKuri = totalTi % tiPerKuri;
+      const finalGha = Math.floor(remAfterKuri / tiPerGha);
+      const finalTi = remAfterKuri % tiPerGha;
+
+      let parts = [];
+      if (finalKuri > 0) parts.push(`${toBnNum(finalKuri)} কুড়ি`);
+      if (finalGha > 0) parts.push(`${toBnNum(finalGha)} ঘা`);
+      if (finalTi > 0) parts.push(`${toBnNum(finalTi)} টি`);
+      let totalQtyText = parts.length > 0 ? parts.join(' ') : (totalKuri > 0 ? `${toBnNum(totalKuri.toFixed(2))} কুড়ি` : '০ কুড়ি');
+      if (dryCount > 0) {
+        totalQtyText += ` (+ ${toBnNum(dryCount)}টি শুকনো লট)`;
+      }
+
+      const avgRate = totalKuri > 0 ? (totalSpent / totalKuri) : 0;
+
+      let numCols = 1;
+      let memoWidth = 780;
+      if (totalEntries > 40) { numCols = 2; memoWidth = 840; }
+
+      let tableHtml = '';
+      if (numCols === 1) {
+        tableHtml = `
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; font-family: 'Noto Sans Bengali', sans-serif;">
+            <thead>
+              <tr style="background: #f1f5f9; border-top: 1.5px solid #cbd5e1; border-bottom: 1.5px solid #cbd5e1; color: #475569; font-weight: 700;">
+                <th style="padding: 8px 6px; text-align: center; width: 34px;">নং</th>
+                <th style="padding: 8px 6px; text-align: center; width: 75px;">সময়</th>
+                <th style="padding: 8px 6px; text-align: left;">বিক্রেতা</th>
+                <th style="padding: 8px 6px; text-align: center;">পরিমাণ</th>
+                <th style="padding: 8px 6px; text-align: center;">দর (৳)</th>
+                <th style="padding: 8px 6px; text-align: right; width: 95px;">মোট খরচ (৳)</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        entries.forEach((item, idx) => {
+          tableHtml += `
+            <tr style="border-bottom: 1px solid #f1f5f9; ${idx % 2 === 1 ? 'background: #f8fafc;' : ''}">
+              <td style="padding: 7px 5px; text-align: center; font-weight: 700; color: #64748b;">${toBnNum(idx + 1)}</td>
+              <td style="padding: 7px 5px; text-align: center; font-size: 11px; color: #64748b;">${item.time || '-'}</td>
+              <td style="padding: 7px 5px; text-align: left; font-weight: 700; color: #0f172a;">${item.seller}</td>
+              <td style="padding: 7px 5px; text-align: center; font-weight: 600;">${item.qtyText}</td>
+              <td style="padding: 7px 5px; text-align: center; font-size: 11.5px;">৳ ${toBnNum(item.rate ? Math.round(item.rate) : '-')}</td>
+              <td style="padding: 7px 5px; text-align: right; font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
+            </tr>
+          `;
+        });
+        tableHtml += `</tbody></table>`;
+      } else {
+        const rowsPerCol = Math.ceil(totalEntries / numCols);
+        tableHtml = `<div style="display: flex; gap: 8px; margin-bottom: 16px; font-family: 'Noto Sans Bengali', sans-serif;">`;
+        for (let c = 0; c < numCols; c++) {
+          const startIdx = c * rowsPerCol;
+          const endIdx = Math.min(startIdx + rowsPerCol, totalEntries);
+          if (startIdx >= totalEntries) break;
+
+          tableHtml += `
+            <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <thead>
+                  <tr style="background: #f8fafc; border-bottom: 1.5px solid #cbd5e1; color: #475569; font-weight: 700;">
+                    <th style="padding: 5px 2px; text-align: center; width: 24px;">নং</th>
+                    <th style="padding: 5px 2px; text-align: left;">বিক্রেতা</th>
+                    <th style="padding: 5px 2px; text-align: center;">পরিমাণ</th>
+                    <th style="padding: 5px 2px; text-align: right;">খরচ (৳)</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          for (let i = startIdx; i < endIdx; i++) {
+            const item = entries[i];
+            tableHtml += `
+              <tr style="border-bottom: 1px solid #f1f5f9; ${i % 2 === 1 ? 'background: #f8fafc;' : ''}">
+                <td style="padding: 4px 2px; text-align: center; font-weight: 700; color: #64748b;">${toBnNum(i + 1)}</td>
+                <td style="padding: 4px 2px; text-align: left; font-weight: 700;">${item.seller}</td>
+                <td style="padding: 4px 2px; text-align: center;">${item.qtyText}</td>
+                <td style="padding: 4px 2px; text-align: right; font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
+              </tr>
+            `;
+          }
+          tableHtml += `</tbody></table></div>`;
+        }
+        tableHtml += `</div>`;
+      }
+
+      const creatorBadgeHtml = `
+        <div style="margin-top: 18px; padding-top: 14px; border-top: 2px dashed #cbd5e1;">
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%); border: 1.5px solid #a7f3d0; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 34px; height: 34px; border-radius: 9px; background: #d1fae5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+              </div>
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: #059669; letter-spacing: 0.3px;">সুপারি হিসাব ক্যালকুলেটর</div>
+                <div style="font-size: 14.5px; font-weight: 800; color: #0f172a;">Created by <span style="color: #059669;">Rahat Sharif</span></div>
+              </div>
+            </div>
+            <div style="background: #ffffff; color: #059669; border: 1px solid #a7f3d0; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Verified App</div>
+          </div>
+        </div>
+      `;
+
+      return `
+        <div style="width: ${memoWidth}px; background: #ffffff; padding: 24px 28px; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; color: #0f172a;">
+          <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px;">
+            <h2 style="margin: 0 0 6px; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px;">দৈনিক সুপারি ক্রয় খাতা (খরিদ চালান)</h2>
+            <div style="font-size: 13.5px; color: #475569; font-weight: 600;">
+              তারিখ: <span style="color: #0f172a; font-weight: 700;">${dateBn}</span> | আড়ত / পাইকারি ক্রয় হিসাব
+            </div>
+          </div>
+
+          ${tableHtml}
+
+          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 16px 20px; font-size: 14px; font-weight: 600;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>মোট বিক্রেতা / চালান:</span>
+              <strong style="color: #0f172a; font-size: 15px;">${toBnNum(totalEntries)} জন</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #065f46;">
+              <span>দিনশেষে মোট কেনা সুপারি:</span>
+              <strong style="font-size: 16px;">${totalQtyText}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569;">
+              <span>মোট কুড়ি (দশমিক):</span>
+              <strong>${toBnNum(totalKuri.toFixed(2))} কুড়ি</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #047857;">
+              <span>গড় দর (প্রতি কুড়ি):</span>
+              <strong>৳ ${toBnNum(avgRate.toFixed(2))}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 2px dashed #cbd5e1; font-size: 20px; font-weight: 800; color: #047857;">
+              <span>দিনশেষে সর্বমোট খরচ:</span>
+              <span>৳ ${toBnNum(totalSpent.toFixed(2))}</span>
+            </div>
+          </div>
+
+          ${creatorBadgeHtml}
+        </div>
+      `;
+    }
+
+    function downloadKroyJPG() {
+      const entries = getKroyEntriesForDate(activeKroyDate);
+      if (entries.length === 0) {
+        showToast('⚠️ সেভ করার জন্য এই তারিখে কোনো ক্রয় হিসাব নেই');
+        return;
+      }
+      const memoWidth = entries.length > 40 ? 840 : 780;
+      const memoHtml = buildKroyMemoHtml();
+      renderMemoToImage(memoHtml, `Supari_Kroy_Khata_${activeKroyDate}.jpg`, memoWidth);
+    }
+
+    /* ======================================================== */
+    /* 8. APP INITIALIZATION & LOCALSTORAGE RESTORATION         */
     /* ======================================================== */
     window.addEventListener('DOMContentLoaded', () => {
       // 1. Restore Kacha Draft
@@ -3014,13 +4025,17 @@
         } catch (e) {}
       }
 
-      // 3. Check URL hash for direct view routing
+      // 3. Initialize Kroy Khata
+      initKroyKhataView();
+
+      // 4. Check URL hash for direct view routing
       const hash = window.location.hash;
       if (hash === '#kacha-paka') navigate('kacha-paka', false);
       else if (hash === '#shukno') navigate('shukno', false);
+      else if (hash === '#kroy-khata') navigate('kroy-khata', false);
       else navigate('home', false);
 
-      // 4. Offline & Service Worker Registration
+      // 5. Offline & Service Worker Registration
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./sw.js')
