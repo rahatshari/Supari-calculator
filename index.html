@@ -18,6 +18,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="html2canvas.min.js"></script>
+  <script>
+    if (typeof html2canvas === 'undefined') {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      document.head.appendChild(s);
+    }
+  </script>
 
   <style>
     :root {
@@ -1214,6 +1221,38 @@
     </div>
   </div>
 
+  <!-- Image Preview & Download Modal -->
+  <div class="modal-overlay" id="imagePreviewModal">
+    <div class="modal-box" style="max-width: 520px; width: 94%; max-height: 92vh; display: flex; flex-direction: column; padding: 16px; border-radius: 16px; text-align: left;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+        <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+          <span>🖼️</span> <span>মেমো ছবি প্রস্তুত হয়েছে</span>
+        </h4>
+        <button onclick="closeImagePreviewModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; line-height: 1; padding: 4px 8px;">✕</button>
+      </div>
+      
+      <div style="flex: 1; overflow-y: auto; text-align: center; margin-bottom: 12px; background: #f8fafc; border-radius: 10px; padding: 6px; border: 1.5px dashed #cbd5e1;">
+        <img id="imagePreviewImg" style="max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.08);" alt="সুপারি মেমো">
+      </div>
+
+      <div style="font-size: 12px; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.4;">
+        💡 ডাউনলোড শুরু না হলে নিচের বাটনে চাপুন অথবা ছবিতে চেপে ধরে <strong>'Save Image'</strong> দিন।
+      </div>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a id="imagePreviewDownloadBtn" download="Supari_Memo.jpg" class="btn btn-primary" style="flex: 2; min-width: 130px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 11px; font-weight: 700; border-radius: 8px; font-size: 14px;">
+          <span>📥 JPG ডাউনলোড</span>
+        </a>
+        <button id="imagePreviewShareBtn" class="btn btn-secondary" onclick="shareGeneratedImage()" style="flex: 1; min-width: 90px; display: none; align-items: center; justify-content: center; gap: 4px; padding: 11px; font-weight: 700; border-radius: 8px; font-size: 14px;">
+          <span>📲 শেয়ার</span>
+        </button>
+        <button class="btn btn-modal-cancel" onclick="closeImagePreviewModal()" style="flex: 1; min-width: 80px; padding: 11px; font-weight: 700; border-radius: 8px; font-size: 14px;">
+          বন্ধ
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- History Sidebar Drawer -->
   <div class="overlay" id="drawerOverlay" onclick="closeHistoryDrawer()"></div>
   <div class="drawer" id="historyDrawer">
@@ -2105,24 +2144,291 @@
       copyToClipboard(text, 'কাঁচা-পাকা রসিদ কপি হয়েছে!');
     }
 
-    function downloadKachaJPG() {
-      if (kachaItems.length === 0) return;
-      const area = document.getElementById('kachaExportArea');
-      const footer = area.querySelector('.receipt-creator-footer');
-      if (footer) footer.style.display = 'block';
-      html2canvas(area, {
-        scale: 2.5,
-        backgroundColor: '#ffffff',
-        ignoreElements: el => el.classList && el.classList.contains('no-print')
-      }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'Kacha_Paka_Supari_Memo.jpg';
-        link.href = canvas.toDataURL('image/jpeg', 0.95);
-        link.click();
-        showToast('🖼️ JPG রসিদ ডাউনলোড হয়েছে');
-      }).finally(() => {
-        if (footer) footer.style.display = 'none';
+    /* ======================================================== */
+    /* IMAGE PREVIEW MODAL & HIGH-RES MEMO EXPORT ENGINE       */
+    /* ======================================================== */
+    let currentGeneratedBlob = null;
+    let currentGeneratedFileName = 'Supari_Memo.jpg';
+
+    function openImagePreviewModal(dataUrl, fileName, blob) {
+      const modal = document.getElementById('imagePreviewModal');
+      const img = document.getElementById('imagePreviewImg');
+      const downloadBtn = document.getElementById('imagePreviewDownloadBtn');
+      const shareBtn = document.getElementById('imagePreviewShareBtn');
+      
+      img.src = dataUrl;
+      downloadBtn.href = dataUrl;
+      downloadBtn.download = fileName;
+      currentGeneratedBlob = blob;
+      currentGeneratedFileName = fileName;
+
+      if (navigator.share && blob && navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'image/jpeg' })] })) {
+        shareBtn.style.display = 'flex';
+      } else {
+        shareBtn.style.display = 'none';
+      }
+
+      modal.classList.add('show');
+    }
+
+    function closeImagePreviewModal() {
+      document.getElementById('imagePreviewModal').classList.remove('show');
+    }
+
+    async function shareGeneratedImage() {
+      if (!currentGeneratedBlob) return;
+      try {
+        const file = new File([currentGeneratedBlob], currentGeneratedFileName, { type: 'image/jpeg' });
+        await navigator.share({
+          title: 'সুপারি বিক্রির মেমো',
+          text: 'সুপারি বিক্রির হিসাব মেমো রসিদ',
+          files: [file]
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          showToast('⚠️ শেয়ার করা যায়নি');
+        }
+      }
+    }
+
+    /* Core Robust Off-screen Memo Renderer */
+    async function renderMemoToImage(memoHtml, fileName) {
+      showToast('⏳ মেমো ছবি তৈরি হচ্ছে...');
+      
+      const wrapper = document.createElement('div');
+      wrapper.id = 'offscreen-memo-renderer';
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '0';
+      wrapper.style.top = '0';
+      wrapper.style.width = '780px';
+      wrapper.style.maxWidth = '780px';
+      wrapper.style.zIndex = '-9999';
+      wrapper.style.opacity = '1';
+      wrapper.style.pointerEvents = 'none';
+      wrapper.style.backgroundColor = '#ffffff';
+      wrapper.style.boxSizing = 'border-box';
+      wrapper.innerHTML = memoHtml;
+      document.body.appendChild(wrapper);
+
+      try {
+        await new Promise(r => setTimeout(r, 160));
+
+        if (typeof html2canvas === 'undefined') {
+          throw new Error('html2canvas লাইব্রেরি লোড হয়নি, দয়া করে আবার চেষ্টা করুন');
+        }
+
+        const canvas = await html2canvas(wrapper, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: 780,
+          logging: false
+        });
+
+        document.body.removeChild(wrapper);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+        canvas.toBlob(blob => {
+          if (blob) {
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = blobUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+            openImagePreviewModal(dataUrl, fileName, blob);
+          } else {
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = dataUrl;
+            link.click();
+            openImagePreviewModal(dataUrl, fileName, null);
+          }
+        }, 'image/jpeg', 0.95);
+
+        showToast('🖼️ JPG রসিদ প্রস্তুত ও ডাউনলোড শুরু হয়েছে!');
+      } catch (err) {
+        if (document.body.contains(wrapper)) {
+          document.body.removeChild(wrapper);
+        }
+        console.error('Memo generation error:', err);
+        showToast('⚠️ মেমো ছবি তৈরিতে সমস্যা হয়েছে: ' + (err.message || 'Error'));
+      }
+    }
+
+    function buildKachaMemoHtml() {
+      const ghaPerKuri = parseInt(document.getElementById('kachaGhaRule').value);
+      const totalEntries = kachaItems.length;
+      const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      const dateStr = toBnNum(new Date().toLocaleDateString('bn-BD', dateOptions));
+
+      let totalTi = 0;
+      let totalKuri = 0;
+      let grandTotal = 0;
+      kachaItems.forEach(item => {
+        totalTi += item.totalTi;
+        totalKuri += item.totalKuri;
+        grandTotal += item.totalPrice;
       });
+
+      const tiPerKuri = ghaPerKuri * tiPerGha;
+      const finalKuri = Math.floor(totalTi / tiPerKuri);
+      const remAfterKuri = totalTi % tiPerKuri;
+      const finalGha = Math.floor(remAfterKuri / tiPerGha);
+      const finalTi = remAfterKuri % tiPerGha;
+
+      let finalQtyParts = [];
+      if (finalKuri > 0) finalQtyParts.push(`${toBnNum(finalKuri)} কুড়ি`);
+      if (finalGha > 0) finalQtyParts.push(`${toBnNum(finalGha)} ঘা`);
+      if (finalTi > 0) finalQtyParts.push(`${toBnNum(finalTi)} টি`);
+      const finalQtyText = finalQtyParts.join(' ') || '০ কুড়ি';
+      const avgGhaRate = totalKuri > 0 ? (grandTotal / totalKuri / ghaPerKuri) : 0;
+
+      let numCols = 1;
+      if (totalEntries > 40) numCols = 3;
+      else if (totalEntries > 10) numCols = 2;
+
+      let tableHtml = '';
+      if (numCols === 1) {
+        tableHtml = `
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13.5px; font-family: 'Noto Sans Bengali', sans-serif;">
+            <thead>
+              <tr style="background: #f1f5f9; border-top: 1.5px solid #cbd5e1; border-bottom: 1.5px solid #cbd5e1; color: #475569; font-weight: 700;">
+                <th style="padding: 9px 8px; text-align: center; width: 44px;">নং</th>
+                <th style="padding: 9px 8px; text-align: center;">পরিমাণ</th>
+                <th style="padding: 9px 8px; text-align: center;">দর (কুড়ি / ঘা)</th>
+                <th style="padding: 9px 8px; text-align: right; width: 110px;">মোট টাকা (৳)</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        kachaItems.forEach((item, idx) => {
+          const itemGhaRate = item.ghaRate || (item.rate / ghaPerKuri);
+          tableHtml += `
+            <tr style="border-bottom: 1px solid #f1f5f9; ${idx % 2 === 1 ? 'background: #f8fafc;' : ''}">
+              <td style="padding: 8px 6px; text-align: center; font-weight: 700; color: #64748b;">${toBnNum(idx + 1)}</td>
+              <td style="padding: 8px 6px; text-align: center; font-weight: 600;">${item.qtyString}</td>
+              <td style="padding: 8px 6px; text-align: center;">
+                <div style="font-weight: 700; color: #0f172a;">${toBnNum(item.rate)} ৳ / কুড়ি</div>
+                <div style="font-size: 11px; color: #047857; font-weight: 700;">(১ ঘা = ৳ ${toBnNum(itemGhaRate.toFixed(2))})</div>
+              </td>
+              <td style="padding: 8px 6px; text-align: right; font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
+            </tr>
+          `;
+        });
+        tableHtml += `</tbody></table>`;
+      } else {
+        const rowsPerCol = Math.ceil(totalEntries / numCols);
+        tableHtml = `<div style="display: flex; gap: 10px; margin-bottom: 16px; font-family: 'Noto Sans Bengali', sans-serif;">`;
+        for (let c = 0; c < numCols; c++) {
+          const startIdx = c * rowsPerCol;
+          const endIdx = Math.min(startIdx + rowsPerCol, totalEntries);
+          if (startIdx >= totalEntries) break;
+
+          tableHtml += `
+            <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
+              <table style="width: 100%; border-collapse: collapse; font-size: ${numCols === 3 ? '11px' : '12px'};">
+                <thead>
+                  <tr style="background: #f8fafc; border-bottom: 1.5px solid #cbd5e1; color: #475569; font-weight: 700;">
+                    <th style="padding: 6px 3px; text-align: center; width: 30px;">নং</th>
+                    <th style="padding: 6px 3px; text-align: center;">পরিমাণ</th>
+                    <th style="padding: 6px 3px; text-align: center;">দর</th>
+                    <th style="padding: 6px 3px; text-align: right;">মোট (৳)</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          for (let i = startIdx; i < endIdx; i++) {
+            const item = kachaItems[i];
+            const itemGhaRate = item.ghaRate || (item.rate / ghaPerKuri);
+            tableHtml += `
+              <tr style="border-bottom: 1px solid #f1f5f9; ${i % 2 === 1 ? 'background: #f8fafc;' : ''}">
+                <td style="padding: 6px 3px; text-align: center; font-weight: 700; color: #64748b;">${toBnNum(i + 1)}</td>
+                <td style="padding: 6px 3px; text-align: center; font-weight: 600;">${item.qtyString}</td>
+                <td style="padding: 6px 3px; text-align: center; font-size: 11px;">
+                  <div>${toBnNum(item.rate)} ৳</div>
+                  <div style="color: #047857; font-weight: 700;">(১ ঘা: ৳ ${toBnNum(itemGhaRate.toFixed(2))})</div>
+                </td>
+                <td style="padding: 6px 3px; text-align: right; font-weight: 700; color: #047857;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
+              </tr>
+            `;
+          }
+          tableHtml += `</tbody></table></div>`;
+        }
+        tableHtml += `</div>`;
+      }
+
+      const creatorBadgeHtml = `
+        <div style="margin-top: 18px; padding-top: 14px; border-top: 2px dashed #cbd5e1;">
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%); border: 1.5px solid #a7f3d0; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 34px; height: 34px; border-radius: 9px; background: #d1fae5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+              </div>
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: #059669; letter-spacing: 0.3px;">সুপারি হিসাব ক্যালকুলেটর</div>
+                <div style="font-size: 14.5px; font-weight: 800; color: #0f172a;">Created by <span style="color: #059669;">Rahat Sharif</span></div>
+              </div>
+            </div>
+            <div style="background: #ffffff; color: #059669; border: 1px solid #a7f3d0; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Verified App</div>
+          </div>
+        </div>
+      `;
+
+      return `
+        <div style="width: 780px; background: #ffffff; padding: 24px 28px; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; color: #0f172a;">
+          <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px;">
+            <h2 style="margin: 0 0 6px; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px;">কাঁচা-পাকা সুপারি বিক্রির রসিদ</h2>
+            <div style="font-size: 13.5px; color: #475569; font-weight: 600;">
+              তারিখ: <span style="color: #0f172a; font-weight: 700;">${dateStr}</span> | হিসাবের নিয়ম: <span style="color: #047857; font-weight: 700;">${toBnNum(ghaPerKuri)} ঘা = ১ কুড়ি</span>
+            </div>
+          </div>
+
+          ${tableHtml}
+
+          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 16px 20px; font-size: 14px; font-weight: 600;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>মোট এন্ট্রি:</span>
+              <strong style="color: #0f172a; font-size: 15px;">${toBnNum(totalEntries)}টি</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #065f46;">
+              <span>সর্বমোট সুপারি:</span>
+              <strong style="font-size: 16px;">${finalQtyText}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569;">
+              <span>মোট কুড়ি (দশমিক):</span>
+              <strong>${toBnNum(totalKuri.toFixed(2))}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #047857;">
+              <span>প্রতি ঘায়ের গড় দাম:</span>
+              <strong>৳ ${toBnNum(avgGhaRate.toFixed(2))}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 2px dashed #cbd5e1; font-size: 20px; font-weight: 800; color: #047857;">
+              <span>সর্বমোট দাম:</span>
+              <span>৳ ${toBnNum(grandTotal.toFixed(2))}</span>
+            </div>
+          </div>
+
+          ${creatorBadgeHtml}
+        </div>
+      `;
+    }
+
+    function downloadKachaJPG() {
+      if (kachaItems.length === 0) {
+        showToast('⚠️ সেভ করার জন্য কোনো হিসাব নেই');
+        return;
+      }
+      const memoHtml = buildKachaMemoHtml();
+      renderMemoToImage(memoHtml, 'Kacha_Paka_Supari_Memo.jpg');
     }
 
     function printKachaReport() {
@@ -2456,24 +2762,157 @@
       copyToClipboard(text, 'শুকনো সুপারি রসিদ কপি হয়েছে!');
     }
 
+    function buildShuknoMemoHtml() {
+      const rateNum = parseBnFloat(document.getElementById('shuknoPricePerHajar').value);
+      const totalBags = shuknoBags.length;
+      const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      const dateStr = toBnNum(new Date().toLocaleDateString('bn-BD', dateOptions));
+
+      const totalGross = shuknoBags.reduce((a, b) => a + b, 0);
+      let netW = totalGross - shuknoDeductedEmptyKg;
+      if (netW < 0) netW = 0;
+      const finalBreakdown = calculateShuknoBreakdown(netW);
+
+      let numCols = 1;
+      if (totalBags > 80) numCols = 4;
+      else if (totalBags > 36) numCols = 3;
+      else if (totalBags > 12) numCols = 2;
+
+      let tableHtml = '';
+      if (numCols === 1) {
+        tableHtml = `
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13.5px; font-family: 'Noto Sans Bengali', sans-serif;">
+            <thead>
+              <tr style="background: #f1f5f9; border-top: 1.5px solid #cbd5e1; border-bottom: 1.5px solid #cbd5e1; color: #475569; font-weight: 700;">
+                <th style="padding: 9px 8px; text-align: center; width: 44px;">বস্তা</th>
+                <th style="padding: 9px 8px; text-align: center;">ওজন</th>
+                <th style="padding: 9px 8px; text-align: center;">সুপারি পরিমাণ</th>
+                <th style="padding: 9px 8px; text-align: right; width: 90px;">দাম (৳)</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        shuknoBags.forEach((gross, idx) => {
+          const row = calculateShuknoBreakdown(gross);
+          tableHtml += `
+            <tr style="border-bottom: 1px solid #f1f5f9; ${idx % 2 === 1 ? 'background: #f8fafc;' : ''}">
+              <td style="padding: 8px 6px; text-align: center; font-weight: 700; color: #64748b;">${toBnNum(idx + 1)}</td>
+              <td style="padding: 8px 6px; text-align: center; font-weight: 600;">${formatWeightKgGm(gross)}</td>
+              <td style="padding: 8px 6px; text-align: center; font-size: 12.5px; color: #334155;">${row.textFormat}</td>
+              <td style="padding: 8px 6px; text-align: right; font-weight: 700; color: #047857;">৳ ${row.priceStr}</td>
+            </tr>
+          `;
+        });
+        tableHtml += `</tbody></table>`;
+      } else {
+        const rowsPerCol = Math.ceil(totalBags / numCols);
+        tableHtml = `<div style="display: flex; gap: 8px; margin-bottom: 16px; font-family: 'Noto Sans Bengali', sans-serif;">`;
+        for (let c = 0; c < numCols; c++) {
+          const startIdx = c * rowsPerCol;
+          const endIdx = Math.min(startIdx + rowsPerCol, totalBags);
+          if (startIdx >= totalBags) break;
+
+          tableHtml += `
+            <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
+              <table style="width: 100%; border-collapse: collapse; font-size: ${numCols >= 3 ? '11px' : '12px'};">
+                <thead>
+                  <tr style="background: #f8fafc; border-bottom: 1.5px solid #cbd5e1; color: #475569; font-weight: 700;">
+                    <th style="padding: 6px 3px; text-align: center; width: 28px;">বস্তা</th>
+                    <th style="padding: 6px 3px; text-align: center;">ওজন</th>
+                    ${numCols === 2 ? '<th style="padding: 6px 3px; text-align: center;">পরিমাণ</th>' : ''}
+                    <th style="padding: 6px 3px; text-align: right;">দাম (৳)</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          for (let i = startIdx; i < endIdx; i++) {
+            const gross = shuknoBags[i];
+            const row = calculateShuknoBreakdown(gross);
+            tableHtml += `
+              <tr style="border-bottom: 1px solid #f1f5f9; ${i % 2 === 1 ? 'background: #f8fafc;' : ''}">
+                <td style="padding: 5px 3px; text-align: center; font-weight: 700; color: #64748b;">${toBnNum(i + 1)}</td>
+                <td style="padding: 5px 3px; text-align: center; font-weight: 600;">${formatWeightKgGm(gross)}</td>
+                ${numCols === 2 ? `<td style="padding: 5px 3px; text-align: center; font-size: 11px; color: #475569;">${row.textFormat}</td>` : ''}
+                <td style="padding: 5px 3px; text-align: right; font-weight: 700; color: #047857;">৳ ${row.priceStr}</td>
+              </tr>
+            `;
+          }
+          tableHtml += `</tbody></table></div>`;
+        }
+        tableHtml += `</div>`;
+      }
+
+      const creatorBadgeHtml = `
+        <div style="margin-top: 18px; padding-top: 14px; border-top: 2px dashed #cbd5e1;">
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%); border: 1.5px solid #a7f3d0; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 34px; height: 34px; border-radius: 9px; background: #d1fae5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+              </div>
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: #059669; letter-spacing: 0.3px;">সুপারি হিসাব ক্যালকুলেটর</div>
+                <div style="font-size: 14.5px; font-weight: 800; color: #0f172a;">Created by <span style="color: #059669;">Rahat Sharif</span></div>
+              </div>
+            </div>
+            <div style="background: #ffffff; color: #059669; border: 1px solid #a7f3d0; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Verified App</div>
+          </div>
+        </div>
+      `;
+
+      return `
+        <div style="width: 780px; background: #ffffff; padding: 24px 28px; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; color: #0f172a;">
+          <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px;">
+            <h2 style="margin: 0 0 6px; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px;">শুকনো সুপারি বিক্রির রসিদ</h2>
+            <div style="font-size: 13.5px; color: #475569; font-weight: 600;">
+              তারিখ: <span style="color: #0f172a; font-weight: 700;">${dateStr}</span> | হিসাবের নিয়ম: <span style="color: #047857; font-weight: 700;">১ হাজার = ${toBnNum(shuknoBaseRule)} কেজি</span> | দর: <span style="color: #047857; font-weight: 700;">৳ ${toBnNum(rateNum.toLocaleString('en-IN'))}</span>
+            </div>
+          </div>
+
+          ${tableHtml}
+
+          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 16px 20px; font-size: 14px; font-weight: 600;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>মোট বস্তা:</span>
+              <strong style="color: #0f172a; font-size: 15px;">${toBnNum(totalBags)}টি</strong>
+            </div>
+            ${shuknoDeductedEmptyKg > 0 ? `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #64748b; font-size: 13px;">
+                <span>বস্তাসহ মোট ওজন:</span>
+                <span>${formatWeightKgGm(totalGross)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #ef4444; font-size: 13px;">
+                <span>বাদ দেওয়া বস্তার ওজন:</span>
+                <strong>- ${formatWeightKgGm(shuknoDeductedEmptyKg)}</strong>
+              </div>
+            ` : ''}
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>সুপারির নিট ওজন:</span>
+              <strong style="color: #0f172a; font-size: 15px;">${formatWeightKgGm(netW)}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #065f46;">
+              <span>মোট সুপারি:</span>
+              <strong style="font-size: 16px;">${finalBreakdown.textFormat}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 2px dashed #cbd5e1; font-size: 20px; font-weight: 800; color: #047857;">
+              <span>সর্বমোট দাম:</span>
+              <span>৳ ${finalBreakdown.priceStr}</span>
+            </div>
+          </div>
+
+          ${creatorBadgeHtml}
+        </div>
+      `;
+    }
+
     function downloadShuknoJPG() {
-      if (shuknoBags.length === 0) return;
-      const area = document.getElementById('shuknoExportArea');
-      const footer = area.querySelector('.receipt-creator-footer');
-      if (footer) footer.style.display = 'block';
-      html2canvas(area, {
-        scale: 2.5,
-        backgroundColor: '#ffffff',
-        ignoreElements: el => el.classList && el.classList.contains('no-print')
-      }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'Shukno_Supari_Memo.jpg';
-        link.href = canvas.toDataURL('image/jpeg', 0.95);
-        link.click();
-        showToast('🖼️ JPG রসিদ ডাউনলোড হয়েছে');
-      }).finally(() => {
-        if (footer) footer.style.display = 'none';
-      });
+      if (shuknoBags.length === 0) {
+        showToast('⚠️ সেভ করার জন্য কোনো বস্তা যোগ করা হয়নি');
+        return;
+      }
+      const memoHtml = buildShuknoMemoHtml();
+      renderMemoToImage(memoHtml, 'Shukno_Supari_Memo.jpg');
     }
 
     function printShuknoReport() {
