@@ -1348,10 +1348,15 @@
           </div>
         </div>
 
-        <!-- Requirement 2: প্রতি কুড়ির দাম ডিফল্ট ফাঁকা -->
-        <div class="input-box rate-box-wrapper no-print">
-          <label>প্রতি কুড়ির দাম (৳)</label>
-          <input type="text" id="kachaInputRate" placeholder="০" inputmode="decimal" oninput="forceBnDigits(event)">
+        <!-- Requirement 2: প্রতি কুড়ির দাম ও লাইভ ঘায়ের দাম হিসাব -->
+        <div class="input-box rate-box-wrapper no-print" style="margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+            <label for="kachaInputRate" style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 0;">প্রতি কুড়ির দাম (৳)</label>
+            <span id="kachaGhaLiveIndicator" style="display: none; font-size: 12px; font-weight: 700; color: #047857; background: #ecfdf5; padding: 2px 8px; border-radius: 12px; border: 1px solid #a7f3d0;">
+              ১ ঘা = ৳ <span id="kachaGhaRateMiniText">০</span>
+            </span>
+          </div>
+          <input type="text" id="kachaInputRate" placeholder="০" inputmode="decimal" oninput="onKachaRateInput(event)">
         </div>
 
         <div class="action-grid no-print">
@@ -1373,7 +1378,7 @@
               <tr>
                 <th style="width: 38px;">নং</th>
                 <th>পরিমাণ</th>
-                <th>দর (৳)</th>
+                <th>দর (কুড়ি / ঘা)</th>
                 <th>মোট টাকা (৳)</th>
                 <th class="action-col no-print" style="width: 60px;">অ্যাকশন</th>
               </tr>
@@ -1389,6 +1394,7 @@
             <div class="summary-row"><span>মোট এন্ট্রি:</span> <strong id="kachaTotalEntries">০টি</strong></div>
             <div class="summary-row"><span>সর্বমোট সুপারি:</span> <strong id="kachaTotalQtyText">০ কুড়ি</strong></div>
             <div class="summary-row"><span>মোট কুড়ি (দশমিক):</span> <strong id="kachaTotalKuriDec">০.০০</strong></div>
+            <div class="summary-row" id="kachaSummaryGhaRateRow" style="color: #047857;"><span>প্রতি ঘায়ের দাম:</span> <strong id="kachaSummaryGhaRateText">৳ ০.০০</strong></div>
             <div class="summary-row total-row">
               <span>সর্বমোট দাম:</span>
               <strong>৳ <span id="kachaGrandTotal">০</span></strong>
@@ -1860,8 +1866,32 @@
       document.getElementById('subtab-kacha-rate').style.display = tab === 'rate' ? 'block' : 'none';
     }
 
+    function onKachaRateInput(e) {
+      if (e) forceBnDigits(e);
+      updateKachaGhaRatePreview();
+    }
+
+    function updateKachaGhaRatePreview() {
+      const rateInput = document.getElementById('kachaInputRate');
+      if (!rateInput) return;
+      const rate = parseBnFloat(rateInput.value);
+      const ghaRuleSelect = document.getElementById('kachaGhaRule');
+      const ghaPerKuri = parseInt(ghaRuleSelect ? ghaRuleSelect.value : 21) || 21;
+      const miniIndicator = document.getElementById('kachaGhaLiveIndicator');
+
+      if (rate > 0) {
+        const ghaRate = rate / ghaPerKuri;
+        const miniText = document.getElementById('kachaGhaRateMiniText');
+        if (miniText) miniText.innerText = toBnNum(ghaRate.toFixed(2));
+        if (miniIndicator) miniIndicator.style.display = 'inline-block';
+      } else {
+        if (miniIndicator) miniIndicator.style.display = 'none';
+      }
+    }
+
     function onKachaRuleChange() {
       localStorage.setItem('kacha_gha_rule', document.getElementById('kachaGhaRule').value);
+      updateKachaGhaRatePreview();
       renderKachaReport();
     }
 
@@ -1882,6 +1912,7 @@
 
       const totalKuri = totalTi / tiPerKuri;
       const totalPrice = Math.round(totalKuri * rate * 100) / 100;
+      const ghaRate = rate / ghaPerKuri;
 
       let parts = [];
       if (kuri > 0) parts.push(`${toBnNum(kuri)} কুড়ি`);
@@ -1889,13 +1920,13 @@
       if (ti > 0) parts.push(`${toBnNum(ti)} টি`);
       const qtyString = parts.join(' ') || `${toBnNum(totalTi)} টি`;
 
-      const item = { kuri, gha, ti, totalTi, totalKuri, rate, totalPrice, qtyString };
+      const item = { kuri, gha, ti, totalTi, totalKuri, rate, ghaRate, totalPrice, qtyString };
       kachaItems.push(item);
       saveKachaDraft();
 
       const banner = document.getElementById('kachaRecentBanner');
       banner.style.display = 'block';
-      banner.innerHTML = `সর্বশেষ যোগ: <strong>${qtyString}</strong> (${toBnNum(rate)} ৳ দরে) <br>মোট: <strong>৳ ${toBnNum(totalPrice.toFixed(2))}</strong>`;
+      banner.innerHTML = `সর্বশেষ যোগ: <strong>${qtyString}</strong> | কুড়ির দর: <strong>${toBnNum(rate)} ৳</strong> (প্রতি ঘা: <strong>৳ ${toBnNum(ghaRate.toFixed(2))}</strong>) <br>মোট: <strong>৳ ${toBnNum(totalPrice.toFixed(2))}</strong>`;
 
       document.getElementById('kachaInputKuri').value = '';
       document.getElementById('kachaInputGha').value = '';
@@ -1936,12 +1967,16 @@
         totalTi += item.totalTi;
         totalKuri += item.totalKuri;
         grandTotal += item.totalPrice;
+        const itemGhaRate = item.ghaRate || (item.rate / ghaPerKuri);
 
         html += `
           <tr>
             <td>${toBnNum(idx + 1)}</td>
             <td style="font-weight: 600;">${item.qtyString}</td>
-            <td>${toBnNum(item.rate)}</td>
+            <td>
+              <div style="font-weight: 600;">${toBnNum(item.rate)} ৳ / কুড়ি</div>
+              <div style="font-size: 11px; color: #047857; font-weight: 700; margin-top: 2px;">(১ ঘা = ৳ ${toBnNum(itemGhaRate.toFixed(2))})</div>
+            </td>
             <td style="font-weight: 700;">৳ ${toBnNum(item.totalPrice.toFixed(2))}</td>
             <td class="action-cell no-print">
               <div class="table-actions">
@@ -1970,6 +2005,13 @@
       document.getElementById('kachaTotalEntries').innerText = `${toBnNum(kachaItems.length)}টি`;
       document.getElementById('kachaTotalQtyText').innerText = finalQtyParts.join(' ') || '০ কুড়ি';
       document.getElementById('kachaTotalKuriDec').innerText = toBnNum(totalKuri.toFixed(2));
+      
+      const avgGhaRate = totalKuri > 0 ? (grandTotal / totalKuri / ghaPerKuri) : 0;
+      const summaryGhaRow = document.getElementById('kachaSummaryGhaRateRow');
+      if (summaryGhaRow) {
+        document.getElementById('kachaSummaryGhaRateText').innerText = `৳ ${toBnNum(avgGhaRate.toFixed(2))}`;
+      }
+
       document.getElementById('kachaGrandTotal').innerText = toBnNum(grandTotal.toFixed(2));
 
       const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -1982,6 +2024,7 @@
       document.getElementById('kachaInputGha').value = item.gha > 0 ? toBnNum(item.gha) : '';
       document.getElementById('kachaInputTi').value = item.ti > 0 ? toBnNum(item.ti) : '';
       document.getElementById('kachaInputRate').value = item.rate > 0 ? toBnNum(item.rate) : '';
+      updateKachaGhaRatePreview();
 
       kachaItems.splice(index, 1);
       saveKachaDraft();
@@ -2011,6 +2054,7 @@
         saveKachaDraft();
         renderKachaReport();
         document.getElementById('kachaRecentBanner').style.display = 'none';
+        updateKachaGhaRatePreview();
         showToast('🗑️ সম্পূর্ণ রিপোর্ট মুছে ফেলা হয়েছে');
       });
     }
@@ -2045,13 +2089,16 @@
 
     function copyKachaReport() {
       if (kachaItems.length === 0) return;
+      const ghaPerKuri = parseInt(document.getElementById('kachaGhaRule').value);
       let text = "--- কাঁচা-পাকা সুপারি হিসাব রসিদ ---\n";
       text += `তারিখ: ${document.getElementById('kachaPrintDate').innerText}\n`;
       text += `হিসাবের নিয়ম: ${document.getElementById('kachaPrintRuleText').innerText}\n\n`;
       kachaItems.forEach((item, i) => {
-        text += `${toBnNum(i + 1)}. ${item.qtyString} | দর: ${toBnNum(item.rate)} ৳ | দাম: ${toBnNum(item.totalPrice.toFixed(2))} ৳\n`;
+        const itemGhaRate = item.ghaRate || (item.rate / ghaPerKuri);
+        text += `${toBnNum(i + 1)}. ${item.qtyString} | দর: ${toBnNum(item.rate)} ৳ / কুড়ি (১ ঘা = ${toBnNum(itemGhaRate.toFixed(2))} ৳) | দাম: ${toBnNum(item.totalPrice.toFixed(2))} ৳\n`;
       });
       text += `\nসর্বমোট সুপারি: ${document.getElementById('kachaTotalQtyText').innerText}\n`;
+      text += `প্রতি ঘায়ের গড় দাম: ${document.getElementById('kachaSummaryGhaRateText').innerText}\n`;
       text += `সর্বমোট দাম: ৳ ${document.getElementById('kachaGrandTotal').innerText}\n`;
       text += `\nCreated by Rahat Sharif\n`;
 
@@ -2505,6 +2552,7 @@
           renderKachaReport();
         } catch (e) {}
       }
+      updateKachaGhaRatePreview();
 
       // 2. Restore Shukno Draft
       const savedShuknoState = localStorage.getItem('shukno_draft_state');

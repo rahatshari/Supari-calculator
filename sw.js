@@ -1,4 +1,4 @@
-const CACHE_NAME = 'supari-calc-v8';
+const CACHE_NAME = 'supari-calc-v10';
 
 const STATIC_ASSETS = [
   './',
