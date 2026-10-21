@@ -8,12 +8,12 @@
   <meta property="og:title" content="সুপারি হিসাব অ্যাপ">
   <meta property="og:description" content="কাঁচা-পাকা ও শুকনো সুপারি কেনা-বেচার সহজ, দ্রুত ও নির্ভুল হিসাব ক্যালকুলেটর">
   
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#10b981">
-  <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <link rel="icon" type="image/png" sizes="192x192" href="pwa-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="pwa-512x512.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -25,7 +25,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <!-- Beautiful Initial Loading State to completely prevent any white screen -->
+    <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; font-family: 'Noto Sans Bengali', system-ui, sans-serif; text-align: center; padding: 20px; box-sizing: border-box;">
+      <div style="width: 76px; height: 76px; margin-bottom: 16px; border-radius: 20px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);">
+        <svg viewBox="0 0 100 100" width="54" height="54" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="initialLoadGrad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#10b981" />
+              <stop offset="60%" stop-color="#059669" />
+              <stop offset="100%" stop-color="#047857" />
+            </radialGradient>
+          </defs>
+          <path d="M50 15 C80 15, 85 50, 70 80 C60 95, 40 95, 30 80 C15 50, 20 15, 50 15 Z" fill="url(#initialLoadGrad)" />
+          <path d="M45 18 C48 10, 52 10, 55 18 Z" fill="#065f46" />
+        </svg>
+      </div>
+      <h2 style="margin: 0 0 6px; color: #065f46; font-size: 20px; font-weight: 800;">সুপারি হিসাব অ্যাপ</h2>
+      <p style="margin: 0; color: #64748b; font-size: 13.5px; font-weight: 600;">লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</p>
+    </div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

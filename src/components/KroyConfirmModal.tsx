@@ -4,7 +4,7 @@ import { PendingKroyItem } from '../types';
 import { toBnNum } from '../utils/bengali';
 
 interface KroyConfirmModalProps {
-  pendingItem: PendingKroyItem;
+  pendingItem: PendingKroyItem | null;
   onConfirm: (sellerName: string) => void;
   onCancel: () => void;
 }
@@ -19,6 +19,8 @@ export const KroyConfirmModal: React.FC<KroyConfirmModalProps> = ({
   useEffect(() => {
     setSellerName('');
   }, [pendingItem]);
+
+  if (!pendingItem) return null;
 
   return (
     <div className="modal-overlay show" onClick={onCancel}>

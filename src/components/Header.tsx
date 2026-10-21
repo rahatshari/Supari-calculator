@@ -36,26 +36,15 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="app-header no-print">
       <div className="header-left">
         {currentView !== 'home' ? (
-          <>
-            <button
-              className="nav-icon-btn"
-              onClick={() => onNavigate('home')}
-              title="মূল মেনুতে ফিরে যান"
-              aria-label="মূল মেনু"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              মেনু
-            </button>
-            <button
-              className="nav-icon-btn settings-header-btn"
-              onClick={onOpenSettings}
-              title="অ্যাপ সেটিংস (ক্রয় খাতা চালু/বন্ধ)"
-              aria-label="অ্যাপ সেটিংস"
-              style={{ padding: '6px 8px' }}
-            >
-              <Settings className="w-3.5 h-3.5" />
-            </button>
-          </>
+          <button
+            className="nav-icon-btn"
+            onClick={() => onNavigate('home')}
+            title="মূল মেনুতে ফিরে যান"
+            aria-label="মূল মেনু"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            মেনু
+          </button>
         ) : (
           <button
             className="nav-icon-btn settings-header-btn"

@@ -301,7 +301,7 @@ export const App: React.FC = () => {
     // Register service worker if supported
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('sw.js')
+        .register('sw.js', { scope: './' })
         .then((reg) => {
           reg.onupdatefound = () => {
             const worker = reg.installing;
@@ -314,7 +314,9 @@ export const App: React.FC = () => {
             }
           };
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.warn('SW register skipped or failed:', err);
+        });
     }
 
     return () => {
@@ -626,11 +628,13 @@ export const App: React.FC = () => {
         onToast={showToast}
       />
 
-      <KroyConfirmModal
-        pendingItem={pendingKroyItem}
-        onConfirm={handleConfirmSaveToKroy}
-        onCancel={() => setPendingKroyItem(null)}
-      />
+      {pendingKroyItem && (
+        <KroyConfirmModal
+          pendingItem={pendingKroyItem}
+          onConfirm={handleConfirmSaveToKroy}
+          onCancel={() => setPendingKroyItem(null)}
+        />
+      )}
 
       <IosInstallModal
         isOpen={isIosModalOpen}
