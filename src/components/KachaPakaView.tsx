@@ -111,6 +111,7 @@ export const KachaPakaView: React.FC<KachaPakaViewProps> = ({
     setInputKuri('');
     setInputGha('');
     setInputTi('');
+    setInputRate('');
     onToast('✅ কাঁচা-পাকা হিসাব যোগ করা হয়েছে');
   };
 
@@ -472,6 +473,10 @@ export const KachaPakaView: React.FC<KachaPakaViewProps> = ({
     setRecentBanner(
       `দর যাচাই থেকে যোগ: <strong>${rateCheckResult.qtyText}</strong> | দর: <strong>${toBnNum(rate)} ৳</strong> (প্রতি ঘা: <strong>৳ ${toBnNum(ghaRateVal.toFixed(2))}</strong>) <br>মোট: <strong>৳ ${toBnNum(totalPrice.toFixed(2))}</strong>`
     );
+    setInputKuri('');
+    setInputGha('');
+    setInputTi('');
+    setInputRate('');
     setSubtab('main');
     window.scrollTo({ top: 120, behavior: 'smooth' });
     onToast('✅ দর যাচাইকৃত হিসাবটি কাঁচা-পাকা মূল তালিকায় যোগ হয়েছে');
@@ -874,75 +879,39 @@ export const KachaPakaView: React.FC<KachaPakaViewProps> = ({
 
               {/* Actions for Rate Checked Lot */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '14px' }}>
-                {/* 1. Add to Daily Purchase Ledger */}
-                {kroyKhataEnabled ? (
+                {/* 1. Add directly to Main Kacha Calculator list */}
+                <button
+                  className="btn btn-primary"
+                  onClick={handleAddRateCheckToMainList}
+                  style={{
+                    width: '100%',
+                    fontWeight: 700,
+                    fontSize: '13.5px',
+                    padding: '10px',
+                  }}
+                >
+                  ➕ কাঁচা-পাকা মূল হিসাব তালিকায় যোগ করুন
+                </button>
+
+                {/* 2. Add to Daily Purchase Ledger (Only if Kroy Khata is enabled) */}
+                {kroyKhataEnabled && (
                   <button
-                    className="btn btn-primary"
+                    className="btn btn-secondary"
                     onClick={handleOpenKroyFromRateCheck}
                     style={{
                       width: '100%',
                       fontWeight: 700,
-                      fontSize: '13.5px',
-                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                      boxShadow: '0 3px 8px rgba(5, 150, 105, 0.25)',
+                      fontSize: '13px',
+                      padding: '9px',
+                      border: '1.5px solid #cbd5e1',
+                      background: '#f8fafc',
+                      color: '#047857',
                     }}
                   >
                     <ShoppingCart className="w-4 h-4 mr-1.5" />
                     🛒 এই হিসাবটি দৈনিক ক্রয় খাতায় জমা করুন
                   </button>
-                ) : (
-                  <div
-                    style={{
-                      background: '#ecfdf5',
-                      border: '1.5px dashed #86efac',
-                      borderRadius: '10px',
-                      padding: '10px 12px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
-                  >
-                    <div style={{ fontSize: '12px', color: '#065f46', lineHeight: 1.3 }}>
-                      💡 হিসাবটি কি <strong>দৈনিক ক্রয় খাতায়</strong> সংরক্ষণ করতে চান?
-                    </div>
-                    {onOpenSettings && (
-                      <button
-                        onClick={onOpenSettings}
-                        style={{
-                          background: '#10b981',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '8px',
-                          padding: '6px 10px',
-                          fontSize: '11.5px',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                          boxShadow: '0 2px 4px rgba(16,185,129,0.2)',
-                        }}
-                      >
-                        ক্রয় খাতা চালু করুন
-                      </button>
-                    )}
-                  </div>
                 )}
-
-                {/* 2. Add directly to Main Kacha Calculator list */}
-                <button
-                  className="btn btn-secondary"
-                  onClick={handleAddRateCheckToMainList}
-                  style={{
-                    width: '100%',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    padding: '10px',
-                    border: '1.5px solid #cbd5e1',
-                    background: '#f8fafc',
-                  }}
-                >
-                  ➕ কাঁচা-পাকা মূল হিসাব তালিকায় যোগ করুন
-                </button>
               </div>
             </div>
           )}
