@@ -301,7 +301,7 @@ export const App: React.FC = () => {
     // Register service worker if supported
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('/sw.js')
+        .register('sw.js')
         .then((reg) => {
           reg.onupdatefound = () => {
             const worker = reg.installing;

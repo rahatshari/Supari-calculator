@@ -19,7 +19,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     <div className="view-panel active">
       <div className="home-hero">
         <div className="home-logo">
-          <img src="/icon.svg" alt="Supari Logo" width="88" height="88" />
+          <img src="icon.svg" alt="Supari Logo" width="88" height="88" />
         </div>
         <h2 className="home-title">সুপারি হিসাব অ্যাপ</h2>
         <p className="home-subtitle">আপনি কোন হিসাবটি করতে চান নিচে নির্বাচন করুন</p>
