@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">সুপারি হিসাব অ্যাপ</string>
-    <string name="title_activity_main">সুপারি হিসাব অ্যাপ</string>
-    <string name="package_name">com.rahatsharif.suparicalculator</string>
-    <string name="custom_url_scheme">com.rahatsharif.suparicalculator</string>
-</resources>
