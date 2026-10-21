@@ -23,10 +23,48 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    window.__APP_MOUNTED__ = false;
+
+    function forceResetCacheAndReload() {
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            for (var i = 0; i < regs.length; i++) regs[i].unregister();
+          });
+        }
+        if ('caches' in window) {
+          caches.keys().then(function(keys) {
+            for (var i = 0; i < keys.length; i++) caches.delete(keys[i]);
+          });
+        }
+      } catch (err) {}
+      setTimeout(function() {
+        var base = window.location.pathname.split('?')[0];
+        window.location.replace(base + '?reload=' + Date.now());
+      }, 300);
+    }
+
+    // If script takes more than 3 seconds or fails, display emergency reload button
+    setTimeout(function() {
+      if (!window.__APP_MOUNTED__) {
+        var el = document.getElementById('loading-recovery');
+        if (el) el.style.display = 'block';
+        var txt = document.getElementById('loading-status-text');
+        if (txt) txt.textContent = 'লোড হতে বেশি সময় নিচ্ছে...';
+      }
+    }, 3200);
+
+    window.addEventListener('error', function() {
+      var el = document.getElementById('loading-recovery');
+      if (el) el.style.display = 'block';
+    });
+  </script>
 </head>
 <body>
   <div id="root">
-    <!-- Beautiful Initial Loading State to completely prevent any white screen -->
+    <!-- Initial Loading State with Guaranteed User Escape Route -->
     <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; font-family: 'Noto Sans Bengali', system-ui, sans-serif; text-align: center; padding: 20px; box-sizing: border-box;">
       <div style="width: 76px; height: 76px; margin-bottom: 16px; border-radius: 20px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);">
         <svg viewBox="0 0 100 100" width="54" height="54" xmlns="http://www.w3.org/2000/svg">
@@ -42,7 +80,20 @@
         </svg>
       </div>
       <h2 style="margin: 0 0 6px; color: #065f46; font-size: 20px; font-weight: 800;">সুপারি হিসাব অ্যাপ</h2>
-      <p style="margin: 0; color: #64748b; font-size: 13.5px; font-weight: 600;">লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</p>
+      <p id="loading-status-text" style="margin: 0; color: #64748b; font-size: 13.5px; font-weight: 600;">লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</p>
+
+      <div id="loading-recovery" style="display: none; margin-top: 24px;">
+        <p style="margin: 0 0 10px; color: #b91c1c; font-size: 13px; font-weight: 600;">
+          পুরনো ব্রাউজার ক্যাশের কারণে আটকে থাকলে চাপুন:
+        </p>
+        <button
+          type="button"
+          onclick="forceResetCacheAndReload()"
+          style="background: #059669; color: #ffffff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);"
+        >
+          🔄 ক্যাশ পরিষ্কার করে রিস্টার্ট করুন
+        </button>
+      </div>
     </div>
   </div>
   <script type="module" src="/src/main.tsx"></script>

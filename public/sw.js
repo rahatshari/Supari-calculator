@@ -1,8 +1,6 @@
-const CACHE_NAME = 'supari-calc-v25';
+const CACHE_NAME = 'supari-calc-v101';
 
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/icon.svg',
   '/pwa-192x192.png',
@@ -11,17 +9,17 @@ const STATIC_ASSETS = [
   '/pwa-maskable-512x512.png'
 ];
 
-// Install: Cache core assets and activate immediately
+// Install: Cache static icons and skip waiting immediately
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_ASSETS).catch(() => {});
     })
   );
 });
 
-// Activate: Immediately remove all old caches and claim clients
+// Activate: Immediately purge all old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
@@ -36,18 +34,26 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Message listener to trigger immediate skipWaiting
+// Message listener
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
 
-// Fetch: Network First for all application code, fallback to cache when offline
+// Fetch: Ignore Vite dev requests, network first for assets
 self.addEventListener('fetch', event => {
   const request = event.request;
+  const url = request.url;
 
-  if (request.method !== 'GET') {
+  // Never intercept dev server internals
+  if (
+    url.includes('/@vite/') ||
+    url.includes('/@react-refresh') ||
+    url.includes('/node_modules/') ||
+    url.includes('.hot-update.') ||
+    request.method !== 'GET'
+  ) {
     return;
   }
 
@@ -55,11 +61,14 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(request)
       .then(networkResponse => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, responseClone);
-          });
+        if (networkResponse && networkResponse.status === 200 && request.method === 'GET') {
+          // Only cache successful static assets
+          if (!url.includes('/src/') && !url.includes('?')) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseClone).catch(() => {});
+            });
+          }
         }
         return networkResponse;
       })
@@ -68,12 +77,10 @@ self.addEventListener('fetch', event => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          if (request.mode === 'navigate') {
-            return caches.match('/index.html') || caches.match('/');
-          }
           if (request.destination === 'image') {
             return caches.match('/icon.svg');
           }
+          return new Response('Offline', { status: 503, statusText: 'Offline' });
         });
       })
   );
