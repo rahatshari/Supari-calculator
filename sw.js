@@ -1,17 +1,14 @@
-const CACHE_NAME = 'supari-calc-v13';
+const CACHE_NAME = 'supari-calc-v14';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './html2canvas.min.js',
   './manifest.json',
   './icon.svg',
   './pwa-192x192.png',
   './pwa-512x512.png',
   './apple-touch-icon.png',
-  './pwa-maskable-512x512.png',
-  './kacha-paka.html',
-  './shukno.html'
+  './pwa-maskable-512x512.png'
 ];
 
 // Install: Cache all core files for complete offline use

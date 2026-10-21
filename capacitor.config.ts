@@ -1,0 +1,12 @@
+import type { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'com.rahatsharif.suparicalculator',
+  appName: 'সুপারি হিসাব অ্যাপ',
+  webDir: 'dist',
+  server: {
+    androidScheme: 'https',
+  },
+};
+
+export default config;
