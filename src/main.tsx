@@ -10,13 +10,9 @@ declare global {
   }
 }
 
-function mountApp() {
-  const container = document.getElementById('root');
-  if (!container) return;
-
+const container = document.getElementById('root');
+if (container) {
   window.__APP_MOUNTED__ = true;
-  document.body.classList.add('app-ready');
-
   const root = createRoot(container);
   root.render(
     <StrictMode>
@@ -25,10 +21,6 @@ function mountApp() {
       </ErrorBoundary>
     </StrictMode>
   );
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', mountApp);
 } else {
-  mountApp();
+  console.error('Fatal: #root element not found in DOM');
 }

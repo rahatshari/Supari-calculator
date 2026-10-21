@@ -298,33 +298,13 @@ export const App: React.FC = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Service worker handling: unregister in dev mode to avoid cache conflicts
+    // Ensure any stale service workers are cleared to avoid cache lockups
     if ('serviceWorker' in navigator) {
-      if (import.meta.env.DEV) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (const registration of registrations) {
-            registration.unregister();
-          }
-        });
-      } else {
-        navigator.serviceWorker
-          .register('/sw.js')
-          .then((reg) => {
-            reg.onupdatefound = () => {
-              const worker = reg.installing;
-              if (worker) {
-                worker.onstatechange = () => {
-                  if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-                    showToast('⚡ অফলাইন ক্যাশ আপডেট সম্পন্ন হয়েছে');
-                  }
-                };
-              }
-            };
-          })
-          .catch((err) => {
-            console.warn('SW register skipped or failed:', err);
-          });
-      }
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister();
+        }
+      });
     }
 
     return () => {
