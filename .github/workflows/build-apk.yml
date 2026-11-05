@@ -39,13 +39,18 @@ jobs:
         run: |
           npx cap add android
           npx cap sync android
-          for dir in android/app/src/main/res/mipmap-*; do
+          # Replace icons for specific density folders only (avoiding anydpi-v26 XML duplicate resource conflict)
+          for dpi in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            dir="android/app/src/main/res/mipmap-$dpi"
             if [ -d "$dir" ]; then
               cp public/pwa-192x192.png "$dir/ic_launcher.png" 2>/dev/null || true
               cp public/pwa-192x192.png "$dir/ic_launcher_round.png" 2>/dev/null || true
               cp public/pwa-512x512.png "$dir/ic_launcher_foreground.png" 2>/dev/null || true
             fi
           done
+          # Ensure anydpi-v26 only keeps XML adaptive icons
+          rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.png 2>/dev/null || true
+          rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.png 2>/dev/null || true
 
       - name: ⚙️ Build Debug APK with Gradle
         run: |
@@ -69,8 +74,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0-apk
-          name: "সুপারি হিসাব অফলাইন অ্যাপ (APK v1.0.0)"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v1.0.0-apk' }}
+          name: "সুপারি হিসাব অফলাইন অ্যাপ (APK ${{ github.ref_name || 'v1.0.0' }})"
           body: "কাঁচা-পাকা ও শুকনো সুপারি হিসাবের ১০০% অফলাইন অ্যান্ড্রয়েড অ্যাপ (APK)।"
           files: output-apk/supari-calculator-offline.apk
         env:

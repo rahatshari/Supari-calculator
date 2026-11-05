@@ -19,6 +19,9 @@ import { KroyConfirmModal } from './components/KroyConfirmModal';
 import { IosInstallModal } from './components/IosInstallModal';
 import { SettingsModal } from './components/SettingsModal';
 import { HistoryDrawer } from './components/HistoryDrawer';
+import { UpdateNotificationModal } from './components/UpdateNotificationModal';
+import { checkForUpdates } from './utils/updateChecker';
+import { AppUpdateInfo } from './config/version';
 import { HomeView } from './components/HomeView';
 import { KachaPakaView } from './components/KachaPakaView';
 import { ShuknoView } from './components/ShuknoView';
@@ -165,6 +168,8 @@ export const App: React.FC = () => {
   const [pendingKroyItem, setPendingKroyItem] = useState<PendingKroyItem | null>(null);
   const [imagePreviewData, setImagePreviewData] = useState<RenderMemoResult | null>(null);
   const [isIosModalOpen, setIsIosModalOpen] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<AppUpdateInfo | null>(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   // PWA Install state
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -249,7 +254,9 @@ export const App: React.FC = () => {
 
     try {
       CapApp.addListener('backButton', () => {
-        if (imagePreviewData) {
+        if (isUpdateModalOpen) {
+          setIsUpdateModalOpen(false);
+        } else if (imagePreviewData) {
           setImagePreviewData(null);
         } else if (pendingKroyItem) {
           setPendingKroyItem(null);
@@ -275,6 +282,7 @@ export const App: React.FC = () => {
       if (removeListener) removeListener();
     };
   }, [
+    isUpdateModalOpen,
     imagePreviewData,
     pendingKroyItem,
     confirmModal.isOpen,
@@ -285,9 +293,31 @@ export const App: React.FC = () => {
     navigate,
   ]);
 
+  // Automatic In-App Update Check on launch
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        const info = await checkForUpdates();
+        const dismissed = sessionStorage.getItem('dismissed_app_update');
+        if (info.hasUpdate && dismissed !== info.latestVersion) {
+          setUpdateInfo(info);
+          setIsUpdateModalOpen(true);
+        }
+      } catch {
+        // Silently fail if offline or unable to reach github
+      }
+    }, 2800);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Browser History & Popstate (Swipe back / Browser back button)
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
+      if (isUpdateModalOpen) {
+        setIsUpdateModalOpen(false);
+        return;
+      }
       if (imagePreviewData) {
         setImagePreviewData(null);
         return;
@@ -727,6 +757,22 @@ export const App: React.FC = () => {
         onClose={() => setIsSettingsOpen(false)}
         kroyKhataEnabled={kroyKhataEnabled}
         onToggleKroyKhata={handleToggleKroyKhata}
+        onShowUpdateModal={(info) => {
+          setUpdateInfo(info);
+          setIsUpdateModalOpen(true);
+        }}
+        onToast={showToast}
+      />
+
+      <UpdateNotificationModal
+        isOpen={isUpdateModalOpen}
+        updateInfo={updateInfo}
+        onClose={() => {
+          setIsUpdateModalOpen(false);
+          if (updateInfo?.latestVersion) {
+            sessionStorage.setItem('dismissed_app_update', updateInfo.latestVersion);
+          }
+        }}
       />
 
       <HistoryDrawer

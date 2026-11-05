@@ -1,11 +1,16 @@
-import React from 'react';
-import { Settings2, X, ShoppingBag, Check, Shield } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings2, X, ShoppingBag, Check, Shield, RefreshCw, GitBranch, Sparkles } from 'lucide-react';
+import { CURRENT_APP_VERSION, AppUpdateInfo } from '../config/version';
+import { checkForUpdates, getTargetRepo, setTargetRepo } from '../utils/updateChecker';
+import { toBnNum } from '../utils/bengali';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   kroyKhataEnabled: boolean;
   onToggleKroyKhata: (enabled: boolean) => void;
+  onShowUpdateModal?: (info: AppUpdateInfo) => void;
+  onToast?: (msg: string) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -13,8 +18,45 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   kroyKhataEnabled,
   onToggleKroyKhata,
+  onShowUpdateModal,
+  onToast,
 }) => {
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
+  const [repoInput, setRepoInput] = useState(() => getTargetRepo());
+  const [showRepoEdit, setShowRepoEdit] = useState(false);
+
   if (!isOpen) return null;
+
+  const handleManualCheck = async () => {
+    setIsCheckingUpdate(true);
+    setUpdateStatus(null);
+    try {
+      const info = await checkForUpdates(true);
+      if (info.hasUpdate) {
+        setUpdateStatus(`নতুন আপডেট উপলব্ধ: v${info.latestVersion}`);
+        if (onShowUpdateModal) {
+          onShowUpdateModal(info);
+        }
+      } else {
+        setUpdateStatus(`আপনার অ্যাপটি আপ-টু-ডেট আছে (v${toBnNum(CURRENT_APP_VERSION)})`);
+        if (onToast) {
+          onToast(`✅ অ্যাপটি আপ-টু-ডেট (v${toBnNum(CURRENT_APP_VERSION)})`);
+        }
+      }
+    } catch {
+      setUpdateStatus('ইন্টারনেট সংযোগ চেক করুন');
+      if (onToast) onToast('⚠️ আপডেট চেক করা যায়নি');
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
+
+  const handleSaveRepo = () => {
+    setTargetRepo(repoInput);
+    setShowRepoEdit(false);
+    if (onToast) onToast('গিটহাব রিপোজিটরি সংরক্ষিত হয়েছে');
+  };
 
   return (
     <div className="modal-overlay show no-print" onClick={onClose}>
@@ -184,6 +226,160 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               {kroyKhataEnabled ? '✓ সক্রিয় (ON)' : '✕ বন্ধ (OFF)'}
             </span>
+          </div>
+        </div>
+
+        {/* App Version & Auto-Update Card */}
+        <div
+          style={{
+            background: '#f8fafc',
+            border: '1.5px solid #e2e8f0',
+            borderRadius: '14px',
+            padding: '14px',
+            marginBottom: '16px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '7px',
+                  background: '#e0f2fe',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#0284c7',
+                }}
+              >
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#0f172a' }}>অ্যাপ ভার্সন</div>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>অফলাইন অ্যান্ড্রয়েড APK</div>
+              </div>
+            </div>
+            <span
+              style={{
+                fontSize: '12.5px',
+                fontWeight: 800,
+                color: '#0284c7',
+                background: '#e0f2fe',
+                padding: '3px 10px',
+                borderRadius: '12px',
+              }}
+            >
+              v{toBnNum(CURRENT_APP_VERSION)}
+            </span>
+          </div>
+
+          {/* Update Checker Button */}
+          <button
+            onClick={handleManualCheck}
+            disabled={isCheckingUpdate}
+            style={{
+              width: '100%',
+              background: '#ffffff',
+              border: '1.5px solid #0284c7',
+              color: '#0284c7',
+              borderRadius: '10px',
+              padding: '8px 12px',
+              fontSize: '12.5px',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              cursor: isCheckingUpdate ? 'wait' : 'pointer',
+              marginTop: '6px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+            {isCheckingUpdate ? 'আপডেট চেক হচ্ছে...' : 'নতুন আপডেট চেক করুন'}
+          </button>
+
+          {updateStatus && (
+            <div
+              style={{
+                fontSize: '11.5px',
+                marginTop: '8px',
+                textAlign: 'center',
+                fontWeight: 600,
+                color: updateStatus.includes('উপলব্ধ') ? '#047857' : '#475569',
+              }}
+            >
+              {updateStatus}
+            </div>
+          )}
+
+          {/* GitHub Repository Info (Collapsible / Editable) */}
+          <div style={{ marginTop: '10px', borderTop: '1px dashed #cbd5e1', paddingTop: '8px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '11px',
+                color: '#64748b',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <GitBranch className="w-3 h-3" /> গিটহাব রিপো:
+              </span>
+              <button
+                onClick={() => setShowRepoEdit(!showRepoEdit)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#0284c7',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                {showRepoEdit ? 'বাতিল' : 'পরিবর্তন'}
+              </button>
+            </div>
+
+            {showRepoEdit ? (
+              <div style={{ marginTop: '6px', display: 'flex', gap: '6px' }}>
+                <input
+                  type="text"
+                  value={repoInput}
+                  onChange={(e) => setRepoInput(e.target.value)}
+                  placeholder="username/reponame"
+                  style={{
+                    flex: 1,
+                    padding: '5px 8px',
+                    fontSize: '11.5px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                  }}
+                />
+                <button
+                  onClick={handleSaveRepo}
+                  style={{
+                    background: '#047857',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '5px 10px',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  সেভ
+                </button>
+              </div>
+            ) : (
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#334155', marginTop: '2px' }}>
+                {repoInput}
+              </div>
+            )}
           </div>
         </div>
 
