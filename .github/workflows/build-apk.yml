@@ -65,6 +65,10 @@ jobs:
             fi
           done
 
+          # Set official Android APK Version 2.0 (versionCode 2, versionName "2.0")
+          sed -i 's/versionCode [0-9]*/versionCode 2/g' android/app/build.gradle
+          sed -i 's/versionName "[^"]*"/versionName "2.0"/g' android/app/build.gradle
+
       - name: ⚙️ Build Debug APK with Gradle
         run: |
           cd android
