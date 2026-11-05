@@ -1,0 +1,8 @@
+{
+  "appId": "com.supari.calculator",
+  "appName": "সুপারি হিসাব",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

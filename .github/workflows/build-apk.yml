@@ -1,0 +1,70 @@
+name: Build Offline Android APK
+
+on:
+  push:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Generate Offline Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install npm dependencies
+        run: npm ci
+
+      - name: 🔨 Build 100% Offline Web Bundle
+        run: npm run build
+
+      - name: 📱 Generate Capacitor Android Native Project
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: ⚙️ Build Debug APK with Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: 📋 Prepare APK for Download
+        run: |
+          mkdir -p output-apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk output-apk/supari-calculator-offline.apk
+
+      - name: 🚀 Upload APK Artifact (Direct Download)
+        uses: actions/upload-artifact@v4
+        with:
+          name: supari-calculator-offline-apk
+          path: output-apk/supari-calculator-offline.apk
+          retention-days: 30
+
+      - name: 🏷️ Publish APK to GitHub Releases (Automatic)
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-apk
+          name: "সুপারি হিসাব অফলাইন অ্যাপ (APK v1.0.0)"
+          body: "কাঁচা-পাকা ও শুকনো সুপারি হিসাবের ১০০% অফলাইন অ্যান্ড্রয়েড অ্যাপ (APK)।"
+          files: output-apk/supari-calculator-offline.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
