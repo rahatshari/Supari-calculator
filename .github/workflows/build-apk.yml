@@ -39,6 +39,13 @@ jobs:
         run: |
           npx cap add android
           npx cap sync android
+          for dir in android/app/src/main/res/mipmap-*; do
+            if [ -d "$dir" ]; then
+              cp public/pwa-192x192.png "$dir/ic_launcher.png" 2>/dev/null || true
+              cp public/pwa-192x192.png "$dir/ic_launcher_round.png" 2>/dev/null || true
+              cp public/pwa-512x512.png "$dir/ic_launcher_foreground.png" 2>/dev/null || true
+            fi
+          done
 
       - name: ⚙️ Build Debug APK with Gradle
         run: |

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { App as CapApp } from '@capacitor/app';
 import {
   AppView,
   KachaItem,
@@ -226,61 +227,153 @@ export const App: React.FC = () => {
     localStorage.setItem(SHUKNO_HIST_KEY, JSON.stringify(shuknoHistory));
   }, [shuknoHistory]);
 
-  // URL Hash routing
+  // URL Hash & History routing
   const navigate = useCallback((view: AppView, updateHash = true) => {
     if (view === 'kroy-khata' && !kroyKhataEnabled) {
       showToast('ℹ️ দৈনিক সুপারি ক্রয় খাতা বন্ধ আছে, সেটিংস থেকে চালু করুন');
       setCurrentView('home');
-      if (updateHash) window.location.hash = '#home';
+      if (updateHash) window.history.pushState({ view: 'home' }, '', '#home');
       return;
     }
     setCurrentView(view);
     if (updateHash) {
-      window.location.hash = view === 'home' ? '#home' : `#${view}`;
+      const targetHash = view === 'home' ? '#home' : `#${view}`;
+      window.history.pushState({ view }, '', targetHash);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [kroyKhataEnabled, showToast]);
 
+  // Native Android Hardware Back Button Handling (Capacitor)
   useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash;
-      if (hash === '#kacha-paka') setCurrentView('kacha-paka');
-      else if (hash === '#shukno') setCurrentView('shukno');
-      else if (hash === '#kroy-khata') {
-        if (kroyKhataEnabled) {
-          setCurrentView('kroy-khata');
+    let removeListener: (() => void) | null = null;
+
+    try {
+      CapApp.addListener('backButton', () => {
+        if (imagePreviewData) {
+          setImagePreviewData(null);
+        } else if (pendingKroyItem) {
+          setPendingKroyItem(null);
+        } else if (confirmModal.isOpen) {
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        } else if (isSettingsOpen) {
+          setIsSettingsOpen(false);
+        } else if (isHistoryOpen) {
+          setIsHistoryOpen(false);
+        } else if (isIosModalOpen) {
+          setIsIosModalOpen(false);
+        } else if (currentView !== 'home') {
+          navigate('home');
         } else {
-          setCurrentView('home');
+          CapApp.exitApp();
         }
+      }).then((handle) => {
+        removeListener = () => handle.remove();
+      }).catch(() => {});
+    } catch {}
+
+    return () => {
+      if (removeListener) removeListener();
+    };
+  }, [
+    imagePreviewData,
+    pendingKroyItem,
+    confirmModal.isOpen,
+    isSettingsOpen,
+    isHistoryOpen,
+    isIosModalOpen,
+    currentView,
+    navigate,
+  ]);
+
+  // Browser History & Popstate (Swipe back / Browser back button)
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (imagePreviewData) {
+        setImagePreviewData(null);
+        return;
+      }
+      if (pendingKroyItem) {
+        setPendingKroyItem(null);
+        return;
+      }
+      if (confirmModal.isOpen) {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        return;
+      }
+      if (isSettingsOpen) {
+        setIsSettingsOpen(false);
+        return;
+      }
+      if (isHistoryOpen) {
+        setIsHistoryOpen(false);
+        return;
+      }
+
+      const stateView = e.state?.view as AppView | undefined;
+      const hash = window.location.hash;
+      if (stateView) {
+        setCurrentView(stateView);
+      } else if (hash === '#kacha-paka') {
+        setCurrentView('kacha-paka');
+      } else if (hash === '#shukno') {
+        setCurrentView('shukno');
+      } else if (hash === '#kroy-khata' && kroyKhataEnabled) {
+        setCurrentView('kroy-khata');
       } else {
         setCurrentView('home');
       }
     };
 
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, [kroyKhataEnabled]);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [
+    imagePreviewData,
+    pendingKroyItem,
+    confirmModal.isOpen,
+    isSettingsOpen,
+    isHistoryOpen,
+    kroyKhataEnabled,
+  ]);
 
-  // PWA & Connectivity listeners
+  // PWA & Connectivity listeners (Disabled inside mobile APK)
   useEffect(() => {
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      ('standalone' in window.navigator && (window.navigator as unknown as { standalone: boolean }).standalone === true) ||
+    // Check if running inside installed APK, Capacitor, or Standalone PWA
+    const isCapacitorNative =
+      Boolean((window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()) ||
+      window.location.protocol === 'capacitor:' ||
+      (window.location.hostname === 'localhost' && window.location.port === '');
+
+    const isAndroidApp =
+      window.navigator.userAgent.includes('wv') ||
       (document.referrer && document.referrer.includes('android-app://'));
 
-    const isInstalled = localStorage.getItem('pwa_installed') === 'true';
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      ('standalone' in window.navigator && (window.navigator as unknown as { standalone: boolean }).standalone === true);
 
-    if (!isStandalone && !isInstalled) {
-      setCanInstall(true);
+    const isAlreadyInstalled =
+      isCapacitorNative ||
+      isAndroidApp ||
+      isStandalone ||
+      localStorage.getItem('pwa_installed') === 'true';
+
+    // In mobile APK / installed app, NEVER show install prompts
+    if (isAlreadyInstalled) {
+      setCanInstall(false);
+      return;
     }
 
+    setCanInstall(true);
+
     const handleBeforeInstallPrompt = (e: Event) => {
+      if (isAlreadyInstalled) {
+        e.preventDefault();
+        setCanInstall(false);
+        return;
+      }
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      if (!isStandalone) {
-        setCanInstall(true);
-      }
+      setCanInstall(true);
     };
 
     const handleAppInstalled = () => {

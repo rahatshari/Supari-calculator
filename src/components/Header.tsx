@@ -37,13 +37,26 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="header-left">
         {currentView !== 'home' ? (
           <button
-            className="nav-icon-btn"
+            className="nav-icon-btn back-header-btn"
             onClick={() => onNavigate('home')}
-            title="মূল মেনুতে ফিরে যান"
-            aria-label="মূল মেনু"
+            title="হোম পেজে ফিরে যান"
+            aria-label="পিছনে"
+            style={{
+              background: 'rgba(255, 255, 255, 0.22)',
+              border: '1px solid rgba(255, 255, 255, 0.42)',
+              borderRadius: '9px',
+              padding: '6px 12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontWeight: 700,
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+              color: '#ffffff',
+              cursor: 'pointer',
+            }}
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            মেনু
+            <ArrowLeft className="w-4 h-4" />
+            <span>পিছনে</span>
           </button>
         ) : (
           <button

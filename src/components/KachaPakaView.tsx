@@ -7,6 +7,7 @@ import {
   cleanBnInput,
 } from '../utils/bengali';
 import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult } from '../utils/exportMemo';
+import { printReceipt } from '../utils/printReceipt';
 import { CreatorBadge, getCreatorBadgeHtml } from './CreatorBadge';
 
 interface KachaPakaViewProps {
@@ -192,13 +193,18 @@ export const KachaPakaView: React.FC<KachaPakaViewProps> = ({
     if (ok) onToast('📋 কাঁচা-পাকা রসিদ কপি হয়েছে!');
   };
 
-  const handlePrint = () => {
-    if (items.length === 0) return;
-    document.body.classList.add('printing-kacha');
-    window.print();
-    setTimeout(() => {
-      document.body.classList.remove('printing-kacha');
-    }, 500);
+  const handlePrint = async () => {
+    if (items.length === 0) {
+      onToast('প্রিন্ট করার মতো কোনো হিসাব নেই!');
+      return;
+    }
+    const memoHtml = buildKachaMemoHtml();
+    onToast('🖨️ প্রিন্ট প্রক্রিয়া শুরু হচ্ছে...');
+    await printReceipt({
+      name: 'কাঁচা-পাকা সুপারি রসিদ',
+      html: memoHtml,
+      cssClass: 'printing-kacha',
+    });
   };
 
   const buildKachaMemoHtml = () => {

@@ -8,6 +8,7 @@ import {
   formatWeightKgGm,
 } from '../utils/bengali';
 import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult } from '../utils/exportMemo';
+import { printReceipt } from '../utils/printReceipt';
 import { CreatorBadge, getCreatorBadgeHtml } from './CreatorBadge';
 
 interface ShuknoViewProps {
@@ -210,13 +211,18 @@ export const ShuknoView: React.FC<ShuknoViewProps> = ({
     if (ok) onToast('📋 শুকনো সুপারি রসিদ কপি হয়েছে!');
   };
 
-  const handlePrint = () => {
-    if (bags.length === 0) return;
-    document.body.classList.add('printing-shukno');
-    window.print();
-    setTimeout(() => {
-      document.body.classList.remove('printing-shukno');
-    }, 500);
+  const handlePrint = async () => {
+    if (bags.length === 0) {
+      onToast('প্রিন্ট করার মতো কোনো হিসাব নেই!');
+      return;
+    }
+    const memoHtml = buildShuknoMemoHtml();
+    onToast('🖨️ প্রিন্ট প্রক্রিয়া শুরু হচ্ছে...');
+    await printReceipt({
+      name: 'শুকনো সুপারি রসিদ',
+      html: memoHtml,
+      cssClass: 'printing-shukno',
+    });
   };
 
   const buildShuknoMemoHtml = () => {

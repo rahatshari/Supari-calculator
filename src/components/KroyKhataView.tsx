@@ -11,6 +11,7 @@ import {
   getTodayDateStr,
 } from '../utils/bengali';
 import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult } from '../utils/exportMemo';
+import { printReceipt } from '../utils/printReceipt';
 import { CreatorBadge, getCreatorBadgeHtml } from './CreatorBadge';
 
 interface KroyKhataViewProps {
@@ -419,13 +420,18 @@ export const KroyKhataView: React.FC<KroyKhataViewProps> = ({
     if (ok) onToast('📋 ক্রয় খাতা রিপোর্ট কপি হয়েছে!');
   };
 
-  const handlePrint = () => {
-    if (entries.length === 0) return;
-    document.body.classList.add('printing-kroy');
-    window.print();
-    setTimeout(() => {
-      document.body.classList.remove('printing-kroy');
-    }, 500);
+  const handlePrint = async () => {
+    if (entries.length === 0) {
+      onToast('প্রিন্ট করার মতো কোনো ক্রয় হিসাব নেই!');
+      return;
+    }
+    const memoHtml = buildKroyMemoHtml();
+    onToast('🖨️ প্রিন্ট প্রক্রিয়া শুরু হচ্ছে...');
+    await printReceipt({
+      name: 'সুপারি ক্রয় খাতা রিপোর্ট',
+      html: memoHtml,
+      cssClass: 'printing-kroy',
+    });
   };
 
   const buildKroyMemoHtml = () => {
