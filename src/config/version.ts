@@ -1,4 +1,4 @@
-export const CURRENT_APP_VERSION = '1.0.0';
+export const CURRENT_APP_VERSION = '2.0.0';
 export const DEFAULT_GITHUB_REPO = 'rahatsharif504/supari-calculator';
 
 export interface AppUpdateInfo {

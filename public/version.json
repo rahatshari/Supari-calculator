@@ -1,8 +1,8 @@
 {
-  "version": "1.0.0",
-  "versionCode": 1,
-  "title": "সুপারি হিসাব v1.0.0",
-  "releaseNotes": "কাঁচা-পাকা ও শুকনো সুপারি হিসাবের ১০০% অফলাইন অ্যাপ। নেটিভ প্রিন্ট এবং ব্যাক-বাটন সাপোর্ট যুক্ত করা হয়েছে।",
+  "version": "2.0.0",
+  "versionCode": 2,
+  "title": "সুপারি হিসাব v2.0",
+  "releaseNotes": "ভার্সন ২.০: স্প্ল্যাশ স্ক্রিনে আসল সুপারি লোগো, সুপার ফাস্ট JPG রসিদ তৈরি, নেটিভ অ্যান্ড্রয়েড প্রিন্ট ও ইন-অ্যাপ অটো-আপডেট নোটিফিকেশন।",
   "downloadUrl": "https://github.com/rahatsharif504/supari-calculator/releases/latest",
   "apkUrl": "https://github.com/rahatsharif504/supari-calculator/releases/latest/download/supari-calculator-offline.apk"
 }

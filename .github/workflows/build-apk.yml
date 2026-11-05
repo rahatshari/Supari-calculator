@@ -52,6 +52,19 @@ jobs:
           rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.png 2>/dev/null || true
           rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.png 2>/dev/null || true
 
+          # Replace default Capacitor splash screens with authentic Supari splash image
+          cp public/splash.png android/app/src/main/res/drawable/splash.png 2>/dev/null || true
+          for dir in android/app/src/main/res/drawable-port-*; do
+            if [ -d "$dir" ]; then
+              cp public/splash.png "$dir/splash.png" 2>/dev/null || true
+            fi
+          done
+          for dir in android/app/src/main/res/drawable-land-*; do
+            if [ -d "$dir" ]; then
+              cp public/splash-land.png "$dir/splash.png" 2>/dev/null || true
+            fi
+          done
+
       - name: ⚙️ Build Debug APK with Gradle
         run: |
           cd android
@@ -74,9 +87,9 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v1.0.0-apk' }}
-          name: "সুপারি হিসাব অফলাইন অ্যাপ (APK ${{ github.ref_name || 'v1.0.0' }})"
-          body: "কাঁচা-পাকা ও শুকনো সুপারি হিসাবের ১০০% অফলাইন অ্যান্ড্রয়েড অ্যাপ (APK)।"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v2.0.0-apk' }}
+          name: "সুপারি হিসাব অফলাইন অ্যাপ (APK ${{ github.ref_name || 'v2.0.0' }})"
+          body: "কাঁচা-পাকা ও শুকনো সুপারি হিসাবের ১০০% অফলাইন অ্যান্ড্রয়েড অ্যাপ (APK ভার্সন ২.০)।"
           files: output-apk/supari-calculator-offline.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
