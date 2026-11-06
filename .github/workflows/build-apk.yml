@@ -37,66 +37,10 @@ jobs:
 
       - name: 📱 Generate Capacitor Android Native Project
         run: |
-          # 1. Clean any pre-existing or dirty android folder so the build is 100% fresh and clean
           rm -rf android
           npx cap add android
           npx cap sync android
-
-          # 2. Replace launcher icons in specific density folders only
-          for dpi in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-            dir="android/app/src/main/res/mipmap-$dpi"
-            if [ -d "$dir" ]; then
-              cp public/pwa-192x192.png "$dir/ic_launcher.png" 2>/dev/null || true
-              cp public/pwa-192x192.png "$dir/ic_launcher_round.png" 2>/dev/null || true
-              cp public/pwa-512x512.png "$dir/ic_launcher_foreground.png" 2>/dev/null || true
-            fi
-          done
-
-          # 3. CRITICAL: Prevent Duplicate Resources error - mipmap-anydpi-v26 must NEVER have PNG or WEBP files
-          rm -f android/app/src/main/res/mipmap-anydpi-v26/*.png 2>/dev/null || true
-          rm -f android/app/src/main/res/mipmap-anydpi-v26/*.webp 2>/dev/null || true
-
-          # 4. Completely disable splash screen and remove blue Capacitor logo
-          cp public/splash.png android/app/src/main/res/drawable/splash.png 2>/dev/null || true
-          for dir in android/app/src/main/res/drawable-port-* android/app/src/main/res/drawable-land-*; do
-            if [ -d "$dir" ]; then
-              cp public/splash.png "$dir/splash.png" 2>/dev/null || true
-            fi
-          done
-
-          # Bypasses launch theme directly to normal theme
-          sed -i 's|<item name="android:background">@drawable/splash</item>|<item name="android:background">#f8fafc</item>|g' android/app/src/main/res/values/styles.xml 2>/dev/null || true
-          sed -i 's|android:theme="@style/AppTheme.NoActionBarLaunch"|android:theme="@style/AppTheme.NoActionBar"|g' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
-          if [ -f "android/app/src/main/res/values-v31/styles.xml" ]; then
-            sed -i 's|<item name="android:windowSplashScreenAnimatedIcon">.*</item>|<item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>|g' android/app/src/main/res/values-v31/styles.xml 2>/dev/null || true
-            sed -i 's|<item name="android:windowSplashScreenBackground">.*</item>|<item name="android:windowSplashScreenBackground">#f8fafc</item>|g' android/app/src/main/res/values-v31/styles.xml 2>/dev/null || true
-          fi
-
-          # 5. Set official Android APK Version 2.1.0 (versionCode 3, versionName "2.1.0")
-          sed -i 's/versionCode [0-9]*/versionCode 3/g' android/app/build.gradle
-          sed -i 's/versionName "[^"]*"/versionName "2.1.0"/g' android/app/build.gradle
-
-          # 6. Copy permanent keystore and configure static signing so all updates share the exact same signature
-          cp supari.keystore android/app/supari.keystore
-          node -e '
-            const fs = require("fs");
-            let content = fs.readFileSync("android/app/build.gradle", "utf8");
-            const signingBlock = `
-    signingConfigs {
-        permanent {
-            storeFile file("supari.keystore")
-            storePassword "supari123"
-            keyAlias "supari"
-            keyPassword "supari123"
-        }
-    }
-`;
-            if (!content.includes("signingConfigs")) {
-              content = content.replace("defaultConfig {", signingBlock + "\n    defaultConfig {");
-              content = content.replace("buildTypes {", "buildTypes {\n        debug {\n            signingConfig signingConfigs.permanent\n        }");
-              fs.writeFileSync("android/app/build.gradle", content, "utf8");
-            }
-          '
+          node scripts/configure-android.js
 
       - name: ⚙️ Build Debug APK with Gradle
         run: |
