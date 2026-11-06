@@ -1,6 +1,6 @@
-import React from 'react';
-import { Download, Share2, X } from 'lucide-react';
-import { RenderMemoResult } from '../utils/exportMemo';
+import React, { useState } from 'react';
+import { Download, Share2, X, Check } from 'lucide-react';
+import { RenderMemoResult, saveOrDownloadImage } from '../utils/exportMemo';
 
 interface ImagePreviewModalProps {
   data: RenderMemoResult | null;
@@ -13,35 +13,43 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
   onClose,
   onToast,
 }) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
   if (!data) return null;
 
-  const canShare = Boolean(
-    typeof navigator.share === 'function' &&
-      data.blob &&
-      typeof navigator.canShare === 'function' &&
-      navigator.canShare({
-        files: [new File([data.blob], data.fileName, { type: 'image/jpeg' })],
-      })
-  );
+  const handleDownload = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    onToast('⏳ মেমো রসিদ সেভ হচ্ছে...');
+    try {
+      const res = await saveOrDownloadImage(data);
+      onToast(res.message);
+      if (res.success) {
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 3000);
+      }
+    } catch (err: any) {
+      onToast('⚠️ সেভ করা যায়নি। ছবিতে চাপ দিয়ে ধরে Save Image দিন।');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleShare = async () => {
-    if (!data.blob) return;
+    onToast('⏳ শেয়ার উইন্ডো ওপেন হচ্ছে...');
     try {
-      const file = new File([data.blob], data.fileName, { type: 'image/jpeg' });
-      await navigator.share({
-        title: 'সুপারি বিক্রির মেমো',
-        text: 'সুপারি বিক্রির হিসাব মেমো রসিদ',
-        files: [file],
-      });
-    } catch (err: unknown) {
-      if ((err as Error)?.name !== 'AbortError') {
-        onToast('⚠️ শেয়ার করা যায়নি');
+      const res = await saveOrDownloadImage(data);
+      if (!res.success) {
+        onToast(res.message);
       }
+    } catch {
+      onToast('⚠️ শেয়ার করা যায়নি');
     }
   };
 
   return (
-    <div className="modal-overlay show" onClick={onClose}>
+    <div className="modal-overlay show" onClick={onClose} style={{ zIndex: 9999 }}>
       <div
         className="modal-box"
         style={{
@@ -53,6 +61,8 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
           padding: '16px',
           borderRadius: '16px',
           textAlign: 'left',
+          background: '#ffffff',
+          boxShadow: '0 20px 40px -10px rgba(0,0,0,0.35)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -100,7 +110,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
             flex: 1,
             overflowY: 'auto',
             textAlign: 'center',
-            marginBottom: '12px',
+            marginBottom: '10px',
             background: '#f8fafc',
             borderRadius: '10px',
             padding: '6px',
@@ -123,71 +133,73 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
 
         <div
           style={{
-            fontSize: '12px',
-            color: '#64748b',
+            fontSize: '11.5px',
+            color: '#475569',
             textAlign: 'center',
             marginBottom: '12px',
             lineHeight: 1.4,
+            background: '#f1f5f9',
+            padding: '6px 10px',
+            borderRadius: '8px',
           }}
         >
-          💡 ডাউনলোড শুরু না হলে নিচের বাটনে চাপুন অথবা ছবিতে চেপে ধরে{' '}
-          <strong>'Save Image'</strong> দিন।
+          💡 গ্যালারিতে সেভ বা WhatsApp-এ পাঠাতে নিচের বাটনে চাপুন অথবা ছবিতে চাপ দিয়ে ধরে{' '}
+          <strong>'Download image'</strong> দিন।
         </div>
 
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <a
-            href={data.dataUrl}
-            download={data.fileName}
+          <button
+            onClick={handleDownload}
+            disabled={isSaving}
             className="btn btn-primary"
             style={{
               flex: 2,
-              minWidth: '130px',
-              textDecoration: 'none',
+              minWidth: '140px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
-              padding: '11px',
+              padding: '12px',
+              fontWeight: 800,
+              borderRadius: '10px',
+              fontSize: '14px',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+              cursor: isSaving ? 'wait' : 'pointer',
+            }}
+          >
+            {isSaved ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+            <span>{isSaving ? 'সংরক্ষণ হচ্ছে...' : isSaved ? 'সেভ হয়েছে!' : 'JPG ডাউনলোড ও সেভ'}</span>
+          </button>
+
+          <button
+            className="btn btn-secondary"
+            onClick={handleShare}
+            style={{
+              flex: 1,
+              minWidth: '90px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              padding: '12px',
               fontWeight: 700,
-              borderRadius: '8px',
+              borderRadius: '10px',
               fontSize: '14px',
             }}
           >
-            <Download className="w-4 h-4" />
-            <span>JPG ডাউনলোড</span>
-          </a>
-
-          {canShare && (
-            <button
-              className="btn btn-secondary"
-              onClick={handleShare}
-              style={{
-                flex: 1,
-                minWidth: '90px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '4px',
-                padding: '11px',
-                fontWeight: 700,
-                borderRadius: '8px',
-                fontSize: '14px',
-              }}
-            >
-              <Share2 className="w-4 h-4" />
-              <span>শেয়ার</span>
-            </button>
-          )}
+            <Share2 className="w-4 h-4" />
+            <span>শেয়ার</span>
+          </button>
 
           <button
             className="btn btn-modal-cancel"
             onClick={onClose}
             style={{
               flex: 1,
-              minWidth: '80px',
-              padding: '11px',
+              minWidth: '70px',
+              padding: '12px',
               fontWeight: 700,
-              borderRadius: '8px',
+              borderRadius: '10px',
               fontSize: '14px',
             }}
           >

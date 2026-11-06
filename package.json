@@ -1,6 +1,6 @@
 {
   "name": "supari-calculator",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,6 +14,8 @@
     "@capacitor/app": "^8.1.2",
     "@capacitor/cli": "^8.6.0",
     "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
     "@capgo/capacitor-printer": "^8.1.8",
     "express": "^4.21.2",
     "html2canvas": "^1.4.1",

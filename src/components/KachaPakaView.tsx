@@ -6,7 +6,7 @@ import {
   parseBnFloat,
   cleanBnInput,
 } from '../utils/bengali';
-import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult } from '../utils/exportMemo';
+import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult, saveOrDownloadImage } from '../utils/exportMemo';
 import { printReceipt } from '../utils/printReceipt';
 import { CreatorBadge, getCreatorBadgeHtml } from './CreatorBadge';
 
@@ -356,7 +356,9 @@ export const KachaPakaView: React.FC<KachaPakaViewProps> = ({
       const html = buildKachaMemoHtml();
       const res = await renderMemoHtmlToImage(html, 'Kacha_Paka_Supari_Memo.jpg', memoWidth);
       onShowImagePreview(res);
-      onToast('🖼️ JPG রসিদ প্রস্তুত হয়েছে!');
+      saveOrDownloadImage(res).then((saveRes) => {
+        if (saveRes.message) onToast(saveRes.message);
+      }).catch(() => {});
     } catch {
       onToast('⚠️ মেমো ছবি তৈরিতে সমস্যা হয়েছে');
     }

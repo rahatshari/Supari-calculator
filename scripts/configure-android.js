@@ -81,8 +81,19 @@ if (fs.existsSync(manifestPath)) {
     'android:theme="@style/AppTheme.NoActionBarLaunch"',
     'android:theme="@style/AppTheme.NoActionBar"'
   );
+  if (!manifest.includes('android.permission.WRITE_EXTERNAL_STORAGE')) {
+    manifest = manifest.replace(
+      '</manifest>',
+      '    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />\n' +
+      '    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />\n' +
+      '</manifest>'
+    );
+  }
+  if (!manifest.includes('android:requestLegacyExternalStorage')) {
+    manifest = manifest.replace('<application', '<application android:requestLegacyExternalStorage="true"');
+  }
   fs.writeFileSync(manifestPath, manifest, 'utf8');
-  console.log('✅ Theme set to AppTheme.NoActionBar in AndroidManifest.xml');
+  console.log('✅ Theme & Storage permissions set in AndroidManifest.xml');
 }
 
 const stylesV31Path = path.join(resDir, 'values-v31', 'styles.xml');
@@ -113,9 +124,9 @@ if (fs.existsSync(keystoreSrc)) {
 if (fs.existsSync(gradlePath)) {
   let gradle = fs.readFileSync(gradlePath, 'utf8');
 
-  // Set Version 2.1.0 (versionCode 3)
-  gradle = gradle.replace(/versionCode \d+/g, 'versionCode 3');
-  gradle = gradle.replace(/versionName "[^"]*"/g, 'versionName "2.1.0"');
+  // Set Version 2.2.0 (versionCode 4)
+  gradle = gradle.replace(/versionCode \d+/g, 'versionCode 4');
+  gradle = gradle.replace(/versionName "[^"]*"/g, 'versionName "2.2.0"');
 
   // Inject permanent signing configuration
   const signingConfigBlock = `
@@ -138,7 +149,7 @@ if (fs.existsSync(gradlePath)) {
   }
 
   fs.writeFileSync(gradlePath, gradle, 'utf8');
-  console.log('✅ Version 2.1.0 & Permanent Keystore injected into build.gradle');
+  console.log('✅ Version 2.2.0 & Permanent Keystore injected into build.gradle');
 }
 
 console.log('🎉 Android configuration completed successfully!');

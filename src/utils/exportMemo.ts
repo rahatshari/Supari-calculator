@@ -1,4 +1,7 @@
 import html2canvas from 'html2canvas';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 export async function copyToClipboard(text: string): Promise<boolean> {
   if (navigator.clipboard && window.isSecureContext) {
@@ -32,10 +35,14 @@ function fallbackCopy(text: string): boolean {
 
 export interface RenderMemoResult {
   dataUrl: string;
+  base64: string;
   blob: Blob | null;
   fileName: string;
 }
 
+/**
+ * Renders HTML memo content to a sharp JPEG image.
+ */
 export async function renderMemoHtmlToImage(
   memoHtml: string,
   fileName: string,
@@ -61,9 +68,6 @@ export async function renderMemoHtmlToImage(
     const contentHeight = Math.max(wrapper.scrollHeight, wrapper.offsetHeight, 350);
     const contentWidth = Math.max(wrapper.scrollWidth, wrapper.offsetWidth, customWidth);
 
-    // Dynamic scale optimization for rapid mobile rendering
-    // High scale (2.0+) on mobile WebView causes 6+ million pixel memory allocations and 8-10s lag
-    // 1.25 - 1.4 provides razor-sharp Bengali text with 4x-5x faster rendering speed
     const isMobile =
       typeof window !== 'undefined' &&
       (window.innerWidth <= 768 ||
@@ -90,30 +94,20 @@ export async function renderMemoHtmlToImage(
 
     document.body.removeChild(wrapper);
 
-    return new Promise((resolve) => {
-      const finishWithBlob = (blob: Blob | null) => {
-        if (blob) {
-          const blobUrl = URL.createObjectURL(blob);
-          try {
-            const link = document.createElement('a');
-            link.download = fileName;
-            link.href = blobUrl;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          } catch {}
-          resolve({ dataUrl: blobUrl, blob, fileName });
-        } else {
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.86);
-          resolve({ dataUrl, blob: null, fileName });
-        }
-      };
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
 
+    return new Promise((resolve) => {
       if (canvas.toBlob) {
-        canvas.toBlob(finishWithBlob, 'image/jpeg', 0.86);
+        canvas.toBlob(
+          (blob) => {
+            resolve({ dataUrl, base64, blob, fileName });
+          },
+          'image/jpeg',
+          0.88
+        );
       } else {
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.86);
-        resolve({ dataUrl, blob: null, fileName });
+        resolve({ dataUrl, base64, blob: null, fileName });
       }
     });
   } catch (err) {
@@ -121,5 +115,100 @@ export async function renderMemoHtmlToImage(
       document.body.removeChild(wrapper);
     }
     throw err;
+  }
+}
+
+/**
+ * Reliable cross-platform image save & download:
+ * - Native Android APK: Writes directly to device storage via Filesystem & invokes Share/Save sheet
+ * - Web Browser: Standard <a> tag download
+ */
+export async function saveOrDownloadImage(result: RenderMemoResult): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  const { dataUrl, fileName, blob, base64 } = result;
+
+  // 1. Native Android APK handling (Capacitor)
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const pureBase64 = base64 || (dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl);
+
+      // Write image to device Cache directory first so it's shareable and saveable
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: pureBase64,
+        directory: Directory.Cache,
+        recursive: true,
+      });
+
+      // Also attempt saving directly to Documents folder
+      try {
+        await Filesystem.writeFile({
+          path: fileName,
+          data: pureBase64,
+          directory: Directory.Documents,
+          recursive: true,
+        });
+      } catch {
+        // Documents fallback non-blocking
+      }
+
+      // Open Android native Share & Save Sheet (Gallery, WhatsApp, File Manager, Save to Device)
+      if (savedFile?.uri) {
+        await Share.share({
+          title: 'সুপারি হিসাব মেমো রসিদ',
+          text: `সুপারি মেমো: ${fileName}`,
+          url: savedFile.uri,
+          dialogTitle: 'মেমো রসিদ সেভ বা শেয়ার করুন',
+        });
+      }
+
+      return {
+        success: true,
+        message: '✅ মেমো রসিদ সফলভাবে সেভ ও শেয়ার অপশনে পাঠানো হয়েছে!',
+      };
+    } catch (nativeErr: any) {
+      console.warn('Native Filesystem save failed, trying Web Share API...', nativeErr);
+
+      // Fallback to Web Share API
+      if (blob && navigator.share) {
+        try {
+          const file = new File([blob], fileName, { type: 'image/jpeg' });
+          await navigator.share({
+            title: 'সুপারি হিসাব মেমো রসিদ',
+            files: [file],
+          });
+          return { success: true, message: '✅ মেমো রসিদ সফলভাবে শেয়ার হয়েছে!' };
+        } catch {
+          // cancelled
+        }
+      }
+    }
+  }
+
+  // 2. Standard Web Browser download fallback
+  try {
+    const link = document.createElement('a');
+    link.download = fileName;
+    link.href = dataUrl;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      if (document.body.contains(link)) {
+        document.body.removeChild(link);
+      }
+    }, 200);
+
+    return {
+      success: true,
+      message: `📥 '${fileName}' ডাউনলোড সম্পন্ন হয়েছে!`,
+    };
+  } catch {
+    return {
+      success: false,
+      message: '⚠️ সরাসরি ডাউনলোড করা যায়নি। ছবিতে চাপ দিয়ে ধরে Save Image দিন।',
+    };
   }
 }

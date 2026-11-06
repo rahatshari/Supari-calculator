@@ -1,8 +1,8 @@
 {
-  "version": "2.1.0",
-  "versionCode": 3,
-  "title": "সুপারি হিসাব v2.1.0",
-  "releaseNotes": "ভার্সন ২.১.০: স্বয়ংক্রিয় আপডেট চেক ও ইন-অ্যাপ ইনস্টলেশন, পার্মানেন্ট সিকিউর সাইনিং (সেম সিগনেচার ফিক্স), কোনো লোডিং স্ক্রিন ছাড়াই তাৎক্ষণিক অ্যাপ ওপেন।",
+  "version": "2.2.0",
+  "versionCode": 4,
+  "title": "সুপারি হিসাব v2.2.0",
+  "releaseNotes": "ভার্সন ২.২.০: অ্যান্ড্রয়েড APK-তে সরাসরি ফাইল স্টোরেজে JPG মেমো রসিদ ডাউনলোড ও গ্যালারিতে সেভ/শেয়ার সুবিধা ফিক্স করা হয়েছে।",
   "downloadUrl": "https://github.com/rahatsharif504/supari-calculator/releases/latest",
   "apkUrl": "https://github.com/rahatsharif504/supari-calculator/releases/latest/download/supari-calculator-offline.apk"
 }

@@ -7,7 +7,7 @@ import {
   cleanBnInput,
   formatWeightKgGm,
 } from '../utils/bengali';
-import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult } from '../utils/exportMemo';
+import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult, saveOrDownloadImage } from '../utils/exportMemo';
 import { printReceipt } from '../utils/printReceipt';
 import { CreatorBadge, getCreatorBadgeHtml } from './CreatorBadge';
 
@@ -378,7 +378,9 @@ export const ShuknoView: React.FC<ShuknoViewProps> = ({
       const html = buildShuknoMemoHtml();
       const res = await renderMemoHtmlToImage(html, 'Shukno_Supari_Memo.jpg', memoWidth);
       onShowImagePreview(res);
-      onToast('🖼️ JPG রসিদ প্রস্তুত হয়েছে!');
+      saveOrDownloadImage(res).then((saveRes) => {
+        if (saveRes.message) onToast(saveRes.message);
+      }).catch(() => {});
     } catch {
       onToast('⚠️ মেমো ছবি তৈরিতে সমস্যা হয়েছে');
     }

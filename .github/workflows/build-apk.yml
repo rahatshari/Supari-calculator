@@ -64,9 +64,9 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v2.1.0-apk' }}
-          name: "সুপারি হিসাব অফলাইন অ্যাপ (APK ${{ github.ref_name || 'v2.1.0' }}) - অটো-আপডেট ও পার্মানেন্ট সাইন"
-          body: "কাঁচা-পাকা ও শুকনো সুপারি হিসাবের ১০০% অফলাইন অ্যান্ড্রয়েড অ্যাপ (APK ভার্সন ২.১.০)। ইন-অ্যাপ অটো-আপডেট ও সিকিউর পার্মানেন্ট সাইনিং।"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v2.2.0-apk' }}
+          name: "সুপারি হিসাব অফলাইন অ্যাপ (APK ${{ github.ref_name || 'v2.2.0' }}) - JPG সেভ ফিক্স ও পার্মানেন্ট সাইন"
+          body: "কাঁচা-পাকা ও শুকনো সুপারি হিসাবের ১০০% অফলাইন অ্যান্ড্রয়েড অ্যাপ (APK ভার্সন ২.২.০)। APK-তে সরাসরি JPG মেমো ডাউনলোড ও সেভ সুবিধা অন্তর্ভুক্ত।"
           files: output-apk/supari-calculator-offline.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
