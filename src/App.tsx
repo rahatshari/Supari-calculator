@@ -293,22 +293,31 @@ export const App: React.FC = () => {
     navigate,
   ]);
 
-  // Automatic In-App Update Check on launch
+  // Automatic In-App Update Check (Runs automatically on launch + whenever internet reconnects)
   useEffect(() => {
-    const timer = setTimeout(async () => {
+    const runAutoUpdateCheck = async () => {
       try {
+        if (!navigator.onLine) return;
         const info = await checkForUpdates();
-        const dismissed = sessionStorage.getItem('dismissed_app_update');
-        if (info.hasUpdate && dismissed !== info.latestVersion) {
+        if (info.hasUpdate) {
           setUpdateInfo(info);
           setIsUpdateModalOpen(true);
         }
       } catch {
-        // Silently fail if offline or unable to reach github
+        // Silently ignore if offline
       }
-    }, 2800);
+    };
 
-    return () => clearTimeout(timer);
+    // Auto-check 1.2s after launch
+    const timer = setTimeout(runAutoUpdateCheck, 1200);
+
+    // Auto-check whenever phone reconnects to internet
+    window.addEventListener('online', runAutoUpdateCheck);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('online', runAutoUpdateCheck);
+    };
   }, []);
 
   // Browser History & Popstate (Swipe back / Browser back button)
@@ -661,6 +670,8 @@ export const App: React.FC = () => {
           canInstall={canInstall}
           onInstall={handleInstallClick}
           kroyKhataEnabled={kroyKhataEnabled}
+          updateInfo={updateInfo}
+          onOpenUpdateModal={() => setIsUpdateModalOpen(true)}
         />
       )}
 

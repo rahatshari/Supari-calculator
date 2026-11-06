@@ -1,13 +1,17 @@
 import React from 'react';
-import { Download, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Download, ShoppingBag, ArrowRight, Sparkles } from 'lucide-react';
 import { AppView } from '../types';
 import { SupariLogo } from './SupariLogo';
+import { AppUpdateInfo } from '../config/version';
+import { toBnNum } from '../utils/bengali';
 
 interface HomeViewProps {
   onNavigate: (view: AppView) => void;
   canInstall: boolean;
   onInstall: () => void;
   kroyKhataEnabled: boolean;
+  updateInfo?: AppUpdateInfo | null;
+  onOpenUpdateModal?: () => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
@@ -15,9 +19,69 @@ export const HomeView: React.FC<HomeViewProps> = ({
   canInstall,
   onInstall,
   kroyKhataEnabled,
+  updateInfo,
+  onOpenUpdateModal,
 }) => {
   return (
     <div className="view-panel active">
+      {/* Persistent Update Banner if a new version is detected */}
+      {updateInfo?.hasUpdate && (
+        <div
+          onClick={onOpenUpdateModal}
+          style={{
+            background: 'linear-gradient(135deg, #047857 0%, #10b981 100%)',
+            color: '#ffffff',
+            borderRadius: '16px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            boxShadow: '0 4px 16px rgba(16, 185, 129, 0.35)',
+            border: '1px solid #6ee7b7',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'rgba(255,255,255,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Sparkles className="w-4 h-4 text-white animate-pulse" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '13.5px' }}>
+                নতুন আপডেট উপলব্ধ (v{toBnNum(updateInfo.latestVersion)})!
+              </div>
+              <div style={{ fontSize: '11px', opacity: 0.9 }}>
+                নতুন ফিচার পেতে এখনই ডাউনলোড ও আপডেট করুন
+              </div>
+            </div>
+          </div>
+          <span
+            style={{
+              background: '#ffffff',
+              color: '#047857',
+              fontSize: '12px',
+              fontWeight: 800,
+              padding: '5px 12px',
+              borderRadius: '8px',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+            }}
+          >
+            আপডেট করুন
+          </span>
+        </div>
+      )}
+
       <div className="home-hero">
         <div className="home-logo">
           <SupariLogo size={88} className="drop-shadow-md" />

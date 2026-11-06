@@ -52,7 +52,7 @@ jobs:
           rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.png 2>/dev/null || true
           rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.png 2>/dev/null || true
 
-          # Replace default Capacitor splash screens with authentic Supari splash image
+          # Remove splash screen images and make them blank matching app background #f8fafc
           cp public/splash.png android/app/src/main/res/drawable/splash.png 2>/dev/null || true
           for dir in android/app/src/main/res/drawable-port-*; do
             if [ -d "$dir" ]; then
@@ -64,6 +64,10 @@ jobs:
               cp public/splash-land.png "$dir/splash.png" 2>/dev/null || true
             fi
           done
+
+          # Disable Android launch splash theme completely so app opens directly to home view
+          sed -i 's|<item name="android:background">@drawable/splash</item>|<item name="android:background">#f8fafc</item>|g' android/app/src/main/res/values/styles.xml 2>/dev/null || true
+          sed -i 's|android:theme="@style/AppTheme.NoActionBarLaunch"|android:theme="@style/AppTheme.NoActionBar"|g' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
 
           # Set official Android APK Version 2.0 (versionCode 2, versionName "2.0")
           sed -i 's/versionCode [0-9]*/versionCode 2/g' android/app/build.gradle
