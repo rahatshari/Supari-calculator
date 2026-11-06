@@ -7,8 +7,8 @@
  * - Completely removes Capacitor splash screen & blue logo
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
 
 const rootDir = process.cwd();
 const androidDir = path.join(rootDir, 'android');
