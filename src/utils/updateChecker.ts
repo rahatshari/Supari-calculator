@@ -1,11 +1,17 @@
-import { CURRENT_APP_VERSION, DEFAULT_GITHUB_REPO, AppUpdateInfo } from '../config/version';
+import {
+  CURRENT_APP_VERSION,
+  OFFICIAL_GITHUB_REPO,
+  OFFICIAL_APK_DOWNLOAD_URL,
+  OFFICIAL_RELEASE_URL,
+  AppUpdateInfo,
+} from '../config/version';
 
 /**
- * Extracts numeric parts from version strings like 'v1.0.1', '1.2.0-apk', etc.
+ * Extracts numeric parts from version strings like 'v2.0', '2.1.0-apk', etc.
  */
 export function parseSemVer(vStr: string): number[] {
   const clean = vStr.replace(/^v/i, '').split('-')[0].trim();
-  return clean.split('.').map(n => parseInt(n, 10) || 0);
+  return clean.split('.').map((n) => parseInt(n, 10) || 0);
 }
 
 /**
@@ -28,51 +34,44 @@ export function compareVersions(verA: string, verB: string): number {
   return 0;
 }
 
+/**
+ * Official locked repository. Cannot be modified or tampered with.
+ */
 export function getTargetRepo(): string {
-  try {
-    const saved = localStorage.getItem('custom_github_repo');
-    if (saved && saved.trim()) return saved.trim();
-
-    // Auto-detect if running on GitHub Pages: e.g. username.github.io/reponame
-    if (typeof window !== 'undefined' && window.location.hostname.endsWith('.github.io')) {
-      const user = window.location.hostname.split('.')[0];
-      const pathParts = window.location.pathname.split('/').filter(Boolean);
-      if (user && pathParts.length > 0) {
-        return `${user}/${pathParts[0]}`;
-      }
-    }
-  } catch {
-    // Ignore storage errors
-  }
-  return DEFAULT_GITHUB_REPO;
+  return OFFICIAL_GITHUB_REPO;
 }
 
-export function setTargetRepo(repo: string): void {
-  try {
-    localStorage.setItem('custom_github_repo', repo.trim());
-  } catch {
-    // Ignore storage errors
+/**
+ * Directly triggers the Android APK download and update installation.
+ */
+export function installAppUpdate(apkUrl?: string): void {
+  const targetUrl = apkUrl || OFFICIAL_APK_DOWNLOAD_URL;
+  if (typeof window !== 'undefined') {
+    // Navigating directly to the APK download triggers the Android Package Installer
+    window.location.href = targetUrl;
   }
 }
 
 /**
- * Checks GitHub Releases and raw version.json for updates.
+ * Automatically checks GitHub Releases and version.json for updates against the locked official repository.
  */
-export async function checkForUpdates(force = false): Promise<AppUpdateInfo> {
+export async function checkForUpdates(): Promise<AppUpdateInfo> {
   const defaultResult: AppUpdateInfo = {
     hasUpdate: false,
     latestVersion: CURRENT_APP_VERSION,
     currentVersion: CURRENT_APP_VERSION,
+    downloadUrl: OFFICIAL_RELEASE_URL,
+    apkUrl: OFFICIAL_APK_DOWNLOAD_URL,
   };
 
   if (!navigator.onLine) {
     return defaultResult;
   }
 
-  const repo = getTargetRepo();
+  const repo = OFFICIAL_GITHUB_REPO;
 
   try {
-    // 1. First try GitHub Releases API (most accurate for release notes and APK link)
+    // 1. Check official GitHub Releases API
     const releaseRes = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
       headers: { Accept: 'application/vnd.github.v3+json' },
     });
@@ -83,8 +82,7 @@ export async function checkForUpdates(force = false): Promise<AppUpdateInfo> {
       const latestVer = rawTag.replace(/^v/i, '').split('-')[0].trim();
 
       if (compareVersions(latestVer, CURRENT_APP_VERSION) > 0) {
-        // Find APK download asset if present
-        let apkAssetUrl = `https://github.com/${repo}/releases/download/${rawTag}/supari-calculator-offline.apk`;
+        let apkAssetUrl = OFFICIAL_APK_DOWNLOAD_URL;
         if (Array.isArray(data.assets)) {
           const found = data.assets.find((a: any) => a.name && a.name.endsWith('.apk'));
           if (found && found.browser_download_url) {
@@ -98,19 +96,21 @@ export async function checkForUpdates(force = false): Promise<AppUpdateInfo> {
           currentVersion: CURRENT_APP_VERSION,
           releaseTitle: data.name || `ভার্সন ${latestVer}`,
           releaseNotes: data.body || 'নতুন ফিচার এবং উন্নতি যুক্ত করা হয়েছে।',
-          downloadUrl: data.html_url || `https://github.com/${repo}/releases/latest`,
+          downloadUrl: data.html_url || OFFICIAL_RELEASE_URL,
           apkUrl: apkAssetUrl,
         };
       }
       return defaultResult;
     }
   } catch {
-    // Fall through to version.json fallback
+    // Fallback to raw version.json
   }
 
   try {
-    // 2. Fallback: Check raw version.json on GitHub (immune to API rate limits)
-    const rawRes = await fetch(`https://raw.githubusercontent.com/${repo}/main/public/version.json?_t=${Date.now()}`);
+    // 2. Fallback: Check raw version.json from GitHub
+    const rawRes = await fetch(
+      `https://raw.githubusercontent.com/${repo}/main/public/version.json?_t=${Date.now()}`
+    );
     if (rawRes.ok) {
       const meta = await rawRes.json();
       const latestVer = (meta.version || '').replace(/^v/i, '').trim();
@@ -121,14 +121,14 @@ export async function checkForUpdates(force = false): Promise<AppUpdateInfo> {
           latestVersion: latestVer,
           currentVersion: CURRENT_APP_VERSION,
           releaseTitle: meta.title || `ভার্সন ${latestVer}`,
-          releaseNotes: meta.releaseNotes || 'নতুন আপডেট পাওয়া গেছে।',
-          downloadUrl: meta.downloadUrl || `https://github.com/${repo}/releases/latest`,
-          apkUrl: meta.apkUrl || `https://github.com/${repo}/releases/latest/download/supari-calculator-offline.apk`,
+          releaseNotes: meta.releaseNotes || 'নতুন আপডেট উপলব্ধ।',
+          downloadUrl: meta.downloadUrl || OFFICIAL_RELEASE_URL,
+          apkUrl: meta.apkUrl || OFFICIAL_APK_DOWNLOAD_URL,
         };
       }
     }
   } catch {
-    // Both failed (network or repo not found)
+    // Network or server unreachable
   }
 
   return defaultResult;

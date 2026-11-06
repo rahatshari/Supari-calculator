@@ -176,7 +176,7 @@ export const UpdateNotificationModal: React.FC<UpdateNotificationModalProps> = (
             }}
           >
             <Download className="w-5 h-5" />
-            নতুন APK ডাউনলোড করুন
+            নতুন APK ইনস্টল করুন (v{toBnNum(updateInfo.latestVersion)})
           </button>
 
           {updateInfo.downloadUrl && (
