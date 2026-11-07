@@ -64,16 +64,9 @@ export const KachaPakaView: React.FC<KachaPakaViewProps> = ({
     qtyText: string;
   } | null>(null);
 
-  // Live Quantity & Gha Rate Calculation
+  // Live Gha Rate Calculation
   const currentRateVal = parseBnFloat(inputRate);
   const liveGhaRate = currentRateVal > 0 ? (currentRateVal / ghaRule).toFixed(2) : null;
-  const liveKuriNum = parseBnFloat(inputKuri);
-  const liveGhaNum = parseBnFloat(inputGha);
-  const liveTiNum = parseBnFloat(inputTi);
-  const hasLiveQty = liveKuriNum > 0 || liveGhaNum > 0 || liveTiNum > 0;
-  const liveQtyInfo = hasLiveQty
-    ? formatKachaItemQty(liveKuriNum, liveGhaNum, liveTiNum, ghaRule, tiPerGha)
-    : null;
 
   // Add Item
   const handleAddItem = () => {
@@ -357,16 +350,16 @@ export const KachaPakaView: React.FC<KachaPakaViewProps> = ({
     if (totalEntries > 80) memoWidth = 860;
     else if (totalEntries > 36) memoWidth = 800;
 
-    onToast('⏳ মেমো ছবি তৈরি হচ্ছে...');
+    onToast('⏳ মেমো ছবি তৈরি ও সেভ হচ্ছে...');
     try {
       const html = buildKachaMemoHtml();
       const res = await renderMemoHtmlToImage(html, 'Kacha_Paka_Supari_Memo.jpg', memoWidth);
-      onShowImagePreview(res);
-      saveOrDownloadImage(res).then((saveRes) => {
-        if (saveRes.message) onToast(saveRes.message);
-      }).catch(() => {});
+      const saveRes = await saveOrDownloadImage(res);
+      if (saveRes.message) {
+        onToast(saveRes.message);
+      }
     } catch {
-      onToast('⚠️ মেমো ছবি তৈরিতে সমস্যা হয়েছে');
+      onToast('⚠️ মেমো ছবি সেভ করতে সমস্যা হয়েছে');
     }
   };
 
@@ -561,44 +554,6 @@ export const KachaPakaView: React.FC<KachaPakaViewProps> = ({
             </div>
           </div>
 
-          {/* Live Quantity Conversion Preview */}
-          {liveQtyInfo && (
-            <div
-              className="no-print"
-              style={{
-                background: '#f0fdf4',
-                border: '1.5px solid #86efac',
-                borderRadius: '12px',
-                padding: '9px 13px',
-                marginBottom: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '8px',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#047857' }}>📊 সুপারি হিসাব:</span>
-                <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#0f172a' }}>
-                  {liveQtyInfo.displayString}
-                </span>
-              </div>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: '#047857',
-                  background: '#dcfce7',
-                  padding: '3px 8px',
-                  borderRadius: '8px',
-                  border: '1px solid #bbf7d0',
-                }}
-              >
-                মোট: {toBnNum(liveQtyInfo.totalTi)} টি ({toBnNum(ghaRule)} ঘা = ১ কুড়ি)
-              </span>
-            </div>
-          )}
 
           {/* Rate input with live gha preview */}
           <div className="input-box rate-box-wrapper no-print" style={{ marginBottom: '14px' }}>

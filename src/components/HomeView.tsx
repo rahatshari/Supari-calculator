@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, ShoppingBag, ArrowRight, Sparkles } from 'lucide-react';
+import { Download, ShoppingBag, Sparkles } from 'lucide-react';
 import { AppView } from '../types';
 import { SupariLogo } from './SupariLogo';
 import { AppUpdateInfo } from '../config/version';
@@ -129,9 +129,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <h3>কাঁচা-পাকা সুপারি হিসাব</h3>
           <p>কুড়ি, ঘা ও পিস অনুযায়ী হিসাব এবং দর যাচাই</p>
         </div>
-        <div className="module-arrow">
-          <ArrowRight className="w-5 h-5" />
-        </div>
       </div>
 
       {/* Module 2: শুকনো সুপারি */}
@@ -153,9 +150,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <div className="module-info">
           <h3>শুকনো সুপারির হিসাব</h3>
           <p>বস্তা ও মোট ওজন হিসাব এবং খালি বস্তার ওজন বাদ</p>
-        </div>
-        <div className="module-arrow">
-          <ArrowRight className="w-5 h-5" />
         </div>
       </div>
 
@@ -188,9 +182,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </span>
             </div>
             <p>ক্রয়কৃত সুপারি ট্র্যাকিং, মোট কুড়ি ও দিনশেষের মোট খরচের হিসাব</p>
-          </div>
-          <div className="module-arrow">
-            <ArrowRight className="w-5 h-5" />
           </div>
         </div>
       )}

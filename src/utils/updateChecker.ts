@@ -51,7 +51,14 @@ export function cleanGitHubRepo(input: string): string {
 export function getCustomRepo(): string | null {
   if (typeof window === 'undefined') return null;
   const val = localStorage.getItem(CUSTOM_REPO_STORAGE_KEY);
-  return val ? cleanGitHubRepo(val) : null;
+  if (!val) return null;
+  const cleaned = cleanGitHubRepo(val);
+  // Auto-heal old misspelled repo so users never get stuck with 404
+  if (cleaned.toLowerCase().includes('rahatsharif504')) {
+    localStorage.removeItem(CUSTOM_REPO_STORAGE_KEY);
+    return null;
+  }
+  return cleaned;
 }
 
 /**

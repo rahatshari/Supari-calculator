@@ -1,8 +1,8 @@
 {
-  "version": "2.5.0",
-  "versionCode": 7,
-  "title": "সুপারি হিসাব v2.5.0",
-  "releaseNotes": "ভার্সন ২.৫.০: কাঁচা সুপারির ক্ষেত্রে ঘা লিখলে পাশে স্বয়ংক্রিয়ভাবে কয় কুড়ি কয় ঘা হয়েছে তা প্রদর্শনের স্মার্ট সুবিধা যুক্ত করা হয়েছে।",
-  "downloadUrl": "https://github.com/rahatsharif504/supari-calculator/releases/latest",
-  "apkUrl": "https://github.com/rahatsharif504/supari-calculator/releases/latest/download/supari-calculator-offline.apk"
+  "version": "2.9.0",
+  "versionCode": 11,
+  "title": "সুপারি হিসাব v2.9.0",
+  "releaseNotes": "ভার্সন ২.৯.০: JPG মেমো রসিদ সেভ অপশনে ক্লিক করার সাথে সাথে কোনো অতিরিক্ত পপআপ বা ফাইল ম্যানেজার সিলেক্টর ছাড়াই সরাসরি মোবাইলে ১-ক্লিকে ছবি সেভ হওয়ার দ্রুত সুবিধা যুক্ত করা হয়েছে।",
+  "downloadUrl": "https://github.com/rahatshari/Supari-calculator/releases/latest",
+  "apkUrl": "https://github.com/rahatshari/Supari-calculator/releases/latest/download/supari-calculator-offline.apk"
 }

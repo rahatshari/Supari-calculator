@@ -124,9 +124,9 @@ if (fs.existsSync(keystoreSrc)) {
 if (fs.existsSync(gradlePath)) {
   let gradle = fs.readFileSync(gradlePath, 'utf8');
 
-  // Set Version 2.5.0 (versionCode 7)
-  gradle = gradle.replace(/versionCode \d+/g, 'versionCode 7');
-  gradle = gradle.replace(/versionName "[^"]*"/g, 'versionName "2.5.0"');
+  // Set Version 2.9.0 (versionCode 11)
+  gradle = gradle.replace(/versionCode \d+/g, 'versionCode 11');
+  gradle = gradle.replace(/versionName "[^"]*"/g, 'versionName "2.9.0"');
 
   // Inject permanent signing configuration
   const signingConfigBlock = `

@@ -685,16 +685,16 @@ export const KroyKhataView: React.FC<KroyKhataViewProps> = ({
     else if (currentTab === 'shukno') fileName = `Shukno_Supari_Kroy_Khata_${activeDate}.jpg`;
     else fileName = `Supari_Kroy_Khata_Sompadito_${activeDate}.jpg`;
 
-    onToast('⏳ মেমো ছবি তৈরি হচ্ছে...');
+    onToast('⏳ মেমো ছবি তৈরি ও সেভ হচ্ছে...');
     try {
       const html = buildKroyMemoHtml();
       const res = await renderMemoHtmlToImage(html, fileName, 780);
-      onShowImagePreview(res);
-      saveOrDownloadImage(res).then((saveRes) => {
-        if (saveRes.message) onToast(saveRes.message);
-      }).catch(() => {});
+      const saveRes = await saveOrDownloadImage(res);
+      if (saveRes.message) {
+        onToast(saveRes.message);
+      }
     } catch {
-      onToast('⚠️ মেমো ছবি তৈরিতে সমস্যা হয়েছে');
+      onToast('⚠️ মেমো ছবি সেভ করতে সমস্যা হয়েছে');
     }
   };
 

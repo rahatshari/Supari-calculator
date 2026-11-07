@@ -31,6 +31,7 @@ const KACHA_HIST_KEY = 'supari_history_kacha';
 const SHUKNO_HIST_KEY = 'supari_history_shukno';
 const KROY_KHATA_DB_KEY = 'supari_kroy_khata_db';
 const KROY_KHATA_ENABLED_KEY = 'supari_kroy_khata_enabled';
+const AUTO_UPDATE_CHECK_KEY = 'supari_auto_update_check_enabled';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -48,6 +49,16 @@ export const App: React.FC = () => {
       return saved === 'true'; // Default is false if null or not 'true'
     } catch {
       return false;
+    }
+  });
+
+  // Feature Toggle: অটোমেটিক আপডেট চেক (Default is TRUE / ON)
+  const [autoUpdateEnabled, setAutoUpdateEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(AUTO_UPDATE_CHECK_KEY);
+      return saved !== 'false';
+    } catch {
+      return true;
     }
   });
 
@@ -199,6 +210,18 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleToggleAutoUpdate = (enabled: boolean) => {
+    setAutoUpdateEnabled(enabled);
+    try {
+      localStorage.setItem(AUTO_UPDATE_CHECK_KEY, String(enabled));
+    } catch {}
+    if (enabled) {
+      showToast('✅ অটোমেটিক আপডেট চেক চালু করা হয়েছে');
+    } else {
+      showToast('ℹ️ অটোমেটিক আপডেট চেক বন্ধ করা হয়েছে');
+    }
+  };
+
   // Sync Drafts
   useEffect(() => {
     localStorage.setItem('kacha_draft_items', JSON.stringify(kachaItems));
@@ -297,6 +320,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     const runAutoUpdateCheck = async () => {
       try {
+        if (!autoUpdateEnabled) return;
         if (!navigator.onLine) return;
         const info = await checkForUpdates();
         if (info.hasUpdate) {
@@ -318,7 +342,7 @@ export const App: React.FC = () => {
       clearTimeout(timer);
       window.removeEventListener('online', runAutoUpdateCheck);
     };
-  }, []);
+  }, [autoUpdateEnabled]);
 
   // Browser History & Popstate (Swipe back / Browser back button)
   useEffect(() => {
@@ -768,6 +792,8 @@ export const App: React.FC = () => {
         onClose={() => setIsSettingsOpen(false)}
         kroyKhataEnabled={kroyKhataEnabled}
         onToggleKroyKhata={handleToggleKroyKhata}
+        autoUpdateEnabled={autoUpdateEnabled}
+        onToggleAutoUpdate={handleToggleAutoUpdate}
         onShowUpdateModal={(info) => {
           setUpdateInfo(info);
           setIsUpdateModalOpen(true);

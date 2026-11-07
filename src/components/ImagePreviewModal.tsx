@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Download, Share2, X, Check } from 'lucide-react';
-import { RenderMemoResult, saveOrDownloadImage } from '../utils/exportMemo';
+import { RenderMemoResult, saveOrDownloadImage, shareMemoImage } from '../utils/exportMemo';
 
 interface ImagePreviewModalProps {
   data: RenderMemoResult | null;
@@ -29,8 +29,8 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
         setIsSaved(true);
         setTimeout(() => setIsSaved(false), 3000);
       }
-    } catch (err: any) {
-      onToast('⚠️ সেভ করা যায়নি। ছবিতে চাপ দিয়ে ধরে Save Image দিন।');
+    } catch {
+      onToast('⚠️ সেভ করা যায়নি');
     } finally {
       setIsSaving(false);
     }
@@ -39,7 +39,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
   const handleShare = async () => {
     onToast('⏳ শেয়ার উইন্ডো ওপেন হচ্ছে...');
     try {
-      const res = await saveOrDownloadImage(data);
+      const res = await shareMemoImage(data);
       if (!res.success) {
         onToast(res.message);
       }

@@ -1,16 +1,7 @@
 import React, { useState } from 'react';
-import { Settings2, X, ShoppingBag, Check, RefreshCw, Download, Sparkles, RotateCcw, Globe, Save } from 'lucide-react';
-import { CURRENT_APP_VERSION, OFFICIAL_GITHUB_REPO, AppUpdateInfo } from '../config/version';
-import {
-  checkForUpdates,
-  installAppUpdate,
-  getTargetRepo,
-  setCustomRepo,
-  resetToDefaultRepo,
-  isCustomRepoActive,
-  getTargetApkUrl,
-  cleanGitHubRepo,
-} from '../utils/updateChecker';
+import { Settings2, X, ShoppingBag, RefreshCw, Download, Sparkles, CheckCircle2 } from 'lucide-react';
+import { CURRENT_APP_VERSION, AppUpdateInfo } from '../config/version';
+import { checkForUpdates, installAppUpdate, getTargetApkUrl } from '../utils/updateChecker';
 import { toBnNum } from '../utils/bengali';
 
 interface SettingsModalProps {
@@ -18,6 +9,8 @@ interface SettingsModalProps {
   onClose: () => void;
   kroyKhataEnabled: boolean;
   onToggleKroyKhata: (enabled: boolean) => void;
+  autoUpdateEnabled: boolean;
+  onToggleAutoUpdate: (enabled: boolean) => void;
   onShowUpdateModal?: (info: AppUpdateInfo) => void;
   onToast?: (msg: string) => void;
 }
@@ -27,52 +20,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   kroyKhataEnabled,
   onToggleKroyKhata,
+  autoUpdateEnabled,
+  onToggleAutoUpdate,
   onShowUpdateModal,
   onToast,
 }) => {
-  const [repoInput, setRepoInput] = useState<string>(() => getTargetRepo());
-  const [isCustom, setIsCustom] = useState<boolean>(() => isCustomRepoActive());
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const [foundUpdate, setFoundUpdate] = useState<AppUpdateInfo | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSaveRepo = () => {
-    const cleaned = cleanGitHubRepo(repoInput);
-    if (!cleaned) {
-      if (onToast) onToast('⚠️ রিপোজিটরি লিংক খালি রাখা যাবে না');
-      return;
-    }
-    setCustomRepo(cleaned);
-    const active = getTargetRepo();
-    setRepoInput(active);
-    setIsCustom(isCustomRepoActive());
-    if (onToast) {
-      onToast(`✅ আপডেট লিংক সেভ হয়েছে: ${active}`);
-    }
-  };
-
-  const handleResetDefault = () => {
-    resetToDefaultRepo();
-    setRepoInput(OFFICIAL_GITHUB_REPO);
-    setIsCustom(false);
-    if (onToast) {
-      onToast(`🔄 ডিফল্ট লিংক (${OFFICIAL_GITHUB_REPO}) ফিরিয়ে আনা হয়েছে!`);
-    }
-  };
-
   const handleManualCheck = async () => {
     setIsCheckingUpdate(true);
     setUpdateStatus(null);
     try {
-      // Save input if user typed something new before checking
-      const cleaned = cleanGitHubRepo(repoInput);
-      if (cleaned && cleaned !== getTargetRepo()) {
-        setCustomRepo(cleaned);
-        setIsCustom(isCustomRepoActive());
-      }
-
       const info = await checkForUpdates();
       if (info.hasUpdate) {
         setFoundUpdate(info);
@@ -82,14 +44,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         }
       } else {
         setFoundUpdate(null);
-        setUpdateStatus(`আপনার অ্যাপটি লেটেস্ট ভার্সনে আছে (v${toBnNum(CURRENT_APP_VERSION)})`);
+        setUpdateStatus(`আপনার অ্যাপটি সর্বশেষ ভার্সনে আছে (v${toBnNum(CURRENT_APP_VERSION)})`);
         if (onToast) {
-          onToast(`✅ অ্যাপটি লেটেস্ট ভার্সন (v${toBnNum(CURRENT_APP_VERSION)})`);
+          onToast(`✅ অ্যাপটি সর্বশেষ ভার্সনে আছে (v${toBnNum(CURRENT_APP_VERSION)})`);
         }
       }
     } catch {
-      setUpdateStatus('ইন্টারনেট বা রিপোজিটরি চেক করুন');
-      if (onToast) onToast('⚠️ আপডেট চেক করা যায়নি');
+      setUpdateStatus('ইন্টারনেট সংযোগ চেক করুন');
+      if (onToast) onToast('⚠️ আপডেট চেক করা যায়নি, ইন্টারনেট চেক করুন');
     } finally {
       setIsCheckingUpdate(false);
     }
@@ -159,7 +121,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </button>
         </div>
 
-        {/* Setting Card: দৈনিক সুপারি ক্রয় খাতা */}
+        {/* Setting Card 1: দৈনিক সুপারি ক্রয় খাতা */}
         <div
           style={{
             background: kroyKhataEnabled ? '#f0fdf4' : '#f8fafc',
@@ -198,7 +160,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             </div>
 
-            {/* Custom Modern Toggle Switch */}
+            {/* Modern Toggle Switch */}
             <label
               style={{
                 position: 'relative',
@@ -272,24 +234,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* App Version & Customizable Auto-Update Card */}
+        {/* Setting Card 2: অ্যাপ আপডেট ও অটো-চেক (Clean - No links) */}
         <div
           style={{
-            background: '#f8fafc',
+            background: '#ffffff',
             border: '1.5px solid #e2e8f0',
             borderRadius: '16px',
-            padding: '15px',
+            padding: '16px',
             marginBottom: '16px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          {/* Header row with current version badge */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div
                 style={{
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '8px',
-                  background: '#dcfce7',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '9px',
+                  background: '#ecfdf5',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -299,13 +263,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
-                <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#0f172a' }}>অটো আপডেট ও ইনস্টল</div>
-                <div style={{ fontSize: '11px', color: '#059669', fontWeight: 700 }}>স্বয়ংক্রিয় আপডেট সক্রিয়</div>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>অ্যাপ আপডেট</div>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>অফলাইন ক্যালকুলেটর সংস্করণ</div>
               </div>
             </div>
             <span
               style={{
-                fontSize: '12.5px',
+                fontSize: '12px',
                 fontWeight: 800,
                 color: '#047857',
                 background: '#dcfce7',
@@ -318,174 +282,190 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </span>
           </div>
 
-          {/* GitHub Repository Link Setting (Editable with 1-Click Default Reset) */}
+          {/* Option: অটোমেটিক আপডেট চেক করুন (ON/OFF Toggle) */}
           <div
             style={{
-              background: '#ffffff',
-              border: '1px solid #e2e8f0',
+              background: autoUpdateEnabled ? '#f0fdf4' : '#f8fafc',
+              border: `1px solid ${autoUpdateEnabled ? '#bbf7d0' : '#e2e8f0'}`,
               borderRadius: '12px',
-              padding: '10px 12px',
+              padding: '12px',
               marginBottom: '12px',
+              transition: 'all 0.2s ease',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: '#334155' }}>
-                <Globe className="w-3.5 h-3.5 text-emerald-600" />
-                <span>গিটহাব আপডেট লিংক:</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+              <div>
+                <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#0f172a', marginBottom: '2px' }}>
+                  অটোমেটিক আপডেট চেক করুন
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#64748b', lineHeight: 1.35 }}>
+                  অ্যাপ চালু হলে বা ইন্টারনেট পেলে স্বয়ংক্রিয়ভাবে নতুন আপডেট নোটিফিকেশন দেবে
+                </div>
               </div>
+
+              {/* Toggle switch for auto update */}
+              <label
+                style={{
+                  position: 'relative',
+                  display: 'inline-block',
+                  width: '46px',
+                  height: '26px',
+                  flexShrink: 0,
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={autoUpdateEnabled}
+                  onChange={(e) => onToggleAutoUpdate(e.target.checked)}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    cursor: 'pointer',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: autoUpdateEnabled ? '#10b981' : '#cbd5e1',
+                    borderRadius: '26px',
+                    transition: '0.25s ease',
+                    boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  <span
+                    style={{
+                      position: 'absolute',
+                      height: '20px',
+                      width: '20px',
+                      left: autoUpdateEnabled ? '23px' : '3px',
+                      bottom: '3px',
+                      backgroundColor: 'white',
+                      borderRadius: '50%',
+                      transition: '0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    }}
+                  />
+                </span>
+              </label>
+            </div>
+
+            <div
+              style={{
+                marginTop: '8px',
+                paddingTop: '6px',
+                borderTop: '1px dashed #cbd5e1',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '11px',
+              }}
+            >
+              <span style={{ color: '#64748b' }}>অটো-চেক স্ট্যাটাস:</span>
               <span
                 style={{
-                  fontSize: '10.5px',
                   fontWeight: 800,
+                  color: autoUpdateEnabled ? '#047857' : '#64748b',
+                  background: autoUpdateEnabled ? '#dcfce7' : '#f1f5f9',
                   padding: '2px 8px',
                   borderRadius: '8px',
-                  background: isCustom ? '#fef3c7' : '#ecfdf5',
-                  color: isCustom ? '#b45309' : '#047857',
-                  border: `1px solid ${isCustom ? '#fde68a' : '#a7f3d0'}`,
                 }}
               >
-                {isCustom ? 'কাস্টম লিংক' : 'ডিফল্ট অফিসিয়াল লিংক'}
+                {autoUpdateEnabled ? '✓ চালু (সক্রিয়)' : '✕ বন্ধ (নিষ্ক্রিয়)'}
               </span>
-            </div>
-
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
-              <input
-                type="text"
-                value={repoInput}
-                onChange={(e) => setRepoInput(e.target.value)}
-                placeholder="username/repo (ডিফল্ট: rahatsharif504/supari-calculator)"
-                style={{
-                  flex: 1,
-                  padding: '7px 10px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '8px',
-                  color: '#0f172a',
-                  background: '#f8fafc',
-                  outline: 'none',
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleSaveRepo}
-                style={{
-                  background: '#10b981',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '0 10px',
-                  fontSize: '11.5px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-                title="পরিবর্তন সেভ করুন"
-              >
-                <Save className="w-3.5 h-3.5" />
-                সেভ
-              </button>
-            </div>
-
-            {/* 1-Click Default Reset Button */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '10.5px', color: '#64748b' }}>
-                ডিফল্ট: <code style={{ color: '#0f172a', fontWeight: 600 }}>{OFFICIAL_GITHUB_REPO}</code>
-              </span>
-              <button
-                type="button"
-                onClick={handleResetDefault}
-                style={{
-                  background: '#f1f5f9',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '6px',
-                  padding: '3px 8px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: '#047857',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  transition: 'all 0.15s ease',
-                }}
-                title="১-ক্লিকে ডিফল্ট অফিসিয়াল লিংকে ফিরে যান"
-              >
-                <RotateCcw className="w-3 h-3 text-emerald-600" />
-                ডিফল্ট ফিরিয়ে আনুন
-              </button>
             </div>
           </div>
 
-          {/* Action Buttons: Direct Install if update is available, or Check & Install */}
+          {/* Action Button: আপডেট চেক করুন ও ইনস্টল করুন */}
           {foundUpdate?.hasUpdate ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div
+                style={{
+                  background: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  color: '#065f46',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>নতুন সংস্করণ <strong>v{toBnNum(foundUpdate.latestVersion)}</strong> প্রস্তুত!</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleDirectInstall}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  fontSize: '14px',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.35)',
+                }}
+              >
+                <Download className="w-4 h-4" />
+                নতুন APK ইনস্টল করুন (v{toBnNum(foundUpdate.latestVersion)})
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={handleDirectInstall}
+              type="button"
+              onClick={handleManualCheck}
+              disabled={isCheckingUpdate}
               style={{
                 width: '100%',
-                background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '10px',
-                padding: '11px',
+                background: '#ffffff',
+                border: '1.5px solid #059669',
+                color: '#059669',
+                borderRadius: '12px',
+                padding: '11px 14px',
                 fontSize: '13.5px',
                 fontWeight: 800,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.35)',
-              }}
-            >
-              <Download className="w-4 h-4" />
-              নতুন APK ইনস্টল করুন (v{toBnNum(foundUpdate.latestVersion)})
-            </button>
-          ) : (
-            <button
-              onClick={handleManualCheck}
-              disabled={isCheckingUpdate}
-              style={{
-                width: '100%',
-                background: '#ffffff',
-                border: '1.5px solid #047857',
-                color: '#047857',
-                borderRadius: '10px',
-                padding: '9px 12px',
-                fontSize: '13px',
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
                 cursor: isCheckingUpdate ? 'wait' : 'pointer',
                 transition: 'all 0.2s ease',
+                boxShadow: '0 2px 5px rgba(5, 150, 105, 0.08)',
               }}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
-              {isCheckingUpdate ? 'আপডেট চেক হচ্ছে...' : 'আপডেট চেক ও ইনস্টল করুন'}
+              <RefreshCw className={`w-4 h-4 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+              {isCheckingUpdate ? 'আপডেট চেক হচ্ছে...' : 'আপডেট চেক করুন ও ইনস্টল করুন'}
             </button>
           )}
 
           {updateStatus && (
             <div
               style={{
-                fontSize: '11.5px',
-                marginTop: '8px',
+                fontSize: '12px',
+                marginTop: '10px',
                 textAlign: 'center',
                 fontWeight: 700,
                 color: updateStatus.includes('পাওয়া গেছে') ? '#047857' : '#475569',
+                background: updateStatus.includes('পাওয়া গেছে') ? '#dcfce7' : '#f8fafc',
+                padding: '6px 10px',
+                borderRadius: '8px',
+                border: `1px solid ${updateStatus.includes('পাওয়া গেছে') ? '#bbf7d0' : '#e2e8f0'}`,
               }}
             >
               {updateStatus}
             </div>
           )}
-
-          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '8px', textAlign: 'center' }}>
-            💡 অ্যাপ চালুর সময় বা নেট সংযোগ পেলেই স্বয়ংক্রিয়ভাবে নতুন আপডেট নোটিফিকেশন আসবে।
-          </div>
         </div>
 
         {/* Helpful Tip */}
@@ -505,9 +485,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         >
           <span style={{ fontSize: '15px' }}>💡</span>
           <div>
-            <strong>টিপস:</strong> আপনি যদি শুধু কেনা-বেচার সাধারণ হিসাব করতে চান তবে এটি বন্ধ
-            রাখতে পারেন। বন্ধ রাখলে হোম স্ক্রিন ও ক্যালকুলেটর থেকে ক্রয় খাতার অতিরিক্ত বাটনগুলো লুকানো
-            থাকবে।
+            <strong>টিপস:</strong> আপনি যদি শুধু কেনা-বেচার সাধারণ হিসাব করতে চান তবে ক্রয় খাতা বন্ধ
+            রাখতে পারেন। বন্ধ রাখলে হোম স্ক্রিন থেকে অতিরিক্ত অপশনগুলো লুকানো থাকবে।
           </div>
         </div>
 

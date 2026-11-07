@@ -119,30 +119,23 @@ export async function renderMemoHtmlToImage(
 }
 
 /**
- * Reliable cross-platform image save & download:
- * - Native Android APK: Writes directly to device storage via Filesystem & invokes Share/Save sheet
- * - Web Browser: Standard <a> tag download
+ * 1-Click Direct Save & Download:
+ * - Native Android APK: Writes directly into Documents / ExternalStorage / Cache WITHOUT any share sheets or file chooser prompts.
+ * - Web Browser: Triggers instant direct HTML5 file download.
  */
 export async function saveOrDownloadImage(result: RenderMemoResult): Promise<{
   success: boolean;
   message: string;
 }> {
-  const { dataUrl, fileName, blob, base64 } = result;
+  const { dataUrl, fileName, base64 } = result;
 
-  // 1. Native Android APK handling (Capacitor)
+  // 1. Native Android APK handling (Capacitor Filesystem)
   if (Capacitor.isNativePlatform()) {
     try {
       const pureBase64 = base64 || (dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl);
+      let isSaved = false;
 
-      // Write image to device Cache directory first so it's shareable and saveable
-      const savedFile = await Filesystem.writeFile({
-        path: fileName,
-        data: pureBase64,
-        directory: Directory.Cache,
-        recursive: true,
-      });
-
-      // Also attempt saving directly to Documents folder
+      // 1. Try Documents directory first (Standard accessible location)
       try {
         await Filesystem.writeFile({
           path: fileName,
@@ -150,44 +143,47 @@ export async function saveOrDownloadImage(result: RenderMemoResult): Promise<{
           directory: Directory.Documents,
           recursive: true,
         });
-      } catch {
-        // Documents fallback non-blocking
+        isSaved = true;
+      } catch (docErr) {
+        console.warn('Could not write to Documents:', docErr);
       }
 
-      // Open Android native Share & Save Sheet (Gallery, WhatsApp, File Manager, Save to Device)
-      if (savedFile?.uri) {
-        await Share.share({
-          title: 'সুপারি হিসাব মেমো রসিদ',
-          text: `সুপারি মেমো: ${fileName}`,
-          url: savedFile.uri,
-          dialogTitle: 'মেমো রসিদ সেভ বা শেয়ার করুন',
+      // 2. Try ExternalStorage directory
+      try {
+        await Filesystem.writeFile({
+          path: fileName,
+          data: pureBase64,
+          directory: Directory.ExternalStorage,
+          recursive: true,
         });
+        isSaved = true;
+      } catch (extErr) {
+        console.warn('Could not write to ExternalStorage:', extErr);
       }
 
-      return {
-        success: true,
-        message: '✅ মেমো রসিদ সফলভাবে সেভ ও শেয়ার অপশনে পাঠানো হয়েছে!',
-      };
+      // 3. Fallback to Data directory
+      try {
+        await Filesystem.writeFile({
+          path: fileName,
+          data: pureBase64,
+          directory: Directory.Data,
+          recursive: true,
+        });
+        isSaved = true;
+      } catch {}
+
+      if (isSaved) {
+        return {
+          success: true,
+          message: `✅ '${fileName}' সরাসরি মোবাইলে সেভ হয়েছে!`,
+        };
+      }
     } catch (nativeErr: any) {
-      console.warn('Native Filesystem save failed, trying Web Share API...', nativeErr);
-
-      // Fallback to Web Share API
-      if (blob && navigator.share) {
-        try {
-          const file = new File([blob], fileName, { type: 'image/jpeg' });
-          await navigator.share({
-            title: 'সুপারি হিসাব মেমো রসিদ',
-            files: [file],
-          });
-          return { success: true, message: '✅ মেমো রসিদ সফলভাবে শেয়ার হয়েছে!' };
-        } catch {
-          // cancelled
-        }
-      }
+      console.warn('Native Filesystem save failed, falling back to browser download...', nativeErr);
     }
   }
 
-  // 2. Standard Web Browser download fallback
+  // 2. Standard Web Browser download
   try {
     const link = document.createElement('a');
     link.download = fileName;
@@ -203,12 +199,61 @@ export async function saveOrDownloadImage(result: RenderMemoResult): Promise<{
 
     return {
       success: true,
-      message: `📥 '${fileName}' ডাউনলোড সম্পন্ন হয়েছে!`,
+      message: `✅ '${fileName}' সরাসরি ডাউনলোড সম্পন্ন হয়েছে!`,
     };
   } catch {
     return {
       success: false,
-      message: '⚠️ সরাসরি ডাউনলোড করা যায়নি। ছবিতে চাপ দিয়ে ধরে Save Image দিন।',
+      message: '⚠️ সরাসরি ডাউনলোড করা যায়নি।',
     };
   }
+}
+
+/**
+ * Explicit Share Function (only called when user deliberately clicks Share)
+ */
+export async function shareMemoImage(result: RenderMemoResult): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  const { dataUrl, fileName, blob, base64 } = result;
+
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const pureBase64 = base64 || (dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl);
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: pureBase64,
+        directory: Directory.Cache,
+        recursive: true,
+      });
+
+      if (savedFile?.uri) {
+        await Share.share({
+          title: 'সুপারি হিসাব মেমো রসিদ',
+          text: `সুপারি মেমো: ${fileName}`,
+          url: savedFile.uri,
+          dialogTitle: 'মেমো রসিদ শেয়ার করুন',
+        });
+        return { success: true, message: '✅ শেয়ার উইন্ডো ওপেন হয়েছে' };
+      }
+    } catch {
+      // User cancelled
+    }
+  }
+
+  if (blob && navigator.share) {
+    try {
+      const file = new File([blob], fileName, { type: 'image/jpeg' });
+      await navigator.share({
+        title: 'সুপারি হিসাব মেমো রসিদ',
+        files: [file],
+      });
+      return { success: true, message: '✅ শেয়ার সম্পন্ন হয়েছে' };
+    } catch {
+      // User cancelled
+    }
+  }
+
+  return { success: false, message: '⚠️ শেয়ার অপশন সাপোর্ট করছে না' };
 }

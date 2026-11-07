@@ -373,16 +373,16 @@ export const ShuknoView: React.FC<ShuknoViewProps> = ({
     if (totalBags > 80) memoWidth = 860;
     else if (totalBags > 36) memoWidth = 800;
 
-    onToast('⏳ মেমো ছবি তৈরি হচ্ছে...');
+    onToast('⏳ মেমো ছবি তৈরি ও সেভ হচ্ছে...');
     try {
       const html = buildShuknoMemoHtml();
       const res = await renderMemoHtmlToImage(html, 'Shukno_Supari_Memo.jpg', memoWidth);
-      onShowImagePreview(res);
-      saveOrDownloadImage(res).then((saveRes) => {
-        if (saveRes.message) onToast(saveRes.message);
-      }).catch(() => {});
+      const saveRes = await saveOrDownloadImage(res);
+      if (saveRes.message) {
+        onToast(saveRes.message);
+      }
     } catch {
-      onToast('⚠️ মেমো ছবি তৈরিতে সমস্যা হয়েছে');
+      onToast('⚠️ মেমো ছবি সেভ করতে সমস্যা হয়েছে');
     }
   };
 
