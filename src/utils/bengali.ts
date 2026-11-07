@@ -67,3 +67,54 @@ export function formatBnTime(dt: Date): string {
   if (h === 0) h = 12;
   return `${ampm} ${toBnNum(h)}:${toBnNum(m.toString().padStart(2, '0'))}`;
 }
+
+/**
+ * Formats Raw Betel Nut (কাঁচা সুপারি) quantity:
+ * When user enters e.g. 25 Gha, it calculates normalized Kuri and Gha
+ * and returns displayString such as: "২৫ ঘা (১ কুড়ি ৪ ঘা)"
+ */
+export function formatKachaItemQty(
+  kuri: number,
+  gha: number,
+  ti: number,
+  ghaRule: number,
+  tiPerGha = 10
+): {
+  displayString: string;
+  rawString: string;
+  normalizedString: string;
+  normKuri: number;
+  normGha: number;
+  normTi: number;
+  totalTi: number;
+} {
+  const tiPerKuri = ghaRule * tiPerGha;
+  const totalTi = Math.round(kuri * tiPerKuri + gha * tiPerGha + ti);
+
+  // Raw user entered parts
+  const rawParts: string[] = [];
+  if (kuri > 0) rawParts.push(`${toBnNum(kuri)} কুড়ি`);
+  if (gha > 0) rawParts.push(`${toBnNum(gha)} ঘা`);
+  if (ti > 0) rawParts.push(`${toBnNum(ti)} টি`);
+  const rawString = rawParts.length > 0 ? rawParts.join(' ') : `${toBnNum(totalTi)} টি`;
+
+  // Normalized Kuri, Gha, Ti calculation
+  const normKuri = Math.floor(totalTi / tiPerKuri);
+  const remAfterKuri = totalTi % tiPerKuri;
+  const normGha = Math.floor(remAfterKuri / tiPerGha);
+  const normTi = remAfterKuri % tiPerGha;
+
+  const normParts: string[] = [];
+  if (normKuri > 0) normParts.push(`${toBnNum(normKuri)} কুড়ি`);
+  if (normGha > 0) normParts.push(`${toBnNum(normGha)} ঘা`);
+  if (normTi > 0) normParts.push(`${toBnNum(normTi)} টি`);
+  const normalizedString = normParts.length > 0 ? normParts.join(' ') : '০ কুড়ি';
+
+  // If raw input has gha >= ghaRule, or kuri was 0 and gha >= ghaRule, or raw differs from normalized representation
+  let displayString = rawString;
+  if (rawString !== normalizedString && (normKuri > 0 || gha >= ghaRule)) {
+    displayString = `${rawString} (${normalizedString})`;
+  }
+
+  return { displayString, rawString, normalizedString, normKuri, normGha, normTi, totalTi };
+}

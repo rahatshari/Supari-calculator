@@ -1,8 +1,8 @@
 {
-  "version": "2.4.0",
-  "versionCode": 6,
-  "title": "সুপারি হিসাব v2.4.0",
-  "releaseNotes": "ভার্সন ২.৪.০: কাস্টম গিটহাব রিপোজিটরি পরিবর্তন ও ১-ক্লিকে অফিশিয়াল ডিফল্ট লিংক রিসেট করার স্মার্ট সুবিধা যুক্ত করা হয়েছে।",
+  "version": "2.5.0",
+  "versionCode": 7,
+  "title": "সুপারি হিসাব v2.5.0",
+  "releaseNotes": "ভার্সন ২.৫.০: কাঁচা সুপারির ক্ষেত্রে ঘা লিখলে পাশে স্বয়ংক্রিয়ভাবে কয় কুড়ি কয় ঘা হয়েছে তা প্রদর্শনের স্মার্ট সুবিধা যুক্ত করা হয়েছে।",
   "downloadUrl": "https://github.com/rahatsharif504/supari-calculator/releases/latest",
   "apkUrl": "https://github.com/rahatsharif504/supari-calculator/releases/latest/download/supari-calculator-offline.apk"
 }

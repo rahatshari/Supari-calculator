@@ -9,6 +9,7 @@ import {
   formatBnDate,
   formatBnTime,
   getTodayDateStr,
+  formatKachaItemQty,
 } from '../utils/bengali';
 import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult, saveOrDownloadImage } from '../utils/exportMemo';
 import { printReceipt } from '../utils/printReceipt';
@@ -133,11 +134,8 @@ export const KroyKhataView: React.FC<KroyKhataViewProps> = ({
     const calculatedKuri = totalTi / calcTiPerKuri;
     const totalPrice = Math.round(calculatedKuri * rate * 100) / 100;
 
-    const parts: string[] = [];
-    if (kuri > 0) parts.push(`${toBnNum(kuri)} কুড়ি`);
-    if (gha > 0) parts.push(`${toBnNum(gha)} ঘা`);
-    if (ti > 0) parts.push(`${toBnNum(ti)} টি`);
-    const qtyText = parts.length > 0 ? parts.join(' ') : `${toBnNum(totalTi)} টি`;
+    const qtyInfo = formatKachaItemQty(kuri, gha, ti, kachaRule, tiPerGha);
+    const qtyText = qtyInfo.displayString;
 
     const newEntry: KroyEntry = {
       id: Date.now(),
@@ -185,11 +183,8 @@ export const KroyKhataView: React.FC<KroyKhataViewProps> = ({
     const calculatedKuri = totalTi / calcTiPerKuri;
     const calculatedRate = Math.round(totalPrice / calculatedKuri);
 
-    const parts: string[] = [];
-    if (kuri > 0) parts.push(`${toBnNum(kuri)} কুড়ি`);
-    if (gha > 0) parts.push(`${toBnNum(gha)} ঘা`);
-    if (ti > 0) parts.push(`${toBnNum(ti)} টি`);
-    const qtyText = parts.length > 0 ? parts.join(' ') : `${toBnNum(totalTi)} টি`;
+    const qtyInfo = formatKachaItemQty(kuri, gha, ti, kachaRule, tiPerGha);
+    const qtyText = qtyInfo.displayString;
 
     const newEntry: KroyEntry = {
       id: Date.now(),
@@ -996,6 +991,33 @@ export const KroyKhataView: React.FC<KroyKhataViewProps> = ({
               />
             </div>
           </div>
+
+          {/* Live Kacha Qty Conversion Preview */}
+          {liveKachaTotalTi > 0 && (
+            <div
+              style={{
+                background: '#f0fdf4',
+                border: '1px solid #86efac',
+                borderRadius: '8px',
+                padding: '6px 10px',
+                marginBottom: '10px',
+                fontSize: '11.5px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div>
+                <span style={{ fontWeight: 800, color: '#047857' }}>📊 সুপারি: </span>
+                <strong style={{ color: '#0f172a' }}>
+                  {formatKachaItemQty(parseBnFloat(kachaKuri), parseBnFloat(kachaGha), parseBnFloat(kachaTi), kachaRule, tiPerGha).displayString}
+                </strong>
+              </div>
+              <span style={{ color: '#047857', fontWeight: 700 }}>
+                মোট {toBnNum(liveKachaTotalTi)} টি
+              </span>
+            </div>
+          )}
 
           {kachaEntryMode === 'regular' ? (
             <>
