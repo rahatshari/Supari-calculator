@@ -2,6 +2,7 @@ import React from 'react';
 import { Download, Sparkles, X, ExternalLink } from 'lucide-react';
 import { AppUpdateInfo } from '../config/version';
 import { toBnNum } from '../utils/bengali';
+import { installAppUpdate } from '../utils/updateChecker';
 
 interface UpdateNotificationModalProps {
   updateInfo: AppUpdateInfo | null;
@@ -18,15 +19,18 @@ export const UpdateNotificationModal: React.FC<UpdateNotificationModalProps> = (
 
   const handleDownload = () => {
     const targetUrl = updateInfo.apkUrl || updateInfo.downloadUrl;
-    if (targetUrl) {
-      window.location.href = targetUrl;
-    }
+    installAppUpdate(targetUrl);
     onClose();
   };
 
   const handleOpenReleasePage = () => {
     if (updateInfo.downloadUrl) {
-      window.location.href = updateInfo.downloadUrl;
+      try {
+        const win = window.open(updateInfo.downloadUrl, '_system');
+        if (!win) window.location.href = updateInfo.downloadUrl;
+      } catch {
+        window.location.href = updateInfo.downloadUrl;
+      }
     }
   };
 

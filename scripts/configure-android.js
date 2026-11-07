@@ -124,9 +124,9 @@ if (fs.existsSync(keystoreSrc)) {
 if (fs.existsSync(gradlePath)) {
   let gradle = fs.readFileSync(gradlePath, 'utf8');
 
-  // Set Version 2.2.0 (versionCode 4)
-  gradle = gradle.replace(/versionCode \d+/g, 'versionCode 4');
-  gradle = gradle.replace(/versionName "[^"]*"/g, 'versionName "2.2.0"');
+  // Set Version 2.4.0 (versionCode 6)
+  gradle = gradle.replace(/versionCode \d+/g, 'versionCode 6');
+  gradle = gradle.replace(/versionName "[^"]*"/g, 'versionName "2.4.0"');
 
   // Inject permanent signing configuration
   const signingConfigBlock = `
@@ -149,7 +149,7 @@ if (fs.existsSync(gradlePath)) {
   }
 
   fs.writeFileSync(gradlePath, gradle, 'utf8');
-  console.log('✅ Version 2.2.0 & Permanent Keystore injected into build.gradle');
+  console.log('✅ Version 2.4.0 & Permanent Keystore injected into build.gradle');
 }
 
 console.log('🎉 Android configuration completed successfully!');

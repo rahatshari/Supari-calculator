@@ -1,4 +1,4 @@
-export const CURRENT_APP_VERSION = '2.2.0';
+export const CURRENT_APP_VERSION = '2.4.0';
 
 // Official locked repository and direct APK download URL (Cannot be edited by users)
 export const OFFICIAL_GITHUB_REPO = 'rahatsharif504/supari-calculator';

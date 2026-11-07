@@ -1,10 +1,10 @@
 import {
   CURRENT_APP_VERSION,
   OFFICIAL_GITHUB_REPO,
-  OFFICIAL_APK_DOWNLOAD_URL,
-  OFFICIAL_RELEASE_URL,
   AppUpdateInfo,
 } from '../config/version';
+
+const CUSTOM_REPO_STORAGE_KEY = 'supari_custom_github_repo';
 
 /**
  * Extracts numeric parts from version strings like 'v2.0', '2.1.0-apk', etc.
@@ -35,44 +35,119 @@ export function compareVersions(verA: string, verB: string): number {
 }
 
 /**
- * Official locked repository. Cannot be modified or tampered with.
+ * Normalizes user input (handles full github.com/user/repo URLs or raw user/repo)
+ */
+export function cleanGitHubRepo(input: string): string {
+  let clean = input.trim();
+  clean = clean.replace(/^https?:\/\/github\.com\//i, '');
+  clean = clean.replace(/^github\.com\//i, '');
+  clean = clean.replace(/\/+$/, '');
+  return clean;
+}
+
+/**
+ * Gets custom repository from localStorage if configured
+ */
+export function getCustomRepo(): string | null {
+  if (typeof window === 'undefined') return null;
+  const val = localStorage.getItem(CUSTOM_REPO_STORAGE_KEY);
+  return val ? cleanGitHubRepo(val) : null;
+}
+
+/**
+ * Sets a custom GitHub repository
+ */
+export function setCustomRepo(repo: string): void {
+  if (typeof window === 'undefined') return;
+  const cleaned = cleanGitHubRepo(repo);
+  if (!cleaned || cleaned.toLowerCase() === OFFICIAL_GITHUB_REPO.toLowerCase()) {
+    localStorage.removeItem(CUSTOM_REPO_STORAGE_KEY);
+  } else {
+    localStorage.setItem(CUSTOM_REPO_STORAGE_KEY, cleaned);
+  }
+}
+
+/**
+ * One-click reset to official default repository
+ */
+export function resetToDefaultRepo(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(CUSTOM_REPO_STORAGE_KEY);
+}
+
+/**
+ * Checks if a custom repository is currently active
+ */
+export function isCustomRepoActive(): boolean {
+  const custom = getCustomRepo();
+  return Boolean(custom && custom.toLowerCase() !== OFFICIAL_GITHUB_REPO.toLowerCase());
+}
+
+/**
+ * Returns the currently active GitHub repository (custom or official default)
  */
 export function getTargetRepo(): string {
-  return OFFICIAL_GITHUB_REPO;
+  const custom = getCustomRepo();
+  return custom ? cleanGitHubRepo(custom) : OFFICIAL_GITHUB_REPO;
+}
+
+/**
+ * Dynamic direct APK download URL based on active repository
+ */
+export function getTargetApkUrl(): string {
+  const repo = getTargetRepo();
+  return `https://github.com/${repo}/releases/latest/download/supari-calculator-offline.apk`;
+}
+
+/**
+ * Dynamic Release page URL based on active repository
+ */
+export function getTargetReleaseUrl(): string {
+  const repo = getTargetRepo();
+  return `https://github.com/${repo}/releases/latest`;
 }
 
 /**
  * Directly triggers the Android APK download and update installation.
  */
 export function installAppUpdate(apkUrl?: string): void {
-  const targetUrl = apkUrl || OFFICIAL_APK_DOWNLOAD_URL;
+  const targetUrl = apkUrl || getTargetApkUrl();
   if (typeof window !== 'undefined') {
-    // Navigating directly to the APK download triggers the Android Package Installer
-    window.location.href = targetUrl;
+    try {
+      // In Android WebView / Capacitor, _system opens the native Android download manager / browser
+      const systemWin = window.open(targetUrl, '_system');
+      if (!systemWin) {
+        window.location.href = targetUrl;
+      }
+    } catch {
+      window.location.href = targetUrl;
+    }
   }
 }
 
 /**
- * Automatically checks GitHub Releases and version.json for updates against the locked official repository.
+ * Automatically checks GitHub Releases and version.json for updates against the target repository.
  */
-export async function checkForUpdates(): Promise<AppUpdateInfo> {
+export async function checkForUpdates(overrideRepo?: string): Promise<AppUpdateInfo> {
+  const repo = overrideRepo ? cleanGitHubRepo(overrideRepo) : getTargetRepo();
+  const defaultApkUrl = `https://github.com/${repo}/releases/latest/download/supari-calculator-offline.apk`;
+  const defaultReleaseUrl = `https://github.com/${repo}/releases/latest`;
+
   const defaultResult: AppUpdateInfo = {
     hasUpdate: false,
     latestVersion: CURRENT_APP_VERSION,
     currentVersion: CURRENT_APP_VERSION,
-    downloadUrl: OFFICIAL_RELEASE_URL,
-    apkUrl: OFFICIAL_APK_DOWNLOAD_URL,
+    downloadUrl: defaultReleaseUrl,
+    apkUrl: defaultApkUrl,
   };
 
   if (!navigator.onLine) {
     return defaultResult;
   }
 
-  const repo = OFFICIAL_GITHUB_REPO;
-
   try {
-    // 1. Check official GitHub Releases API
-    const releaseRes = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+    // 1. Check official GitHub Releases API with cache-busting
+    const releaseRes = await fetch(`https://api.github.com/repos/${repo}/releases/latest?_t=${Date.now()}`, {
       headers: { Accept: 'application/vnd.github.v3+json' },
     });
 
@@ -82,7 +157,7 @@ export async function checkForUpdates(): Promise<AppUpdateInfo> {
       const latestVer = rawTag.replace(/^v/i, '').split('-')[0].trim();
 
       if (compareVersions(latestVer, CURRENT_APP_VERSION) > 0) {
-        let apkAssetUrl = OFFICIAL_APK_DOWNLOAD_URL;
+        let apkAssetUrl = defaultApkUrl;
         if (Array.isArray(data.assets)) {
           const found = data.assets.find((a: any) => a.name && a.name.endsWith('.apk'));
           if (found && found.browser_download_url) {
@@ -96,7 +171,7 @@ export async function checkForUpdates(): Promise<AppUpdateInfo> {
           currentVersion: CURRENT_APP_VERSION,
           releaseTitle: data.name || `ভার্সন ${latestVer}`,
           releaseNotes: data.body || 'নতুন ফিচার এবং উন্নতি যুক্ত করা হয়েছে।',
-          downloadUrl: data.html_url || OFFICIAL_RELEASE_URL,
+          downloadUrl: data.html_url || defaultReleaseUrl,
           apkUrl: apkAssetUrl,
         };
       }
@@ -122,8 +197,8 @@ export async function checkForUpdates(): Promise<AppUpdateInfo> {
           currentVersion: CURRENT_APP_VERSION,
           releaseTitle: meta.title || `ভার্সন ${latestVer}`,
           releaseNotes: meta.releaseNotes || 'নতুন আপডেট উপলব্ধ।',
-          downloadUrl: meta.downloadUrl || OFFICIAL_RELEASE_URL,
-          apkUrl: meta.apkUrl || OFFICIAL_APK_DOWNLOAD_URL,
+          downloadUrl: meta.downloadUrl || defaultReleaseUrl,
+          apkUrl: meta.apkUrl || defaultApkUrl,
         };
       }
     }

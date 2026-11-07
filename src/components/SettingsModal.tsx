@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { Settings2, X, ShoppingBag, Check, Shield, RefreshCw, Download, Sparkles, Lock } from 'lucide-react';
-import { CURRENT_APP_VERSION, OFFICIAL_GITHUB_REPO, OFFICIAL_APK_DOWNLOAD_URL, AppUpdateInfo } from '../config/version';
-import { checkForUpdates, installAppUpdate } from '../utils/updateChecker';
+import { Settings2, X, ShoppingBag, Check, RefreshCw, Download, Sparkles, RotateCcw, Globe, Save } from 'lucide-react';
+import { CURRENT_APP_VERSION, OFFICIAL_GITHUB_REPO, AppUpdateInfo } from '../config/version';
+import {
+  checkForUpdates,
+  installAppUpdate,
+  getTargetRepo,
+  setCustomRepo,
+  resetToDefaultRepo,
+  isCustomRepoActive,
+  getTargetApkUrl,
+  cleanGitHubRepo,
+} from '../utils/updateChecker';
 import { toBnNum } from '../utils/bengali';
 
 interface SettingsModalProps {
@@ -21,16 +30,49 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onShowUpdateModal,
   onToast,
 }) => {
+  const [repoInput, setRepoInput] = useState<string>(() => getTargetRepo());
+  const [isCustom, setIsCustom] = useState<boolean>(() => isCustomRepoActive());
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const [foundUpdate, setFoundUpdate] = useState<AppUpdateInfo | null>(null);
 
   if (!isOpen) return null;
 
+  const handleSaveRepo = () => {
+    const cleaned = cleanGitHubRepo(repoInput);
+    if (!cleaned) {
+      if (onToast) onToast('⚠️ রিপোজিটরি লিংক খালি রাখা যাবে না');
+      return;
+    }
+    setCustomRepo(cleaned);
+    const active = getTargetRepo();
+    setRepoInput(active);
+    setIsCustom(isCustomRepoActive());
+    if (onToast) {
+      onToast(`✅ আপডেট লিংক সেভ হয়েছে: ${active}`);
+    }
+  };
+
+  const handleResetDefault = () => {
+    resetToDefaultRepo();
+    setRepoInput(OFFICIAL_GITHUB_REPO);
+    setIsCustom(false);
+    if (onToast) {
+      onToast(`🔄 ডিফল্ট লিংক (${OFFICIAL_GITHUB_REPO}) ফিরিয়ে আনা হয়েছে!`);
+    }
+  };
+
   const handleManualCheck = async () => {
     setIsCheckingUpdate(true);
     setUpdateStatus(null);
     try {
+      // Save input if user typed something new before checking
+      const cleaned = cleanGitHubRepo(repoInput);
+      if (cleaned && cleaned !== getTargetRepo()) {
+        setCustomRepo(cleaned);
+        setIsCustom(isCustomRepoActive());
+      }
+
       const info = await checkForUpdates();
       if (info.hasUpdate) {
         setFoundUpdate(info);
@@ -46,7 +88,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         }
       }
     } catch {
-      setUpdateStatus('ইন্টারনেট সংযোগ চেক করুন');
+      setUpdateStatus('ইন্টারনেট বা রিপোজিটরি চেক করুন');
       if (onToast) onToast('⚠️ আপডেট চেক করা যায়নি');
     } finally {
       setIsCheckingUpdate(false);
@@ -54,7 +96,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const handleDirectInstall = () => {
-    const targetUrl = foundUpdate?.apkUrl || OFFICIAL_APK_DOWNLOAD_URL;
+    const targetUrl = foundUpdate?.apkUrl || getTargetApkUrl();
     if (onToast) onToast('📥 নতুন ভার্সন ডাউনলোড ও ইনস্টল শুরু হচ্ছে...');
     installAppUpdate(targetUrl);
   };
@@ -64,7 +106,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       <div
         className="modal-box"
         style={{
-          maxWidth: '420px',
+          maxWidth: '430px',
           width: '94%',
           textAlign: 'left',
           borderRadius: '18px',
@@ -230,7 +272,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* App Version & Permanent Auto-Update Card */}
+        {/* App Version & Customizable Auto-Update Card */}
         <div
           style={{
             background: '#f8fafc',
@@ -240,7 +282,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             marginBottom: '16px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div
                 style={{
@@ -276,25 +318,105 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </span>
           </div>
 
-          {/* Locked Official Update Source Link */}
+          {/* GitHub Repository Link Setting (Editable with 1-Click Default Reset) */}
           <div
             style={{
               background: '#ffffff',
               border: '1px solid #e2e8f0',
-              borderRadius: '10px',
-              padding: '8px 10px',
-              marginBottom: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '11px',
+              borderRadius: '12px',
+              padding: '10px 12px',
+              marginBottom: '12px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#475569' }}>
-              <Lock className="w-3.5 h-3.5 text-emerald-600" />
-              <span>আপডেট লিংক (অপরিবর্তনীয়):</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: '#334155' }}>
+                <Globe className="w-3.5 h-3.5 text-emerald-600" />
+                <span>গিটহাব আপডেট লিংক:</span>
+              </div>
+              <span
+                style={{
+                  fontSize: '10.5px',
+                  fontWeight: 800,
+                  padding: '2px 8px',
+                  borderRadius: '8px',
+                  background: isCustom ? '#fef3c7' : '#ecfdf5',
+                  color: isCustom ? '#b45309' : '#047857',
+                  border: `1px solid ${isCustom ? '#fde68a' : '#a7f3d0'}`,
+                }}
+              >
+                {isCustom ? 'কাস্টম লিংক' : 'ডিফল্ট অফিসিয়াল লিংক'}
+              </span>
             </div>
-            <span style={{ fontWeight: 700, color: '#0f172a' }}>{OFFICIAL_GITHUB_REPO}</span>
+
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+              <input
+                type="text"
+                value={repoInput}
+                onChange={(e) => setRepoInput(e.target.value)}
+                placeholder="username/repo (ডিফল্ট: rahatsharif504/supari-calculator)"
+                style={{
+                  flex: 1,
+                  padding: '7px 10px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  color: '#0f172a',
+                  background: '#f8fafc',
+                  outline: 'none',
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleSaveRepo}
+                style={{
+                  background: '#10b981',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0 10px',
+                  fontSize: '11.5px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                title="পরিবর্তন সেভ করুন"
+              >
+                <Save className="w-3.5 h-3.5" />
+                সেভ
+              </button>
+            </div>
+
+            {/* 1-Click Default Reset Button */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '10.5px', color: '#64748b' }}>
+                ডিফল্ট: <code style={{ color: '#0f172a', fontWeight: 600 }}>{OFFICIAL_GITHUB_REPO}</code>
+              </span>
+              <button
+                type="button"
+                onClick={handleResetDefault}
+                style={{
+                  background: '#f1f5f9',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  padding: '3px 8px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: '#047857',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'all 0.15s ease',
+                }}
+                title="১-ক্লিকে ডিফল্ট অফিসিয়াল লিংকে ফিরে যান"
+              >
+                <RotateCcw className="w-3 h-3 text-emerald-600" />
+                ডিফল্ট ফিরিয়ে আনুন
+              </button>
+            </div>
           </div>
 
           {/* Action Buttons: Direct Install if update is available, or Check & Install */}
