@@ -14,6 +14,7 @@ import {
 import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult, saveOrDownloadImage } from '../utils/exportMemo';
 import { printReceipt } from '../utils/printReceipt';
 import { CreatorBadge, getCreatorBadgeHtml } from './CreatorBadge';
+import { GhaRuleSelector, ShuknoRuleSelector } from './RuleToggleCard';
 
 interface KroyKhataViewProps {
   kroyDb: KroyDatabase;
@@ -935,7 +936,7 @@ export const KroyKhataView: React.FC<KroyKhataViewProps> = ({
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '10px', marginBottom: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: '10px', marginBottom: '10px', alignItems: 'end' }}>
             <div className="input-box">
               <label style={{ fontSize: '12px' }}>বিক্রেতা / গ্রাহকের নাম (ঐচ্ছিক)</label>
               <input
@@ -945,17 +946,11 @@ export const KroyKhataView: React.FC<KroyKhataViewProps> = ({
                 onChange={(e) => setKachaSeller(e.target.value)}
               />
             </div>
-            <div className="input-box">
-              <label style={{ fontSize: '12px', fontWeight: 700 }}>হিসাবের নিয়ম</label>
-              <select
-                className="std-input"
-                style={{ height: '44px', padding: '6px 8px', fontSize: '13px', fontWeight: 700 }}
-                value={kachaRule}
-                onChange={(e) => setKachaRule(parseInt(e.target.value, 10))}
-              >
-                <option value={21}>২১ ঘা = ১ কুড়ি</option>
-                <option value={20}>২০ ঘা = ১ কুড়ি</option>
-              </select>
+            <div className="input-box" style={{ alignItems: 'stretch' }}>
+              <label style={{ fontSize: '12px', fontWeight: 700, textAlign: 'center' }}>হিসাবের নিয়ম</label>
+              <div style={{ height: '44px', display: 'flex', alignItems: 'center' }}>
+                <GhaRuleSelector value={kachaRule} onChange={setKachaRule} variant="compact" />
+              </div>
             </div>
           </div>
 
@@ -1130,17 +1125,11 @@ export const KroyKhataView: React.FC<KroyKhataViewProps> = ({
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '10px', marginBottom: '10px' }}>
-            <div className="input-box">
-              <label style={{ fontSize: '12px' }}>হিসাবের নিয়ম</label>
-              <select
-                className="std-input"
-                style={{ height: '44px', padding: '6px 8px', fontSize: '13px', fontWeight: 700 }}
-                value={shuknoRule}
-                onChange={(e) => setShuknoRule(parseInt(e.target.value, 10))}
-              >
-                <option value={82}>৮২ কেজি = ১ হাজার</option>
-                <option value={80}>৮০ কেজি = ১ হাজার</option>
-              </select>
+            <div className="input-box" style={{ alignItems: 'stretch' }}>
+              <label style={{ fontSize: '12px', textAlign: 'center' }}>হিসাবের নিয়ম</label>
+              <div style={{ height: '44px', display: 'flex', alignItems: 'center' }}>
+                <ShuknoRuleSelector value={shuknoRule} onChange={setShuknoRule} variant="compact" />
+              </div>
             </div>
             <div className="input-box">
               <label style={{ fontSize: '12px' }}>বস্তার সংখ্যা</label>

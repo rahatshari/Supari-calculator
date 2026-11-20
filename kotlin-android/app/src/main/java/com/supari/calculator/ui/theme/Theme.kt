@@ -6,8 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 val EmeraldPrimary = Color(0xFF059669)
+val EmeraldVibrant = Color(0xFF10B981)
 val EmeraldDark = Color(0xFF047857)
 val EmeraldLight = Color(0xFFECFDF5)
+val EmeraldBorder = Color(0xFF86EFAC)
 val BackgroundGray = Color(0xFFF8FAFC)
 val CardBackground = Color(0xFFFFFFFF)
 val TextDark = Color(0xFF0F172A)
@@ -16,6 +18,9 @@ val BorderLight = Color(0xFFE2E8F0)
 val DangerRed = Color(0xFFDC2626)
 val DangerLight = Color(0xFFFEF2F2)
 val WarningAmber = Color(0xFFD97706)
+val WarningLight = Color(0xFFFFFBEB)
+val BlueAccent = Color(0xFF1D4ED8)
+val BlueLight = Color(0xFFEFF6FF)
 
 private val LightColorScheme = lightColorScheme(
     primary = EmeraldPrimary,

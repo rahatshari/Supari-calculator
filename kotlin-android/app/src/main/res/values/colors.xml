@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="emerald_primary">#FF059669</color>
+    <color name="emerald_dark">#FF047857</color>
+    <color name="bg_surface">#FFF8FAFC</color>
+</resources>

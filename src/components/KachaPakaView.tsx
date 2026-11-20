@@ -10,6 +10,7 @@ import {
 import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult, saveOrDownloadImage } from '../utils/exportMemo';
 import { printReceipt } from '../utils/printReceipt';
 import { CreatorBadge, getCreatorBadgeHtml } from './CreatorBadge';
+import { GhaRuleSelector } from './RuleToggleCard';
 
 interface KachaPakaViewProps {
   items: KachaItem[];
@@ -510,16 +511,7 @@ export const KachaPakaView: React.FC<KachaPakaViewProps> = ({
       {/* Subtab 1: Main Calculation */}
       {subtab === 'main' && (
         <div>
-          <div className="settings-bar no-print">
-            <span>হিসাবের নিয়ম:</span>
-            <select
-              value={ghaRule}
-              onChange={(e) => setGhaRule(parseInt(e.target.value, 10))}
-            >
-              <option value={21}>২১ ঘা = ১ কুড়ি</option>
-              <option value={20}>২০ ঘা = ১ কুড়ি</option>
-            </select>
-          </div>
+          <GhaRuleSelector value={ghaRule} onChange={setGhaRule} />
 
           <div className="grid-inputs no-print">
             <div className="input-box">
@@ -788,16 +780,7 @@ export const KachaPakaView: React.FC<KachaPakaViewProps> = ({
       {/* Subtab 2: Rate Checker */}
       {subtab === 'rate' && (
         <div>
-          <div className="settings-bar">
-            <span>হিসাবের নিয়ম:</span>
-            <select
-              value={rateCheckRule}
-              onChange={(e) => setRateCheckRule(parseInt(e.target.value, 10))}
-            >
-              <option value={21}>২১ ঘা = ১ কুড়ি</option>
-              <option value={20}>২০ ঘা = ১ কুড়ি</option>
-            </select>
-          </div>
+          <GhaRuleSelector value={rateCheckRule} onChange={setRateCheckRule} />
 
           <p
             style={{

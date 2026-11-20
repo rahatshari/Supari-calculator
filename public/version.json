@@ -1,8 +1,8 @@
 {
-  "version": "2.9.0",
-  "versionCode": 11,
-  "title": "সুপারি হিসাব v2.9.0",
-  "releaseNotes": "ভার্সন ২.৯.০: JPG মেমো রসিদ সেভ অপশনে ক্লিক করার সাথে সাথে কোনো অতিরিক্ত পপআপ বা ফাইল ম্যানেজার সিলেক্টর ছাড়াই সরাসরি মোবাইলে ১-ক্লিকে ছবি সেভ হওয়ার দ্রুত সুবিধা যুক্ত করা হয়েছে।",
+  "version": "3.0.0",
+  "versionCode": 12,
+  "title": "সুপারি হিসাব v3.0.0 (নেটিভ অ্যান্ড্রয়েড)",
+  "releaseNotes": "ভার্সন ৩.০.০: সম্পূর্ণ নতুন নেটিভ কটলিন (Jetpack Compose) অ্যাপ! কোনো স্প্ল্যাশ স্ক্রিন বা ওয়েবভিউ ছাড়াই মুহূর্তেই অ্যাপ ওপেন হবে। ১-ক্লিকে সরাসরি গ্যালারিতে JPG মেমো সেভ, ক্রয় খাতা, এবং ইন-অ্যাপ অটো-আপডেট সুবিধা।",
   "downloadUrl": "https://github.com/rahatshari/Supari-calculator/releases/latest",
   "apkUrl": "https://github.com/rahatshari/Supari-calculator/releases/latest/download/supari-calculator-offline.apk"
 }

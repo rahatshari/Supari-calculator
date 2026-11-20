@@ -10,6 +10,7 @@ import {
 import { copyToClipboard, renderMemoHtmlToImage, RenderMemoResult, saveOrDownloadImage } from '../utils/exportMemo';
 import { printReceipt } from '../utils/printReceipt';
 import { CreatorBadge, getCreatorBadgeHtml } from './CreatorBadge';
+import { ShuknoRuleSelector } from './RuleToggleCard';
 
 interface ShuknoViewProps {
   bags: number[];
@@ -473,15 +474,7 @@ export const ShuknoView: React.FC<ShuknoViewProps> = ({
       <div className="settings-grid-2 no-print">
         <div className="setting-card">
           <label>হিসাবের নিয়ম</label>
-          <select
-            className="std-input"
-            style={{ height: '38px', fontSize: '13px' }}
-            value={baseRule}
-            onChange={(e) => setBaseRule(parseInt(e.target.value, 10))}
-          >
-            <option value={82}>৮২ কেজি = ১ হাজার</option>
-            <option value={80}>৮০ কেজি = ১ হাজার</option>
-          </select>
+          <ShuknoRuleSelector value={baseRule} onChange={setBaseRule} variant="compact" />
         </div>
 
         <div className="setting-card">
