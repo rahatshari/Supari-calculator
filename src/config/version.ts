@@ -1,4 +1,4 @@
-export const CURRENT_APP_VERSION = '3.0.0';
+export const CURRENT_APP_VERSION = '3.1.0';
 
 // Official default repository and direct APK download URL
 export const OFFICIAL_GITHUB_REPO = 'rahatshari/Supari-calculator';

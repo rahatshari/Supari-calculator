@@ -19,26 +19,23 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="সুপারি হিসাব">
   
-  <!-- Fonts & Local Libraries for 100% Offline Capability -->
+  <!-- Fonts (Non-blocking for instant offline APK startup) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
   <script>
-    // Self-healing: automatically clear any stuck service workers and stale caches
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(regs) {
-        for (var i = 0; i < regs.length; i++) {
-          regs[i].unregister();
-        }
-      });
-    }
-    if ('caches' in window) {
-      caches.keys().then(function(keys) {
-        for (var i = 0; i < keys.length; i++) {
-          caches.delete(keys[i]);
-        }
-      });
+    if (window.location.protocol === 'https:' && window.location.hostname !== 'localhost') {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var i = 0; i < regs.length; i++) regs[i].unregister();
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(keys) {
+          for (var i = 0; i < keys.length; i++) caches.delete(keys[i]);
+        });
+      }
     }
 
     function forceReload() {
@@ -54,7 +51,7 @@
           });
         }
       } catch (e) {}
-      window.location.reload(true);
+      window.location.reload();
     }
   </script>
 </head>

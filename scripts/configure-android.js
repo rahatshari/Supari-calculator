@@ -2,9 +2,10 @@
  * configure-android.js
  * Automatically configures Capacitor Android native project:
  * - Permanent keystore signing (fixes "conflicting signature" / "same signature" error)
- * - Version 2.1.0 (versionCode 3)
+ * - Syncs versionName from package.json and versionCode from public/version.json
  * - Clean Supari icons & prevents Duplicate Resources error in mipmap-anydpi-v26
- * - Completely removes Capacitor splash screen & blue logo
+ * - Completely removes Capacitor splash screen & sets 0ms splash animation duration
+ * - Configures signed Release build for fastest ART cold start
  */
 
 import fs from 'node:fs';
@@ -16,6 +17,18 @@ const appDir = path.join(androidDir, 'app');
 const resDir = path.join(appDir, 'src', 'main', 'res');
 
 console.log('⚙️ Starting Android project configuration...');
+
+// Read dynamic version & versionCode
+let appVersion = '3.1.0';
+let appVersionCode = 13;
+try {
+  const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
+  if (pkg.version) appVersion = pkg.version;
+} catch {}
+try {
+  const verMeta = JSON.parse(fs.readFileSync(path.join(rootDir, 'public', 'version.json'), 'utf8'));
+  if (verMeta.versionCode) appVersionCode = Number(verMeta.versionCode);
+} catch {}
 
 // 1. Copy App Icons to density folders only
 const icon192 = path.join(rootDir, 'public', 'pwa-192x192.png');
@@ -70,6 +83,12 @@ if (fs.existsSync(stylesPath)) {
     /<item name="android:background">@drawable\/splash<\/item>/g,
     '<item name="android:background">#f8fafc</item>'
   );
+  if (!styles.includes('android:windowDisablePreview')) {
+    styles = styles.replace(
+      '</style>',
+      '        <item name="android:windowBackground">#f8fafc</item>\n    </style>'
+    );
+  }
   fs.writeFileSync(stylesPath, styles, 'utf8');
   console.log('✅ Splash background changed to #f8fafc in styles.xml');
 }
@@ -107,11 +126,17 @@ if (fs.existsSync(stylesV31Path)) {
     /<item name="android:windowSplashScreenBackground">.*?<\/item>/g,
     '<item name="android:windowSplashScreenBackground">#f8fafc</item>'
   );
+  if (!styles31.includes('windowSplashScreenAnimationDuration')) {
+    styles31 = styles31.replace(
+      '</style>',
+      '        <item name="android:windowSplashScreenAnimationDuration">0</item>\n    </style>'
+    );
+  }
   fs.writeFileSync(stylesV31Path, styles31, 'utf8');
-  console.log('✅ Android 12+ splash transparent configured in values-v31/styles.xml');
+  console.log('✅ Android 12+ splash transparent & 0ms configured in values-v31/styles.xml');
 }
 
-// 5. Update build.gradle with Version 2.1.0 and Permanent Keystore Signing
+// 5. Update build.gradle with dynamic Version & Permanent Keystore Signing for both debug and release
 const gradlePath = path.join(appDir, 'build.gradle');
 const keystoreSrc = path.join(rootDir, 'supari.keystore');
 const keystoreDest = path.join(appDir, 'supari.keystore');
@@ -124,11 +149,9 @@ if (fs.existsSync(keystoreSrc)) {
 if (fs.existsSync(gradlePath)) {
   let gradle = fs.readFileSync(gradlePath, 'utf8');
 
-  // Set Version 2.9.0 (versionCode 11)
-  gradle = gradle.replace(/versionCode \d+/g, 'versionCode 11');
-  gradle = gradle.replace(/versionName "[^"]*"/g, 'versionName "2.9.0"');
+  gradle = gradle.replace(/versionCode \d+/g, `versionCode ${appVersionCode}`);
+  gradle = gradle.replace(/versionName "[^"]*"/g, `versionName "${appVersion}"`);
 
-  // Inject permanent signing configuration
   const signingConfigBlock = `
     signingConfigs {
         permanent {
@@ -143,13 +166,13 @@ if (fs.existsSync(gradlePath)) {
   if (!gradle.includes('signingConfigs')) {
     gradle = gradle.replace('defaultConfig {', signingConfigBlock + '\n    defaultConfig {');
     gradle = gradle.replace(
-      'buildTypes {',
-      'buildTypes {\n        debug {\n            signingConfig signingConfigs.permanent\n        }'
+      /buildTypes\s*\{\s*release\s*\{/,
+      'buildTypes {\n        debug {\n            signingConfig signingConfigs.permanent\n        }\n        release {\n            signingConfig signingConfigs.permanent'
     );
   }
 
   fs.writeFileSync(gradlePath, gradle, 'utf8');
-  console.log('✅ Version 2.5.0 & Permanent Keystore injected into build.gradle');
+  console.log(`✅ Version ${appVersion} (${appVersionCode}) & Permanent Keystore injected into build.gradle`);
 }
 
 console.log('🎉 Android configuration completed successfully!');
